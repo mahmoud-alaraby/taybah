@@ -11,10 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // إضافة الـ middleware للأدمن
         $middleware->alias([
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
             'admin.guest' => \App\Http\Middleware\AdminGuest::class,
+            'employee.auth' => \App\Http\Middleware\EmployeeAuth::class,
+            'employee.guest' => \App\Http\Middleware\EmployeeGuest::class,
+            'employee.permission' => \App\Http\Middleware\EmployeePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

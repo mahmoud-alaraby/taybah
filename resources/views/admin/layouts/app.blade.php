@@ -40,11 +40,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- نأخر تحميل Alpine.js عشان نتجنب مشاكل الانميشن -->
     
     <style>
-        body { font-family: 'Cairo', sans-serif; }
-        [x-cloak] { display: none !important; }
+        body { 
+            font-family: 'Cairo', sans-serif; 
+        }
+        [x-cloak] { 
+            display: none !important; 
+        }
+        /* إصلاح مشاكل الانيميشن */
+        .fade-out {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .fade-out.hidden {
+            opacity: 0;
+        }
+        /* منع اختفاء العناصر بطريقة مفاجئة */
+        .prevent-flash {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-cairo">
@@ -55,8 +71,8 @@
                 <!-- Logo -->
                 <div class="flex items-center justify-center h-16 px-4" style="background-color: #dddddd1a;">
                     <div class="flex items-center">
-                        <div class=" h-14  flex items-center justify-center ml-2 ">
-                        <img src="{{ asset('assets/images/taiba-logo.png') }}" alt="شركة طيبة" class="h-14 ">    
+                        <div class="h-14 flex items-center justify-center ml-2">
+                            <img src="{{ asset('assets/images/taiba-logo.png') }}" alt="شركة طيبة" class="h-14">    
                         </div>
                     </div>
                 </div>
@@ -86,21 +102,33 @@
                         <!-- Navigation -->
                         <nav class="space-y-1">
                             <a href="{{ route('admin.dashboard') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
                                 الرئيسية
                             </a>
                             
                             <a href="{{ route('admin.admins.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 <i class="fas fa-users-cog ml-3 text-sm"></i>
                                 إدارة المديرين
+                            </a>
+                            
+                            <a href="{{ route('admin.employees.index') }}" 
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.employees.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                <i class="fas fa-users ml-3 text-sm"></i>
+                                إدارة الموظفين
+                            </a>
+                            
+                            <a href="{{ route('admin.roles.index') }}" 
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.roles.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                <i class="fas fa-user-tag ml-3 text-sm"></i>
+                                إدارة الأدوار
                             </a>
                             
                             <div class="mt-6 pt-6 border-t border-gray-700">
                                 <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf
-                                    <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors">
+                                    <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">
                                         <i class="fas fa-sign-out-alt ml-3 text-sm"></i>
                                         تسجيل خروج
                                     </button>
@@ -124,8 +152,8 @@
                     
                     <div class="flex items-center space-x-4 space-x-reverse">
                         <!-- Profile dropdown -->
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 p-1">
+                        <div class="dropdown-container relative">
+                            <button onclick="toggleDropdown()" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 p-1 prevent-flash">
                                 <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                                     <span class="text-gray-600 font-medium text-sm">
                                         {{ mb_substr(auth('admin')->user()->name, 0, 1) }}
@@ -134,16 +162,8 @@
                                 <i class="fas fa-chevron-down mr-2 text-sm text-gray-400"></i>
                             </button>
                             
-                            <div x-show="open" 
-                                 x-cloak
-                                 @click.away="open = false"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="transform opacity-0 scale-95"
-                                 x-transition:enter-end="transform opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-75"
-                                 x-transition:leave-start="transform opacity-100 scale-100"
-                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="origin-top-right absolute left-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+                            <div id="profile-dropdown"
+                                 class="hidden origin-top-right absolute left-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50 prevent-flash">
                                 <div class="px-4 py-2 border-b">
                                     <p class="text-sm font-medium text-gray-900">{{ auth('admin')->user()->name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth('admin')->user()->email }}</p>
@@ -169,19 +189,29 @@
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                         <!-- Flash Messages -->
                         @if(session('success'))
-                            <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-                                <div class="flex">
-                                    <i class="fas fa-check-circle text-green-400 ml-2 mt-0.5"></i>
-                                    <span>{{ session('success') }}</span>
+                            <div id="success-alert" class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md prevent-flash">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex">
+                                        <i class="fas fa-check-circle text-green-400 ml-2 mt-0.5"></i>
+                                        <span>{{ session('success') }}</span>
+                                    </div>
+                                    <button onclick="closeAlert('success-alert')" class="text-green-700 hover:text-green-900">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
                         @endif
                         
                         @if(session('error'))
-                            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                                <div class="flex">
-                                    <i class="fas fa-exclamation-circle text-red-400 ml-2 mt-0.5"></i>
-                                    <span>{{ session('error') }}</span>
+                            <div id="error-alert" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md prevent-flash">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex">
+                                        <i class="fas fa-exclamation-circle text-red-400 ml-2 mt-0.5"></i>
+                                        <span>{{ session('error') }}</span>
+                                    </div>
+                                    <button onclick="closeAlert('error-alert')" class="text-red-700 hover:text-red-900">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
                         @endif
@@ -224,16 +254,59 @@
             });
         }
         
-        // Auto hide flash messages
+        // Dropdown toggle function
+        function toggleDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profile-dropdown');
+            const button = document.querySelector('.dropdown-container button');
+            
+            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+        
+        // Close alert function
+        function closeAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.classList.add('fade-out');
+                setTimeout(() => {
+                    alert.remove();
+                }, 500);
+            }
+        }
+        
+        // Auto hide flash messages بعد 8 ثواني بدلاً من 5
         setTimeout(() => {
-            const alerts = document.querySelectorAll('[class*="bg-green-50"], [class*="bg-red-50"]');
-            alerts.forEach(alert => {
-                alert.style.transition = 'opacity 0.5s';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
+            const successAlert = document.getElementById('success-alert');
+            const errorAlert = document.getElementById('error-alert');
+            
+            if (successAlert) {
+                closeAlert('success-alert');
+            }
+            if (errorAlert) {
+                closeAlert('error-alert');
+            }
+        }, 8000);
+        
+        // منع أي انيميشن غير مرغوب فيه عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // إزالة أي كلاسات قد تسبب اختفاء العناصر
+            const elements = document.querySelectorAll('.prevent-flash');
+            elements.forEach(element => {
+                element.style.opacity = '1';
+                element.style.visibility = 'visible';
             });
-        }, 5000);
+        });
     </script>
+    
+    <!-- تحميل Alpine.js في النهاية عشان نتجنب مشاكل الانيميشن -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     @stack('scripts')
 </body>

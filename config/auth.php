@@ -1,4 +1,5 @@
 <?php
+// config/auth.php - إضافة guard للموظفين
 
 return [
     'defaults' => [
@@ -17,6 +18,12 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+        
+        // إضافة guard للموظفين
+        'employee' => [
+            'driver' => 'session',
+            'provider' => 'employees',
+        ],
     ],
 
     'providers' => [
@@ -29,6 +36,12 @@ return [
         'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
+        ],
+        
+        // إضافة provider للموظفين
+        'employees' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Employee::class,
         ],
     ],
 
@@ -43,6 +56,14 @@ return [
         'admins' => [
             'provider' => 'admins',
             'table' => 'admin_password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        
+        // إضافة password broker للموظفين
+        'employees' => [
+            'provider' => 'employees',
+            'table' => 'employee_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
