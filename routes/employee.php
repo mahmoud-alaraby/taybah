@@ -63,10 +63,33 @@ Route::middleware('employee.auth')->group(function () {
             ->name('employee.customer-movement.print');
     });
 
-    Route::middleware('employee.permission:potential_customers')->group(function () {
-        Route::get('/potential-customers', function () {
-            return view('employee.systems.potential-customers');
-        })->name('employee.potential-customers');
+Route::middleware('employee.permission:potential_customers')->group(function () {
+        Route::get('/potential-customers', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'index'])
+            ->name('employee.potential-customers');
+
+        Route::post('/potential-customers', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'store'])
+            ->name('employee.potential-customers.store');
+
+        Route::get('/potential-customers/edit/{potentialCustomer}', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'edit'])
+            ->name('employee.potential-customers.edit');
+
+        Route::put('/potential-customers/{potentialCustomer}', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'update'])
+            ->name('employee.potential-customers.update');
+
+        Route::delete('/potential-customers/{potentialCustomer}', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'destroy'])
+            ->name('employee.potential-customers.destroy');
+
+        Route::put('/potential-customers/{potentialCustomer}/classifications', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'updateClassifications'])
+            ->name('employee.potential-customers.classifications');
+
+        Route::post('/potential-customers/{potentialCustomer}/quick-classification', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'quickClassification'])
+            ->name('employee.potential-customers.quick-classification');
+
+        Route::get('/potential-customers/stats', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'getClassificationStats'])
+            ->name('employee.potential-customers.stats');
+
+        Route::get('/potential-customers/print', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'printReport'])
+            ->name('employee.potential-customers.print');
     });
 
     Route::middleware('employee.permission:stopwatch_system')->group(function () {

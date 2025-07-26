@@ -87,4 +87,30 @@ Route::middleware('admin.auth')->group(function () {
         
         Route::get('/print', [CustomerMovementController::class, 'printReport'])->name('print');
     });
+
+
+
+    // إدارة العملاء المحتملين
+    Route::prefix('potential-customers')->name('admin.potential-customers.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'index'])->name('index');
+        
+        Route::get('/create', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'create'])->name('create');
+        
+        Route::post('/', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'store'])->name('store');
+        
+        Route::get('/{potentialCustomer}/edit', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'edit'])->name('edit');
+        
+        Route::put('/{potentialCustomer}', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'update'])->name('update');
+        
+        Route::delete('/{potentialCustomer}', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'destroy'])->name('destroy');
+        
+        Route::put('/{potentialCustomer}/classifications', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'updateClassifications'])->name('classifications');
+        
+        Route::post('/bulk-classifications', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'bulkUpdateClassifications'])->name('bulk-classifications');
+        
+        Route::get('/stats', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'getClassificationStats'])->name('stats');
+        
+        Route::get('/print', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'printReport'])->name('print');
+    });
+    
 });
