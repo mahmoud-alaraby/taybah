@@ -124,7 +124,13 @@
                                 <i class="fas fa-user-tag ml-3 text-sm"></i>
                                 إدارة الأدوار
                             </a>
+
                             
+                            <a href="{{ route('admin.receipts-payments.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-money-bill-wave ml-3 text-sm"></i>
+    المقبوضات والمدفوعات
+</a>
                             <div class="mt-6 pt-6 border-t border-gray-700">
                                 <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf
