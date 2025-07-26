@@ -4,6 +4,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Employee\AuthController;
 use App\Http\Controllers\Employee\DashboardController;
+use App\Http\Controllers\Employee\CustomerMovementController;
 
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
@@ -40,9 +41,26 @@ Route::middleware('employee.auth')->group(function () {
     });
 
     Route::middleware('employee.permission:customer_movement')->group(function () {
-        Route::get('/customer-movement', function () {
-            return view('employee.systems.customer-movement');
-        })->name('employee.customer-movement');
+        Route::get('/customer-movement', [CustomerMovementController::class, 'index'])
+            ->name('employee.customer-movement');
+
+        Route::post('/customer-movement', [CustomerMovementController::class, 'store'])
+            ->name('employee.customer-movement.store');
+
+        Route::get('/customer-movement/edit/{customerMovement}', [CustomerMovementController::class, 'edit'])
+            ->name('employee.customer-movement.edit');
+
+        Route::put('/customer-movement/{customerMovement}', [CustomerMovementController::class, 'update'])
+            ->name('employee.customer-movement.update');
+
+        Route::delete('/customer-movement/{customerMovement}', [CustomerMovementController::class, 'destroy'])
+            ->name('employee.customer-movement.destroy');
+
+        Route::post('/customer-movement/target', [CustomerMovementController::class, 'updateTarget'])
+            ->name('employee.customer-movement.target');
+
+        Route::get('/customer-movement/print', [CustomerMovementController::class, 'printReport'])
+            ->name('employee.customer-movement.print');
     });
 
     Route::middleware('employee.permission:potential_customers')->group(function () {

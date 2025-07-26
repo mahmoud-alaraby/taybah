@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ReceiptsPaymentsController;
+use App\Http\Controllers\Admin\CustomerMovementController;
 
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
@@ -66,5 +67,24 @@ Route::middleware('admin.auth')->group(function () {
         Route::delete('/payment/{payment}', [ReceiptsPaymentsController::class, 'deletePayment'])->name('payment.delete');
         
         Route::get('/print', [ReceiptsPaymentsController::class, 'printReport'])->name('print');
+    });
+
+    // إدارة حركة العملاء
+    Route::prefix('customer-movement')->name('admin.customer-movement.')->group(function () {
+        Route::get('/', [CustomerMovementController::class, 'index'])->name('index');
+        
+        Route::get('/create', [CustomerMovementController::class, 'create'])->name('create');
+        
+        Route::post('/', [CustomerMovementController::class, 'store'])->name('store');
+        
+        Route::get('/{customerMovement}/edit', [CustomerMovementController::class, 'edit'])->name('edit');
+        
+        Route::put('/{customerMovement}', [CustomerMovementController::class, 'update'])->name('update');
+        
+        Route::delete('/{customerMovement}', [CustomerMovementController::class, 'destroy'])->name('destroy');
+        
+        Route::post('/target', [CustomerMovementController::class, 'updateTarget'])->name('target');
+        
+        Route::get('/print', [CustomerMovementController::class, 'printReport'])->name('print');
     });
 });
