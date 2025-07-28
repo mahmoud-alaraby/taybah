@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Employee\AuthController;
 use App\Http\Controllers\Employee\DashboardController;
 use App\Http\Controllers\Employee\CustomerMovementController;
-
+use App\Http\Controllers\Employee\PhotoGraphyBookingController;
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
@@ -157,4 +157,23 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
             return view('employee.systems.montage-follow-up');
         })->name('employee.montage-follow-up');
     });
+
+    // الكود المُصحح:
+
+Route::group(['middleware' => 'employee.auth'], function () {
+    Route::prefix('photography-booking')->name('employee.photography-booking.')->group(function () {
+        Route::get('/', [PhotoGraphyBookingController::class, 'index'])->name('index');
+        Route::get('/create', [PhotoGraphyBookingController::class, 'create'])->name('create');
+        Route::post('/', [PhotoGraphyBookingController::class, 'store'])->name('store');
+        Route::get('/{photographyBooking}', [PhotoGraphyBookingController::class, 'show'])->name('show');
+        Route::get('/{photographyBooking}/edit', [PhotoGraphyBookingController::class, 'edit'])->name('edit');
+        Route::put('/{photographyBooking}', [PhotoGraphyBookingController::class, 'update'])->name('update');
+        Route::delete('/{photographyBooking}', [PhotoGraphyBookingController::class, 'destroy'])->name('destroy');
+    });
 });
+
+});
+
+
+
+   

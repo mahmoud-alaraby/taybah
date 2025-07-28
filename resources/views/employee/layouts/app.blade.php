@@ -145,14 +145,82 @@
                                     التشغيل العام
                                 </a>
                             @endif
-                            
-                            @if(auth('employee')->user()->hasPermission('photography_booking'))
-                                <a href="{{ route('employee.photography-booking') }}" 
-                                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.photography-booking') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                    <i class="fas fa-camera ml-3 text-sm"></i>
-                                    حجز التصوير والمونتاج
-                                </a>
-                            @endif
+<!-- حجوزات التصوير والمونتاج -->
+@php
+    $hasPhotographyPermission = auth()->guard('employee')->user()->roles()->whereHas('permissions', function($q) {
+        $q->where('name', 'photography_booking_manage');
+    })->exists();
+    
+    $hasMontagePermission = auth()->guard('employee')->user()->roles()->whereHas('permissions', function($q) {
+        $q->where('name', 'montage_booking_manage');
+    })->exists();
+@endphp
+
+@if($hasPhotographyPermission || $hasMontagePermission)
+    <a href="{{ route('employee.photography-booking.index') }}" 
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-camera ml-3 text-sm"></i>
+        <span class="flex-1">حجوزات التصوير والمونتاج</span>
+        @php
+            try {
+                $myActiveBookings = \DB::table('photography_bookings')
+                    ->where('assigned_person_id', auth()->guard('employee')->id())
+                    ->where('status', 'in_progress')
+                    ->count();
+            } catch (Exception $e) {
+                $myActiveBookings = 0;
+            }
+        @endphp
+        @if($myActiveBookings > 0)
+            <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2">{{ $myActiveBookings }}</span>
+        @endif
+    </a>
+@endif
+
+@if($hasPhotographyPermission || $hasMontagePermission)
+    <a href="{{ route('employee.photography-booking.index') }}" 
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-camera ml-3 text-sm"></i>
+        <div class="flex items-center justify-between w-full">
+            <span>
+                @if($hasPhotographyPermission && $hasMontagePermission)
+                    حجوزات التصوير والمونتاج
+                @elseif($hasPhotographyPermission)
+                    حجوزات التصوير
+                @else
+                    حجوزات المونتاج
+                @endif
+            </span>
+            <div class="flex items-center gap-2 ml-2">
+                @if($hasPhotographyPermission && $hasMontagePermission)
+                    <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">كلاهما</span>
+                @elseif($hasPhotographyPermission)
+                    <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">تصوير</span>
+                @else
+                    <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">مونتاج</span>
+                @endif
+                
+                @php
+                    try {
+                        $myActiveBookings = \DB::table('photography_bookings')
+                            ->where('assigned_person_id', auth()->guard('employee')->id())
+                            ->where('status', 'in_progress')
+                            ->count();
+                    } catch (Exception $e) {
+                        $myActiveBookings = 0;
+                    }
+                @endphp
+                @if($myActiveBookings > 0)
+                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ $myActiveBookings }}</span>
+                @endif
+            </div>
+        </div>
+    </a>
+@endif
+
+
+
+
                             
                             @if(auth('employee')->user()->hasPermission('designers_account'))
                                 <a href="{{ route('employee.designers-account') }}" 

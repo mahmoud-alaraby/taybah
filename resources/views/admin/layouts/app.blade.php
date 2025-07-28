@@ -41,7 +41,8 @@
     
     <!-- Alpine.js -->
     <!-- نأخر تحميل Alpine.js عشان نتجنب مشاكل الانميشن -->
-    
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
         body { 
             font-family: 'Cairo', sans-serif; 
@@ -145,6 +146,32 @@
                                 <i class="fas fa-user-plus ml-3 text-sm"></i>
                                 العملاء المحتملين
                             </a>
+<a href="{{ route('admin.operation-system.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-calendar-check ml-3 text-sm"></i>
+    نظام التشغيل العام
+</a>
+
+
+   <a href="{{ route('admin.photography-booking.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-camera ml-3 text-sm"></i>
+    <span class="flex-1">حجوزات التصوير والمونتاج</span>
+    @if(class_exists('\App\Models\BookingNotification'))
+        @php
+            try {
+                $unreadCount = \App\Models\BookingNotification::unread()
+                    ->forAdmin(auth()->guard('admin')->id())
+                    ->count();
+            } catch (Exception $e) {
+                $unreadCount = 0;
+            }
+        @endphp
+        @if($unreadCount > 0)
+            <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2">{{ $unreadCount }}</span>
+        @endif
+    @endif
+</a>
 
 
                             <div class="mt-6 pt-6 border-t border-gray-700">

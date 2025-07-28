@@ -8,7 +8,8 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ReceiptsPaymentsController;
 use App\Http\Controllers\Admin\CustomerMovementController;
-
+use App\Http\Controllers\Admin\OperationSystemController;
+use App\Http\Controllers\Admin\PhotoGraphyBookingController;
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
@@ -112,5 +113,37 @@ Route::middleware('admin.auth')->group(function () {
         
         Route::get('/print', [App\Http\Controllers\Admin\PotentialCustomerController::class, 'printReport'])->name('print');
     });
+
+      
+    // مسارات نظام التشغيل العام
+  
+    Route::prefix('operation-system')->name('admin.operation-system.')->group(function () {
+        Route::get('/', [OperationSystemController::class, 'index'])->name('index');
+        Route::get('/create', [OperationSystemController::class, 'create'])->name('create');
+        Route::post('/', [OperationSystemController::class, 'store'])->name('store');
+        Route::get('/{id}', [OperationSystemController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [OperationSystemController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [OperationSystemController::class, 'update'])->name('update');
+        Route::delete('/{id}', [OperationSystemController::class, 'destroy'])->name('destroy');
+    });
+
     
+   
+      
+     
+      // حجوزات التصوير والمونتاج - ROUTES المُصححة
+Route::prefix('photography-booking')->name('admin.photography-booking.')->group(function () {
+    Route::get('/', [PhotoGraphyBookingController::class, 'index'])->name('index');
+    Route::get('/create', [PhotoGraphyBookingController::class, 'create'])->name('create');
+    Route::post('/', [PhotoGraphyBookingController::class, 'store'])->name('store');
+    Route::get('/{photographyBooking}', [PhotoGraphyBookingController::class, 'show'])->name('show');
+    Route::get('/{photographyBooking}/edit', [PhotoGraphyBookingController::class, 'edit'])->name('edit');
+    Route::put('/{photographyBooking}', [PhotoGraphyBookingController::class, 'update'])->name('update');
+    Route::delete('/{photographyBooking}', [PhotoGraphyBookingController::class, 'destroy'])->name('destroy');
+    
+    // Routes الإشعارات
+    Route::get('/notifications', [PhotoGraphyBookingController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/{notification}/read', [PhotoGraphyBookingController::class, 'markNotificationRead'])->name('notification.read');
+});
+
 });
