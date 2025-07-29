@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\ReceiptsPaymentsController;
 use App\Http\Controllers\Admin\CustomerMovementController;
 use App\Http\Controllers\Admin\OperationSystemController;
 use App\Http\Controllers\Admin\PhotoGraphyBookingController;
+use App\Http\Controllers\Admin\TaskController as AdminTaskController ;
+
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
@@ -145,5 +147,19 @@ Route::prefix('photography-booking')->name('admin.photography-booking.')->group(
     Route::get('/notifications', [PhotoGraphyBookingController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{notification}/read', [PhotoGraphyBookingController::class, 'markNotificationRead'])->name('notification.read');
 });
+
+// سيسام المهام 
+
+// مسارات الأدمن
+Route::prefix('admin')->name('admin.')->group(function () {
+
+
+    Route::get('/tasks', [AdminTaskController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [AdminTaskController::class, 'store'])->name('tasks.store');
+    Route::patch('/tasks/{task}', [AdminTaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [AdminTaskController::class, 'destroy'])->name('tasks.destroy');
+
+});
+
 
 });

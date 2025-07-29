@@ -43,6 +43,7 @@
     <!-- نأخر تحميل Alpine.js عشان نتجنب مشاكل الانميشن -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+
     <style>
         body { 
             font-family: 'Cairo', sans-serif; 
@@ -126,6 +127,12 @@
                                 إدارة الأدوار
                             </a>
 
+                            <!-- رابط قائمة المهام الجديد -->
+                            <a href="{{ route('admin.tasks.index') }}" 
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                <i class="fas fa-tasks ml-3 text-sm"></i>
+                                قائمة المهام
+                            </a>
 
                             <a href="{{ route('admin.receipts-payments.index') }}" 
    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -133,13 +140,11 @@
     المقبوضات والمدفوعات
 </a>
 
-
 <a href="{{ route('admin.customer-movement.index') }}" 
    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.customer-movement.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
     <i class="fas fa-users ml-3 text-sm"></i>
     متابعة حركة العملاء
 </a>
-
 
                             <a href="{{ route('admin.potential-customers.index') }}" 
                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.potential-customers.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -151,7 +156,6 @@
     <i class="fas fa-calendar-check ml-3 text-sm"></i>
     نظام التشغيل العام
 </a>
-
 
    <a href="{{ route('admin.photography-booking.index') }}" 
    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -172,7 +176,6 @@
         @endif
     @endif
 </a>
-
 
                             <div class="mt-6 pt-6 border-t border-gray-700">
                                 <form method="POST" action="{{ route('admin.logout') }}">

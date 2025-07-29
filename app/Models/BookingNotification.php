@@ -1,5 +1,4 @@
 <?php
-// app/Models/BookingNotification.php
 
 namespace App\Models;
 
@@ -9,8 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class BookingNotification extends Model
 {
     use HasFactory;
-
-    protected $table = 'booking_notifications';
 
     protected $fillable = [
         'booking_id',

@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
-    {{-- Header Section - نفس الكود السابق --}}
+    {{-- Header Section --}}
     <div class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0">
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    {{-- Statistics Cards - نفس الكود السابق --}}
+    {{-- Statistics Cards --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        {{-- Filters Section - نفس الكود السابق --}}
+        {{-- Filters Section --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
             <div class="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 flex items-center">
@@ -196,16 +196,25 @@
             </div>
         </div>
 
-        {{-- Calendar Grid - Collapsible Day Cards مع IDs فريدة --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {{-- زر لفتح/إغلاق جميع الأيام --}}
+        <div class="flex justify-center space-x-2 space-x-reverse mb-6">
+            <button onclick="toggleAllDays(true)" class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition-colors">
+                فتح جميع الأيام
+            </button>
+            <button onclick="toggleAllDays(false)" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors">
+                إغلاق جميع الأيام
+            </button>
+        </div>
+
+        {{-- Calendar Grid - Day Cards محدث ليأخذ Full Width --}}
+        <div class="space-y-4">
             @foreach($days as $index => $day)
                 @php
-                    // إنشاء ID فريد لكل كارد باستخدام التاريخ الكامل أو index
+                    // إنشاء ID فريد لكل كارد باستخدام التاريخ الكامل
                     $uniqueId = $year . '_' . $month . '_' . $day['day'];
-                    // أو يمكن استخدام: $uniqueId = 'day_' . $index;
                 @endphp
                 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $day['is_today'] ? 'ring-2 ring-yellow-400 bg-yellow-50' : ($day['is_weekend'] ? 'bg-gray-50' : '') }}">
+                <div class="w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $day['is_today'] ? 'ring-2 ring-yellow-400 bg-yellow-50' : ($day['is_weekend'] ? 'bg-gray-50' : '') }}">
                     {{-- Day Header (Always Visible) --}}
                     <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="toggleDay('{{ $uniqueId }}')">
                         <div class="flex items-center space-x-3 space-x-reverse">
@@ -219,13 +228,30 @@
                             {{-- Day Info --}}
                             <div>
                                 <h3 class="font-semibold text-gray-900">{{ $day['day_name'] }}</h3>
-                                <p class="text-sm text-gray-500">
-                                    @if($day['total_tasks'] > 0)
-                                        {{ $day['total_tasks'] }} مهمة
-                                    @else
-                                        لا توجد مهام
-                                    @endif
-                                </p>
+                                <p class="text-sm text-gray-500">{{ $day['date'] }}</p>
+                            </div>
+                            
+                            {{-- Tasks Summary --}}
+                            <div class="flex items-center space-x-4 space-x-reverse">
+                                @if($day['total_tasks'] > 0)
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            إجمالي: {{ $day['total_tasks'] }}
+                                        </span>
+                                        @if($day['design_tasks']->count() > 0)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                تصميم: {{ $day['design_tasks']->count() }}
+                                            </span>
+                                        @endif
+                                        @if($day['marketing_tasks']->count() > 0)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                تسويق: {{ $day['marketing_tasks']->count() }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-sm text-gray-400">لا توجد مهام</span>
+                                @endif
                             </div>
                         </div>
 
@@ -254,54 +280,57 @@
                     <div id="content-{{ $uniqueId }}" class="hidden">
                         {{-- Tasks Content --}}
                         @if($day['total_tasks'] > 0)
-                            <div class="p-4 pt-0 space-y-4">
-                                {{-- Design Tasks --}}
-                                @if($day['design_tasks']->count() > 0)
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-purple-600 mb-2 flex items-center">
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
-                                            </svg>
-                                            مهام التصميم ({{ $day['design_tasks']->count() }})
-                                        </h4>
-                                        <div class="space-y-2">
-                                            @foreach($day['design_tasks'] as $task)
-                                                @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'design'])
-                                            @endforeach
+                            <div class="p-4 pt-0">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {{-- Design Tasks Column --}}
+                                    @if($day['design_tasks']->count() > 0)
+                                        <div>
+                                            <h4 class="text-lg font-semibold text-purple-600 mb-4 flex items-center">
+                                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+                                                </svg>
+                                                مهام التصميم ({{ $day['design_tasks']->count() }})
+                                            </h4>
+                                            <div class="space-y-3">
+                                                @foreach($day['design_tasks'] as $task)
+                                                    @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'design'])
+                                                @endforeach
+                                            </div>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
 
-                                {{-- Marketing Tasks --}}
-                                @if($day['marketing_tasks']->count() > 0)
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-orange-600 mb-2 flex items-center">
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                                            </svg>
-                                            مهام التسويق ({{ $day['marketing_tasks']->count() }})
-                                        </h4>
-                                        <div class="space-y-2">
-                                            @foreach($day['marketing_tasks'] as $task)
-                                                @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'marketing'])
-                                            @endforeach
+                                    {{-- Marketing Tasks Column --}}
+                                    @if($day['marketing_tasks']->count() > 0)
+                                        <div>
+                                            <h4 class="text-lg font-semibold text-orange-600 mb-4 flex items-center">
+                                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                                                </svg>
+                                                مهام التسويق ({{ $day['marketing_tasks']->count() }})
+                                            </h4>
+                                            <div class="space-y-3">
+                                                @foreach($day['marketing_tasks'] as $task)
+                                                    @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'marketing'])
+                                                @endforeach
+                                            </div>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
                             </div>
                         @else
                             {{-- No Tasks Message --}}
                             <div class="p-4 pt-0">
-                                <div class="text-center py-6 text-gray-400">
-                                    <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="text-center py-8 text-gray-400">
+                                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"></path>
                                     </svg>
-                                    <p class="text-sm">لا توجد مهام في هذا اليوم</p>
-                                    <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" class="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800">
-                                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <p class="text-lg font-medium">لا توجد مهام في هذا اليوم</p>
+                                    <p class="text-sm mt-1">يمكنك إضافة مهمة جديدة بالضغط على الزر أدناه</p>
+                                    <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                         </svg>
-                                        إضافة مهمة
+                                        إضافة مهمة جديدة
                                     </a>
                                 </div>
                             </div>
@@ -324,6 +353,23 @@ function toggleDay(uniqueId) {
         return;
     }
     
+    // إغلاق جميع الكاردات الأخرى أولاً
+    const allContents = document.querySelectorAll('[id^="content-"]');
+    const allArrows = document.querySelectorAll('[id^="arrow-"]');
+    
+    allContents.forEach(otherContent => {
+        if (otherContent.id !== 'content-' + uniqueId && !otherContent.classList.contains('hidden')) {
+            otherContent.classList.add('hidden');
+        }
+    });
+    
+    allArrows.forEach(otherArrow => {
+        if (otherArrow.id !== 'arrow-' + uniqueId) {
+            otherArrow.classList.remove('rotate-180');
+        }
+    });
+    
+    // تبديل حالة الكارد الحالي
     if (content.classList.contains('hidden')) {
         // فتح
         content.classList.remove('hidden');
@@ -335,7 +381,7 @@ function toggleDay(uniqueId) {
     }
 }
 
-// إضافة وظيفة لفتح/إغلاق جميع الأيام (اختياري)
+// إضافة وظيفة لفتح/إغلاق جميع الأيام
 function toggleAllDays(open = true) {
     @foreach($days as $index => $day)
         @php
@@ -356,29 +402,34 @@ function toggleAllDays(open = true) {
     @endforeach
 }
 
-// فتح الأيام التي بها مهام تلقائياً عند تحميل الصفحة (اختياري)
+// تحسين تجربة المستخدم - إضافة تأثيرات الانتقال
 document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تأثير انتقال للمحتوى القابل للطي
+    const allContents = document.querySelectorAll('[id^="content-"]');
+    allContents.forEach(content => {
+        content.style.transition = 'all 0.3s ease-in-out';
+    });
+    
+    // فتح الأيام التي بها مهام تلقائياً عند تحميل الصفحة (اختياري)
+    // يمكنك إزالة هذا الجزء إذا كنت لا تريد فتح أي كاردات تلقائياً
+    /*
     @foreach($days as $index => $day)
         @if($day['total_tasks'] > 0)
             @php
                 $uniqueId = $year . '_' . $month . '_' . $day['day'];
             @endphp
-            // toggleDay('{{ $uniqueId }}');
+            toggleDay('{{ $uniqueId }}');
         @endif
     @endforeach
+    */
+});
+
+// إضافة إمكانية الإغلاق بالضغط على ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        toggleAllDays(false);
+    }
 });
 </script>
-
-{{-- زر لفتح/إغلاق جميع الأيام (اختياري) --}}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-    <div class="flex justify-center space-x-2 space-x-reverse">
-        <button onclick="toggleAllDays(true)" class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition-colors">
-            فتح جميع الأيام
-        </button>
-        <button onclick="toggleAllDays(false)" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors">
-            إغلاق جميع الأيام
-        </button>
-    </div>
-</div>
 
 @endsection
