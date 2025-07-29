@@ -12,62 +12,54 @@ use Illuminate\Support\Facades\Auth;
 
 class PhotoGraphyBookingController extends Controller
 {
+
     public function index(Request $request)
     {
         $employee = Auth::guard('employee')->user();
-        
+
         $query = PhotoGraphyBooking::query();
-        
-        // تصفية حسب الحالة
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
-        // تصفية حسب اسم العميل
         if ($request->filled('client_name')) {
             $query->where('client_name', 'like', '%' . $request->client_name . '%');
         }
-        
-        // تصفية حسب التاريخ
         if ($request->filled('date_from')) {
             $query->whereDate('booking_date', '>=', $request->date_from);
         }
-        
         if ($request->filled('date_to')) {
             $query->whereDate('booking_date', '<=', $request->date_to);
         }
-        
-        // الفلاتر الجديدة للموظف
+
+        // الفلتر المعتمد كليًا على الموظف الحالي
         if ($request->filled('booking_filter')) {
             switch ($request->booking_filter) {
                 case 'assigned_by_admin':
-                    // حجوزات أضافني المسئول فيها
                     $query->where('assigned_person_id', $employee->id)
-                          ->whereNotNull('created_by') // أنشأها المدير
-                          ->whereNull('created_by_employee'); // لم ينشأها موظف
+                          ->whereNotNull('created_by')
+                          ->whereNull('created_by_employee');
                     break;
-                    
+
                 case 'created_by_me':
-                    // حجوزات أضفتها بنفسي
                     $query->where('created_by_employee', $employee->id);
                     break;
-                    
+
                 case 'not_assigned_to_me':
-                    // حجوزات لم أضفها أو لم تُسند إلي
-                    $query->where(function($q) use ($employee) {
-                        $q->where(function($subQ) use ($employee) {
+                    $query->where(function ($q) use ($employee) {
+                        $q->where(function ($subQ) use ($employee) {
                             $subQ->where('assigned_person_id', '!=', $employee->id)
-                                 ->orWhereNull('assigned_person_id');
-                        })->where(function($subQ) use ($employee) {
+                                ->orWhereNull('assigned_person_id');
+                        })->where(function ($subQ) use ($employee) {
                             $subQ->where('created_by_employee', '!=', $employee->id)
-                                 ->orWhereNull('created_by_employee');
+                                ->orWhereNull('created_by_employee');
                         });
                     });
                     break;
-                    
+
+                case 'all':
                 default:
-                    // عرض جميع الحجوزات المتاحة للموظف
-                    $query->where(function($q) use ($employee) {
+                    $query->where(function ($q) use ($employee) {
                         $q->where('assigned_person_id', $employee->id)
                           ->orWhere('created_by_employee', $employee->id)
                           ->orWhereNull('assigned_person_id');
@@ -75,40 +67,37 @@ class PhotoGraphyBookingController extends Controller
                     break;
             }
         } else {
-            // عرض جميع الحجوزات المتاحة للموظف بشكل افتراضي
-            $query->where(function($q) use ($employee) {
+            $query->where(function ($q) use ($employee) {
                 $q->where('assigned_person_id', $employee->id)
                   ->orWhere('created_by_employee', $employee->id)
                   ->orWhereNull('assigned_person_id');
             });
         }
-        
-        $bookings = $query
-            ->with(['assignedPerson', 'creator', 'employeeCreator'])
+
+        $bookings = $query->with(['assignedPerson', 'creator', 'employeeCreator'])
             ->orderBy('booking_date', 'desc')
             ->orderBy('booking_time', 'desc')
             ->paginate(15);
-            
-        // إحصائيات الحجوزات
+
+        // إحصائيات الفئات (تحسب بناءً على الموظف الحالي)
         $stats = [
             'assigned_by_admin' => PhotoGraphyBooking::where('assigned_person_id', $employee->id)
-                ->whereNotNull('created_by')
-                ->whereNull('created_by_employee')
-                ->count(),
+                ->whereNotNull('created_by')->whereNull('created_by_employee')->count(),
             'created_by_me' => PhotoGraphyBooking::where('created_by_employee', $employee->id)->count(),
-            'not_assigned_to_me' => PhotoGraphyBooking::where(function($q) use ($employee) {
-                $q->where(function($subQ) use ($employee) {
+            'not_assigned_to_me' => PhotoGraphyBooking::where(function ($q) use ($employee) {
+                $q->where(function ($subQ) use ($employee) {
                     $subQ->where('assigned_person_id', '!=', $employee->id)
-                         ->orWhereNull('assigned_person_id');
-                })->where(function($subQ) use ($employee) {
+                        ->orWhereNull('assigned_person_id');
+                })->where(function ($subQ) use ($employee) {
                     $subQ->where('created_by_employee', '!=', $employee->id)
-                         ->orWhereNull('created_by_employee');
+                        ->orWhereNull('created_by_employee');
                 });
-            })->count()
+            })->count(),
         ];
-        
+
         return view('employee.photography-booking.index', compact('bookings', 'stats'));
     }
+
 
     public function create()
     {

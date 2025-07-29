@@ -133,6 +133,18 @@
                                 <i class="fas fa-tasks ml-3 text-sm"></i>
                                 قائمة المهام
                             </a>
+                        <!-- رابط نظام مواعيد التجديد -->
+<a href="{{ route('admin.renewal-dates.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-calendar-alt ml-3 text-sm"></i>
+    مواعيد التجديد
+    @if(isset($upcomingRenewalsCount) && $upcomingRenewalsCount > 0)
+        <span class="bg-yellow-500 text-white text-xs rounded-full px-2 py-1 mr-2">
+            {{ $upcomingRenewalsCount }}
+        </span>
+    @endif
+</a>
+
 
                             <a href="{{ route('admin.receipts-payments.index') }}" 
    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">

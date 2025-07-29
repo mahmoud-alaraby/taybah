@@ -26,7 +26,7 @@
         </div>
     </div>
 
-    <!-- Statistics Cards - التصميم المحدث مع الإحصائيات الجديدة -->
+    <!-- Statistics Cards -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
             <!-- إجمالي الحجوزات -->
@@ -41,7 +41,6 @@
                     </svg>
                 </div>
             </div>
-
             <!-- مُخصصة من المدير -->
             <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
                 <div class="flex items-center justify-between">
@@ -54,7 +53,6 @@
                     </svg>
                 </div>
             </div>
-
             <!-- أضفتها بنفسي -->
             <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg">
                 <div class="flex items-center justify-between">
@@ -67,7 +65,6 @@
                     </svg>
                 </div>
             </div>
-
             <!-- غير مُخصصة لي -->
             <div class="bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl p-4 text-white shadow-lg">
                 <div class="flex items-center justify-between">
@@ -80,7 +77,6 @@
                     </svg>
                 </div>
             </div>
-
             <!-- مكتملة -->
             <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg">
                 <div class="flex items-center justify-between">
@@ -93,7 +89,6 @@
                     </svg>
                 </div>
             </div>
-
             <!-- جاري العمل -->
             <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg">
                 <div class="flex items-center justify-between">
@@ -120,7 +115,7 @@
         <div class="p-6">
             <form method="GET" action="{{ route('employee.photography-booking.index') }}">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                    <!-- فلتر نوع الحجز - جديد -->
+                    <!-- فلتر نوع الحجز -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">نوع الحجز</label>
                         <select name="booking_filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
@@ -136,7 +131,6 @@
                             </option>
                         </select>
                     </div>
-
                     <!-- الحالة -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
@@ -147,39 +141,35 @@
                             <option value="bad_debt" {{ request('status') == 'bad_debt' ? 'selected' : '' }}>ديون معدومة</option>
                         </select>
                     </div>
-
                     <!-- اسم العميل -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
                         <input type="text" name="client_name" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
-                               value="{{ request('client_name') }}" placeholder="ابحث بالاسم">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
+                            value="{{ request('client_name') }}" placeholder="ابحث بالاسم">
                     </div>
-
                     <!-- من تاريخ -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
                         <input type="date" name="date_from" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
-                               value="{{ request('date_from') }}">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
+                            value="{{ request('date_from') }}">
                     </div>
-
                     <!-- إلى تاريخ -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
                         <input type="date" name="date_to" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
-                               value="{{ request('date_to') }}">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
+                            value="{{ request('date_to') }}">
                     </div>
                 </div>
-
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
                         <i class="fas fa-search mr-2"></i>
                         بحث
                     </button>
                     <a href="{{ route('employee.photography-booking.index') }}" 
-                       class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors text-center inline-flex items-center justify-center">
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors text-center inline-flex items-center justify-center">
                         <i class="fas fa-times mr-2"></i>
                         إلغاء
                     </a>
@@ -201,7 +191,9 @@
                 </span>
             </div>
         </div>
-
+        @php
+            $employeeId = auth('employee')->id();
+        @endphp
         @if($bookings->count() > 0)
             <!-- Desktop Table -->
             <div class="hidden lg:block overflow-x-auto">
@@ -256,15 +248,15 @@
                                     <span class="text-xs font-bold text-red-600">#{{ $booking->id }}</span>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    @if($booking->booking_type == 'assigned_by_admin')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-user-tie mr-1"></i>
-                                            مُخصص من المدير
-                                        </span>
-                                    @elseif($booking->booking_type == 'created_by_me')
+                                    @if($booking->created_by_employee == $employeeId)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                             <i class="fas fa-user-plus mr-1"></i>
                                             أضفته بنفسي
+                                        </span>
+                                    @elseif($booking->assigned_person_id == $employeeId && $booking->created_by && !$booking->created_by_employee)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-user-tie mr-1"></i>
+                                            مُخصص من المدير
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -334,19 +326,16 @@
                                 <td class="px-2 py-2 whitespace-nowrap text-xs font-medium">
                                     <div class="flex items-center gap-1">
                                         <a href="{{ route('employee.photography-booking.show', $booking) }}" 
-                                           class="text-blue-600 hover:text-blue-900 transition-colors p-1 rounded" title="عرض">
+                                            class="text-blue-600 hover:text-blue-900 transition-colors p-1 rounded" title="عرض">
                                             <i class="fas fa-eye text-xs"></i>
                                         </a>
-                                        
-                                        @if($booking->isCreatedByEmployee(Auth::guard('employee')->id()) || 
-                                            $booking->isAssignedTo(Auth::guard('employee')->id()))
+                                        @if($booking->created_by_employee == $employeeId || $booking->assigned_person_id == $employeeId)
                                             <a href="{{ route('employee.photography-booking.edit', $booking) }}" 
-                                               class="text-yellow-600 hover:text-yellow-900 transition-colors p-1 rounded" title="تعديل">
+                                                class="text-yellow-600 hover:text-yellow-900 transition-colors p-1 rounded" title="تعديل">
                                                 <i class="fas fa-edit text-xs"></i>
                                             </a>
                                         @endif
-                                        
-                                        @if($booking->isCreatedByEmployee(Auth::guard('employee')->id()))
+                                        @if($booking->created_by_employee == $employeeId)
                                             <form action="{{ route('employee.photography-booking.destroy', $booking) }}" 
                                                   method="POST" class="inline">
                                                 @csrf
@@ -376,18 +365,17 @@
                                 @if($booking->work_description)
                                     <p class="text-sm text-gray-600 mt-1">{{ Str::limit($booking->work_description, 30) }}</p>
                                 @endif
-                                
-                                <!-- نوع الحجز في الموبايل -->
+                                <!-- نوع الحجز -->
                                 <div class="mt-2">
-                                    @if($booking->booking_type == 'assigned_by_admin')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-user-tie mr-1"></i>
-                                            مُخصص من المدير
-                                        </span>
-                                    @elseif($booking->booking_type == 'created_by_me')
+                                    @if($booking->created_by_employee == $employeeId)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                             <i class="fas fa-user-plus mr-1"></i>
                                             أضفته بنفسي
+                                        </span>
+                                    @elseif($booking->assigned_person_id == $employeeId && $booking->created_by && !$booking->created_by_employee)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-user-tie mr-1"></i>
+                                            مُخصص من المدير
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -416,7 +404,6 @@
                                 @endif
                             </div>
                         </div>
-
                         <div class="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
                             <div>
                                 <span class="font-medium text-gray-900">الجوال:</span> 
@@ -447,22 +434,18 @@
                                 {{ $booking->final_delivery ? $booking->final_delivery->format('Y-m-d') : '-' }}
                             </div>
                         </div>
-
                         <div class="flex items-center justify-end gap-4">
                             <a href="{{ route('employee.photography-booking.show', $booking) }}" 
                                class="text-blue-600 hover:text-blue-900 transition-colors">
                                 <i class="fas fa-eye mr-1"></i> عرض
                             </a>
-                            
-                            @if($booking->isCreatedByEmployee(Auth::guard('employee')->id()) || 
-                                $booking->isAssignedTo(Auth::guard('employee')->id()))
+                            @if($booking->created_by_employee == $employeeId || $booking->assigned_person_id == $employeeId)
                                 <a href="{{ route('employee.photography-booking.edit', $booking) }}" 
                                    class="text-yellow-600 hover:text-yellow-900 transition-colors">
                                     <i class="fas fa-edit mr-1"></i> تعديل
                                 </a>
                             @endif
-                            
-                            @if($booking->isCreatedByEmployee(Auth::guard('employee')->id()))
+                            @if($booking->created_by_employee == $employeeId)
                                 <form action="{{ route('employee.photography-booking.destroy', $booking) }}" 
                                       method="POST" class="inline">
                                     @csrf
@@ -501,15 +484,4 @@
         @endif
     </div>
 </div>
-
-@push('scripts')
-<script>
-    // تحديث الصفحة عند تغيير فلتر نوع الحجز
-    $('select[name="booking_filter"]').change(function() {
-        if($(this).val() !== '') {
-            $(this).closest('form').submit();
-        }
-    });
-</script>
-@endpush
 @endsection

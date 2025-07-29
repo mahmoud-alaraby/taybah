@@ -100,6 +100,21 @@
                                 <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
                                 الرئيسية
                             </a>
+                              <!-- رابط قائمة المهام الجديد -->
+                            <a href="{{ route('employee.tasks.index') }}" 
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                <i class="fas fa-tasks ml-3 text-sm"></i>
+                                قائمة المهام
+                            </a>
+
+                            @if(auth('employee')->user()->hasPermission('renewal_dates'))
+    <a href="{{ route('employee.renewal-dates.index') }}" 
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.renewal-dates*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-calendar-alt ml-3 text-sm"></i>
+        مواعيد التجديد
+    </a>
+@endif
+
                             
                             @if(auth('employee')->user()->hasPermission('receipts_payments'))
                                 <a href="{{ route('employee.receipts-payments') }}" 
@@ -187,13 +202,7 @@
                                 </a>
                             @endif
                             
-                            @if(auth('employee')->user()->hasPermission('renewal_dates'))
-                                <a href="{{ route('employee.renewal-dates') }}" 
-                                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.renewal-dates') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                    <i class="fas fa-calendar-alt ml-3 text-sm"></i>
-                                    مواعيد التجديد
-                                </a>
-                            @endif
+                       
                             
                             @if(auth('employee')->user()->hasPermission('photography_costs'))
                                 <a href="{{ route('employee.photography-costs') }}" 

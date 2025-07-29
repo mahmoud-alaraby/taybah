@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\CustomerMovementController;
 use App\Http\Controllers\Admin\OperationSystemController;
 use App\Http\Controllers\Admin\PhotoGraphyBookingController;
 use App\Http\Controllers\Admin\TaskController as AdminTaskController ;
-
+use App\Http\Controllers\Admin\RenewalDateController as AdminRenewalDateController;
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
@@ -161,5 +161,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
+
+Route::prefix('renewal-dates')->name('admin.renewal-dates.')->group(function () {
+    Route::get('/', [AdminRenewalDateController::class, 'index'])->name('index');
+    Route::get('/create', [AdminRenewalDateController::class, 'create'])->name('create');
+    Route::post('/', [AdminRenewalDateController::class, 'store'])->name('store');
+    Route::get('/{renewalDate}', [AdminRenewalDateController::class, 'show'])->name('show');
+    Route::get('/{renewalDate}/edit', [AdminRenewalDateController::class, 'edit'])->name('edit');
+    Route::put('/{renewalDate}', [AdminRenewalDateController::class, 'update'])->name('update');
+    Route::delete('/{renewalDate}', [AdminRenewalDateController::class, 'destroy'])->name('destroy');
+    Route::get('/calendar/view', [AdminRenewalDateController::class, 'calendar'])->name('calendar');
+    Route::post('/{renewalDate}/complete', [AdminRenewalDateController::class, 'markCompleted'])->name('complete');
+    Route::post('/{renewalDate}/renew', [AdminRenewalDateController::class, 'renew'])->name('renew');
+});
 
 });

@@ -7,6 +7,7 @@ use App\Http\Controllers\Employee\DashboardController;
 use App\Http\Controllers\Employee\CustomerMovementController;
 use App\Http\Controllers\Employee\PhotoGraphyBookingController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
+use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateController ;
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
@@ -137,9 +138,19 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
     });
 
     Route::middleware('employee.permission:renewal_dates')->group(function () {
-        Route::get('/renewal-dates', function () {
-            return view('employee.systems.renewal-dates');
-        })->name('employee.renewal-dates');
+    Route::prefix('renewal-dates')->name('employee.renewal-dates.')->group(function () {
+        Route::get('/', [EmployeeRenewalDateController::class, 'index'])->name('index');
+        Route::get('/create', [EmployeeRenewalDateController::class, 'create'])->name('create');
+        Route::post('/', [EmployeeRenewalDateController::class, 'store'])->name('store');
+        Route::get('/{renewalDate}', [EmployeeRenewalDateController::class, 'show'])->name('show');
+        Route::get('/{renewalDate}/edit', [EmployeeRenewalDateController::class, 'edit'])->name('edit');
+        Route::put('/{renewalDate}', [EmployeeRenewalDateController::class, 'update'])->name('update');
+        Route::delete('/{renewalDate}', [EmployeeRenewalDateController::class, 'destroy'])->name('destroy');
+        Route::get('/calendar/view', [EmployeeRenewalDateController::class, 'calendar'])->name('calendar');
+        Route::post('/{renewalDate}/complete', [EmployeeRenewalDateController::class, 'markCompleted'])->name('complete');
+        Route::post('/{renewalDate}/renew', [EmployeeRenewalDateController::class, 'renew'])->name('renew');
+    });
+
     });
 
     Route::middleware('employee.permission:photography_costs')->group(function () {
@@ -170,11 +181,12 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
 // سيستم المهام 
 
 // مسارات الموظفين
+
 Route::prefix('employee')->name('employee.')->group(function () {
- Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
     Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
     Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
-
+    Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route الحذف
 });
 
 });

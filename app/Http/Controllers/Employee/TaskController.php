@@ -1,5 +1,8 @@
 <?php
 // app/Http/Controllers/Employee/TaskController.php
+
+
+
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
@@ -11,13 +14,10 @@ class TaskController extends Controller
 {
     public function index()
     {
-        // ترحيل المهام تلقائياً
-        DailyTask::carryOverTasks();
-        
         $today = Carbon::now()->toDateString();
         $tasks = DailyTask::whereDate('task_date', $today)
-                         ->orderBy('created_at', 'desc')
-                         ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('employee.tasks.index', compact('tasks'));
     }
@@ -42,12 +42,23 @@ class TaskController extends Controller
     public function update(DailyTask $task, Request $request)
     {
         $newStatus = $task->status === 'pending' ? 'completed' : 'pending';
-        
         $task->update([
             'status' => $newStatus,
             'completed_at' => $newStatus === 'completed' ? now() : null,
         ]);
 
         return redirect()->back();
+    }
+
+    // إضافة دالة الحذف للموظف
+    public function destroy(DailyTask $task)
+    {
+        // التأكد من أن الموظف يمكنه حذف المهمة (المهام التي أنشأها فقط)
+        if ($task->created_by_employee !== auth('employee')->id()) {
+            return redirect()->back()->with('error', 'غير مسموح لك بحذف هذه المهمة');
+        }
+
+        $task->delete();
+        return redirect()->back()->with('success', 'تم حذف المهمة بنجاح');
     }
 }
