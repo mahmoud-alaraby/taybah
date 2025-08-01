@@ -206,139 +206,165 @@
             </button>
         </div>
 
-        {{-- Calendar Grid - Day Cards محدث ليأخذ Full Width --}}
-        <div class="space-y-4">
-            @foreach($days as $index => $day)
-                @php
-                    // إنشاء ID فريد لكل كارد باستخدام التاريخ الكامل
-                    $uniqueId = $year . '_' . $month . '_' . $day['day'];
-                @endphp
-                
-                <div class="w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $day['is_today'] ? 'ring-2 ring-yellow-400 bg-yellow-50' : ($day['is_weekend'] ? 'bg-gray-50' : '') }}">
-                    {{-- Day Header (Always Visible) --}}
-                    <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="toggleDay('{{ $uniqueId }}')">
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            {{-- Day Number --}}
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 rounded-full flex items-center justify-center {{ $day['is_today'] ? 'bg-yellow-500 text-white' : 'bg-blue-100 text-blue-600' }} font-bold text-lg">
-                                    {{ $day['day'] }}
-                                </div>
+   {{-- Calendar Grid - Day Cards محدث ليأخذ Full Width --}}
+<div class="space-y-4">
+    @foreach($days as $index => $day)
+        @php
+            // إنشاء ID فريد لكل كارد باستخدام التاريخ الكامل
+            $uniqueId = $year . '_' . $month . '_' . $day['day'];
+            $dayDate = \Carbon\Carbon::parse($day['date']);
+            $isPastDayWithoutTasks = $dayDate->lt(\Carbon\Carbon::today()) && $day['total_tasks'] == 0;
+            // (ملاحظة: الأيام الفارغة الماضية لا تظهر أصلاً من الكنترولر، هذا شرط فقط للوضوح)
+        @endphp
+        
+        {{-- نتأكد هذا اليوم له مهام او انه اليوم الحالي او مستقبلي --}}
+        @if(!$isPastDayWithoutTasks)
+            <div class="w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $day['is_today'] ? 'ring-2 ring-yellow-400 bg-yellow-50' : ($day['is_weekend'] ? 'bg-gray-50' : '') }}">
+                {{-- رأس اليوم --}}
+                <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="toggleDay('{{ $uniqueId }}')">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        {{-- رقم اليوم --}}
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center {{ $day['is_today'] ? 'bg-yellow-500 text-white' : 'bg-blue-100 text-blue-600' }} font-bold text-lg">
+                                {{ $day['day'] }}
                             </div>
-                            
-                            {{-- Day Info --}}
-                            <div>
-                                <h3 class="font-semibold text-gray-900">{{ $day['day_name'] }}</h3>
-                                <p class="text-sm text-gray-500">{{ $day['date'] }}</p>
-                            </div>
-                            
-                            {{-- Tasks Summary --}}
-                            <div class="flex items-center space-x-4 space-x-reverse">
-                                @if($day['total_tasks'] > 0)
-                                    <div class="flex items-center space-x-2 space-x-reverse">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            إجمالي: {{ $day['total_tasks'] }}
+                        </div>
+                        
+                        {{-- معلومات اليوم --}}
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ $day['day_name'] }}</h3>
+                            <p class="text-sm text-gray-500">{{ $day['date'] }}</p>
+                        </div>
+                        
+                        {{-- ملخص المهام --}}
+                        <div class="flex items-center space-x-4 space-x-reverse">
+                            @if($day['total_tasks'] > 0)
+                                <div class="flex items-center space-x-2 space-x-reverse">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        إجمالي: {{ $day['total_tasks'] }}
+                                    </span>
+                                    @if($day['design_tasks'] > 0)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            تصميم: {{ $day['design_tasks'] }}
                                         </span>
-                                        @if($day['design_tasks']->count() > 0)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                تصميم: {{ $day['design_tasks']->count() }}
-                                            </span>
-                                        @endif
-                                        @if($day['marketing_tasks']->count() > 0)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                تسويق: {{ $day['marketing_tasks']->count() }}
-                                            </span>
-                                        @endif
-                                    </div>
+                                    @endif
+                                    @if($day['marketing_tasks'] > 0)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                            تسويق: {{ $day['marketing_tasks'] }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                {{-- اليوم حر إذا اليوم الحالي أو مستقبلي وبدون مهام --}}
+                                @if($dayDate->gte(\Carbon\Carbon::today()))
+                                    <span class="text-green-600 font-semibold">اليوم حر</span>
                                 @else
-                                    <span class="text-sm text-gray-400">لا توجد مهام</span>
+                                    <span class="text-gray-400">لا توجد مهام</span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- أزرار الإضافة والطباعة --}}
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        {{-- زر إضافة مهمة --}}
+                        <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" 
+                           onclick="event.stopPropagation()"
+                           class="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors" 
+                           title="إضافة مهمة">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </a>
+
+                        {{-- سهم تبديل التفاصيل --}}
+                        <div class="p-2">
+                            <svg id="arrow-{{ $uniqueId }}" class="w-5 h-5 text-gray-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- المحتوى القابل للطي --}}
+                <div id="content-{{ $uniqueId }}" class="hidden">
+                    @if($day['total_tasks'] > 0)
+                        <div class="p-4 pt-0">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {{-- مهام التصميم --}}
+                                @if($day['design_tasks'] > 0)
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-purple-600 mb-4 flex items-center">
+                                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+                                            </svg>
+                                            مهام التصميم ({{ $day['design_tasks'] }})
+                                        </h4>
+                                        <div class="space-y-3">
+                                            @foreach($day['tasks']->where('task_type', 'design') as $task)
+                                                @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'design'])
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- مهام التسويق --}}
+                                @if($day['marketing_tasks'] > 0)
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-orange-600 mb-4 flex items-center">
+                                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                                            </svg>
+                                            مهام التسويق ({{ $day['marketing_tasks'] }})
+                                        </h4>
+                                        <div class="space-y-3">
+                                            @foreach($day['tasks']->where('task_type', 'marketing') as $task)
+                                                @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'marketing'])
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </div>
-
-                        {{-- Toggle Button & Add Button --}}
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            {{-- Add Button --}}
-                            <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" 
-                               onclick="event.stopPropagation()"
-                               class="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors" 
-                               title="إضافة مهمة">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    @else
+                        {{-- رسالة لا توجد مهام إذا لم يكن اليوم الحالي أو مستقبل --}}
+                        <div class="p-4 pt-0">
+                            <div class="text-center py-8 text-gray-400">
+                                <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"></path>
                                 </svg>
-                            </a>
-
-                            {{-- Toggle Arrow --}}
-                            <div class="p-2">
-                                <svg id="arrow-{{ $uniqueId }}" class="w-5 h-5 text-gray-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
+                                <p class="text-lg font-medium">@if($dayDate->gte(\Carbon\Carbon::today())) اليوم حر @else لا توجد مهام في هذا اليوم @endif</p>
+                                <p class="text-sm mt-1">يمكنك إضافة مهمة جديدة بالضغط على الزر أدناه</p>
+                                <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    إضافة مهمة جديدة
+                                </a>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Collapsible Content --}}
-                    <div id="content-{{ $uniqueId }}" class="hidden">
-                        {{-- Tasks Content --}}
-                        @if($day['total_tasks'] > 0)
-                            <div class="p-4 pt-0">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {{-- Design Tasks Column --}}
-                                    @if($day['design_tasks']->count() > 0)
-                                        <div>
-                                            <h4 class="text-lg font-semibold text-purple-600 mb-4 flex items-center">
-                                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
-                                                </svg>
-                                                مهام التصميم ({{ $day['design_tasks']->count() }})
-                                            </h4>
-                                            <div class="space-y-3">
-                                                @foreach($day['design_tasks'] as $task)
-                                                    @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'design'])
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- Marketing Tasks Column --}}
-                                    @if($day['marketing_tasks']->count() > 0)
-                                        <div>
-                                            <h4 class="text-lg font-semibold text-orange-600 mb-4 flex items-center">
-                                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                                                </svg>
-                                                مهام التسويق ({{ $day['marketing_tasks']->count() }})
-                                            </h4>
-                                            <div class="space-y-3">
-                                                @foreach($day['marketing_tasks'] as $task)
-                                                    @include('admin.operation-system.partials.task-card', ['task' => $task, 'type' => 'marketing'])
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @else
-                            {{-- No Tasks Message --}}
-                            <div class="p-4 pt-0">
-                                <div class="text-center py-8 text-gray-400">
-                                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"></path>
-                                    </svg>
-                                    <p class="text-lg font-medium">لا توجد مهام في هذا اليوم</p>
-                                    <p class="text-sm mt-1">يمكنك إضافة مهمة جديدة بالضغط على الزر أدناه</p>
-                                    <a href="{{ route('admin.operation-system.create', ['date' => $day['date']]) }}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        إضافة مهمة جديدة
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
-            @endforeach
-        </div>
+            </div>
+        @endif
+    @endforeach
+</div>
+
+{{-- جافاسكريبت لتبديل ظهور تفاصيل اليوم --}}
+<script>
+    function toggleDay(id) {
+        const content = document.getElementById('content-' + id);
+        const arrow = document.getElementById('arrow-' + id);
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            arrow.classList.add('rotate-180');
+        } else {
+            content.classList.add('hidden');
+            arrow.classList.remove('rotate-180');
+        }
+    }
+</script>
+
     </div>
 </div>
 

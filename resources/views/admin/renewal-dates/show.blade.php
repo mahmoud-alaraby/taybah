@@ -190,31 +190,7 @@
                         $progress = $totalDays > 0 ? min(100, ($passedDays / $totalDays) * 100) : 100;
                     @endphp
 
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="text-gray-600">التقدم نحو موعد التجديد</span>
-                            <span class="font-medium">{{ number_format($progress, 1) }}%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" 
-                                 style="width: {{ $progress }}%"></div>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-3 gap-4 text-center">
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-lg font-bold text-blue-600">{{ $totalDays }}</div>
-                            <div class="text-xs text-blue-700">إجمالي الأيام</div>
-                        </div>
-                        <div class="bg-green-50 p-3 rounded-lg">
-                            <div class="text-lg font-bold text-green-600">{{ $passedDays }}</div>
-                            <div class="text-xs text-green-700">الأيام المنقضية</div>
-                        </div>
-                        <div class="bg-orange-50 p-3 rounded-lg">
-                            <div class="text-lg font-bold text-orange-600">{{ max(0, $days) }}</div>
-                            <div class="text-xs text-orange-700">الأيام المتبقية</div>
-                        </div>
-                    </div>
                 </div>
             </div>
             @endif
@@ -334,49 +310,6 @@
                 </div>
             </div>
 
-            <!-- Statistics Widget -->
-            @if($renewalDate->status === 'active')
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-sm border border-blue-200">
-                <div class="p-6 border-b border-blue-200">
-                    <h3 class="text-lg font-semibold text-blue-900 flex items-center">
-                        <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
-                        إحصائيات سريعة
-                    </h3>
-                </div>
-
-                <div class="p-6">
-                    <div class="space-y-4">
-                        @php
-                            $daysSinceCreation = now()->diffInDays($renewalDate->created_at);
-                            $daysUntilRenewal = $renewalDate->getDaysUntilRenewal();
-                        @endphp
-
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-700 text-sm">منذ الإنشاء</span>
-                            <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm font-medium">{{ $daysSinceCreation }} يوم</span>
-                        </div>
-
-                        @if($renewalDate->next_renewal_date)
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-700 text-sm">للتجديد التالي</span>
-                            <span class="bg-indigo-200 text-indigo-800 px-2 py-1 rounded text-sm font-medium">
-                                {{ now()->diffInDays($renewalDate->next_renewal_date) }} يوم
-                            </span>
-                        </div>
-                        @endif
-
-                        @if($renewalDate->amount)
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-700 text-sm">التكلفة</span>
-                            <span class="bg-green-200 text-green-800 px-2 py-1 rounded text-sm font-medium">
-                                {{ number_format($renewalDate->amount) }} ر.س
-                            </span>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 </div>

@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/CustomerMovementController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -8,7 +7,7 @@ use App\Models\CustomerMovement;
 use App\Models\CustomerMovementTarget;
 use App\Models\Employee;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class CustomerMovementController extends Controller
 {
@@ -21,63 +20,54 @@ class CustomerMovementController extends Controller
         $customerType = $request->get('customer_type');
         $workStatus = $request->get('work_status');
 
-        // الحصول على حركة العملاء للشهر المحدد
         $query = CustomerMovement::with('employee')
-                              ->forPeriod($currentYear, $currentMonth)
-                              ->orderBy('agreement_start_date', 'desc');
+            ->forPeriod($currentYear, $currentMonth)
+            ->orderBy('agreement_start_date', 'desc');
 
-        // فلترة بالموظف
         if ($employeeId) {
             $query->where('employee_id', $employeeId);
         }
-
-        // فلترة بنوع العميل
         if ($customerType) {
             $query->where('customer_type', $customerType);
         }
-
-        // فلترة بحالة العمل
         if ($workStatus) {
             $query->where('work_status', $workStatus);
         }
-
-        // البحث
         if ($search) {
             $query->search($search);
         }
 
-        // حساب الإجماليات
         $totalAgreed = CustomerMovement::getTotalAgreedForMonth($currentYear, $currentMonth, $employeeId);
-        $totalPaid = CustomerMovement::getTotalPaidForMonth($currentYear, $currentMonth, $employeeId);
-        $totalDebts = CustomerMovement::getTotalDebtsForMonth($currentYear, $currentMonth, $employeeId);
+        $totalPaid   = CustomerMovement::getTotalPaidForMonth($currentYear, $currentMonth, $employeeId);
+        $totalDebts  = CustomerMovement::getTotalDebtsForMonth($currentYear, $currentMonth, $employeeId);
 
-        // الحصول على التارجت
         $targetAmount = 0;
-        $achievementPercentage = 0;
-        
+
         if ($employeeId) {
             $target = CustomerMovementTarget::where('employee_id', $employeeId)
-                                          ->where('year', $currentYear)
-                                          ->where('month', $currentMonth)
-                                          ->first();
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->first();
             $targetAmount = $target ? $target->target_amount : 0;
         } else {
-            // إجمالي كل التارجتات للشهر
             $targetAmount = CustomerMovementTarget::where('year', $currentYear)
-                                                 ->where('month', $currentMonth)
-                                                 ->sum('target_amount');
+                ->where('month', $currentMonth)
+                ->sum('target_amount');
         }
-        
         $achievementPercentage = $targetAmount > 0 ? round(($totalAgreed / $targetAmount) * 100, 2) : 0;
 
         $movements = $query->paginate(15);
 
-        // قائمة الموظفين والخيارات للفلترة
-        $employees = Employee::active()->orderBy('name')->get();
-        $customerTypes = CustomerMovement::getCustomerTypes();
-        $workStatuses = CustomerMovement::getWorkStatuses();
+        $employees = Employee::whereHas('roles.permissions', function($q){
+                $q->where('name', 'customer_movement');
+            })
+            ->active()
+            ->orderBy('name')
+            ->get();
 
-        // قائمة الشهور للفلترة
+        $customerTypes = CustomerMovement::getCustomerTypes();
+        $workStatuses  = CustomerMovement::getWorkStatuses();
+
         $months = [
             1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
             5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
@@ -106,19 +96,27 @@ class CustomerMovementController extends Controller
 
     public function create()
     {
-        $employees = Employee::active()->orderBy('name')->get();
+        $employees = Employee::whereHas('roles.permissions', function($q){
+                $q->where('name', 'customer_movement');
+            })
+            ->active()
+            ->orderBy('name')
+            ->get();
+
         $customerTypes = CustomerMovement::getCustomerTypes();
         $workStatuses = CustomerMovement::getWorkStatuses();
-        
+
         return view('admin.customer-movement.addedit', compact(
-            'employees', 
-            'customerTypes', 
+            'employees',
+            'customerTypes',
             'workStatuses'
         ));
     }
 
     public function store(Request $request)
     {
+        Log::debug('CustomerMovementController@store called with data: ', $request->all());
+
         $request->validate([
             'employee_id' => 'nullable|exists:employees,id',
             'customer_name' => 'required|string|max:255',
@@ -165,25 +163,33 @@ class CustomerMovementController extends Controller
         ]);
 
         return redirect()->route('admin.customer-movement.index')
-                       ->with('success', 'تم إضافة حركة العميل بنجاح');
+               ->with('success', 'تم إضافة حركة العميل بنجاح');
     }
 
     public function edit(CustomerMovement $customerMovement)
     {
-        $employees = Employee::active()->orderBy('name')->get();
+        $employees = Employee::whereHas('roles.permissions', function($q){
+                $q->where('name', 'customer_movement');
+            })
+            ->active()
+            ->orderBy('name')
+            ->get();
+
         $customerTypes = CustomerMovement::getCustomerTypes();
         $workStatuses = CustomerMovement::getWorkStatuses();
-        
+
         return view('admin.customer-movement.addedit', compact(
             'customerMovement',
-            'employees', 
-            'customerTypes', 
+            'employees',
+            'customerTypes',
             'workStatuses'
         ));
     }
 
     public function update(Request $request, CustomerMovement $customerMovement)
     {
+        Log::debug('CustomerMovementController@update called with data: ', $request->all());
+
         $request->validate([
             'employee_id' => 'nullable|exists:employees,id',
             'customer_name' => 'required|string|max:255',
@@ -230,102 +236,17 @@ class CustomerMovementController extends Controller
         ]);
 
         return redirect()->route('admin.customer-movement.index')
-                       ->with('success', 'تم تحديث حركة العميل بنجاح');
+               ->with('success', 'تم تحديث حركة العميل بنجاح');
     }
+
 
     public function destroy(CustomerMovement $customerMovement)
     {
         $customerMovement->delete();
 
         return redirect()->route('admin.customer-movement.index')
-                       ->with('success', 'تم حذف حركة العميل بنجاح');
+               ->with('success', 'تم حذف حركة العميل بنجاح');
     }
 
-    public function updateTarget(Request $request)
-    {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'target_amount' => 'required|numeric|min:0',
-            'year' => 'required|integer|min:2020|max:2050',
-            'month' => 'required|integer|min:1|max:12',
-        ], [
-            'employee_id.required' => 'الموظف مطلوب',
-            'target_amount.required' => 'مبلغ التارجت مطلوب',
-            'target_amount.min' => 'التارجت لا يمكن أن يكون سالباً',
-            'year.required' => 'السنة مطلوبة',
-            'month.required' => 'الشهر مطلوب',
-        ]);
-
-        CustomerMovementTarget::updateOrCreateTarget(
-            $request->year,
-            $request->month,
-            $request->target_amount,
-            $request->employee_id
-        );
-
-        return redirect()->route('admin.customer-movement.index', [
-            'year' => $request->year,
-            'month' => $request->month,
-            'employee_id' => $request->employee_id
-        ])->with('success', 'تم تحديث التارجت بنجاح');
-    }
-
-    public function printReport(Request $request)
-    {
-        $year = $request->get('year', date('Y'));
-        $month = $request->get('month', date('n'));
-        $employeeId = $request->get('employee_id');
-
-        $query = CustomerMovement::with('employee')
-                               ->forPeriod($year, $month)
-                               ->orderBy('agreement_start_date', 'asc');
-
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
-        }
-
-        $movements = $query->get();
-
-        $totalAgreed = CustomerMovement::getTotalAgreedForMonth($year, $month, $employeeId);
-        $totalPaid = CustomerMovement::getTotalPaidForMonth($year, $month, $employeeId);
-        $totalDebts = CustomerMovement::getTotalDebtsForMonth($year, $month, $employeeId);
-
-        $targetAmount = 0;
-        $achievementPercentage = 0;
-        $selectedEmployee = null;
-
-        if ($employeeId) {
-            $selectedEmployee = Employee::find($employeeId);
-            $target = CustomerMovementTarget::where('employee_id', $employeeId)
-                                          ->where('year', $year)
-                                          ->where('month', $month)
-                                          ->first();
-            $targetAmount = $target ? $target->target_amount : 0;
-        } else {
-            $targetAmount = CustomerMovementTarget::where('year', $year)
-                                                 ->where('month', $month)
-                                                 ->sum('target_amount');
-        }
-
-        $achievementPercentage = $targetAmount > 0 ? round(($totalAgreed / $targetAmount) * 100, 2) : 0;
-
-        $months = [
-            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
-            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
-            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
-        ];
-
-        return view('admin.customer-movement.print', compact(
-            'movements',
-            'totalAgreed',
-            'totalPaid',
-            'totalDebts',
-            'targetAmount',
-            'achievementPercentage',
-            'year',
-            'month',
-            'months',
-            'selectedEmployee'
-        ));
-    }
+    // لديك تعريفات أخرى حسب حاجتك ...
 }

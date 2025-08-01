@@ -17,9 +17,27 @@
             </h1>
             <p class="text-slate-600 mt-2 text-lg">عرض جميع تفاصيل الحجز</p>
         </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-4">
+    <span class="block text-sm text-gray-500 mb-1 sm:mb-0">تم إنشاء الحجز بواسطة:</span>
+    @if($photographyBooking->employeeCreator)
+        <span class="inline-block text-md font-bold text-green-600 bg-green-50 px-2 py-1 rounded">
+            {{ $photographyBooking->employeeCreator->name }}
+        </span>
+    @elseif($photographyBooking->creator)
+        <span class="inline-block text-md font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            {{ $photographyBooking->creator->name }}
+        </span>
+    @else
+        <span class="inline-block text-md font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
+            غير محدد
+        </span>
+    @endif
+</div>
+
         <div class="flex flex-col sm:flex-row gap-3">
             <a href="{{ route('admin.photography-booking.edit', $photographyBooking) }}" 
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
@@ -174,7 +192,7 @@
     <!-- Third Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <!-- جدولة المونتاج والتسليم -->
-        <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-8 text-white shadow-xl">
+        <div class="bg-gradient-to-br from-red-500 to-red-400 rounded-2xl p-8 text-white shadow-xl">
             <div class="flex items-center mb-6">
                 <svg class="w-8 h-8 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -273,11 +291,19 @@
             <div class="bg-white bg-opacity-10 rounded-xl p-4">
                 <label class="text-sm opacity-80 block mb-1">تم الإنشاء بواسطة</label>
                 <p class="text-lg font-semibold">
-                    @if($photographyBooking->creator)
-                        {{ $photographyBooking->creator->name }}
-                    @else
-                        غير محدد
-                    @endif
+                       @if($photographyBooking->employeeCreator)
+        <span class="  ">
+            {{ $photographyBooking->employeeCreator->name }}
+        </span>
+    @elseif($photographyBooking->creator)
+        <span class="   ">
+            {{ $photographyBooking->creator->name }}
+        </span>
+    @else
+        <span class="  ">
+            غير محدد
+        </span>
+    @endif
                 </p>
             </div>
         </div>

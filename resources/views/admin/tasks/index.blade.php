@@ -14,7 +14,73 @@
             </div>
         </div>
 
-        <!-- نموذج إضافة مهمة محسن -->
+
+
+        <!-- رسائل النجاح والخطأ -->
+        @if(session('success'))
+            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 text-sm lg:text-base">
+                ✅ {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4 text-sm lg:text-base">
+                ❌ {{ session('error') }}
+            </div>
+        @endif
+    </div>
+
+<!-- Statistics Cards - ثلاث كروت فقط -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+        <!-- إجمالي المهام -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي المهام</p>
+                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->count() }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- قيد التنفيذ -->
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">قيد التنفيذ</p>
+                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'pending')->count() }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- مكتملة -->
+        <div class="bg-gradient-to-r from-green-500 to-green-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">مكتملة</p>
+                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'completed')->count() }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+            <!-- نموذج إضافة مهمة محسن -->
         <div class="bg-white p-4 lg:p-5 rounded-lg border border-gray-200 shadow-sm mb-4">
             <h3 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">➕ إضافة مهمة جديدة</h3>
             
@@ -41,75 +107,11 @@
                 <div class="flex justify-end">
                     <button type="submit" 
                             class="px-6 py-2 lg:px-8 lg:py-3 text-sm lg:text-base bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
-                        ➕ إضافة المهمة
+                         إضافة المهمة
                     </button>
                 </div>
             </form>
         </div>
-
-        <!-- رسائل النجاح والخطأ -->
-        @if(session('success'))
-            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 text-sm lg:text-base">
-                ✅ {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4 text-sm lg:text-base">
-                ❌ {{ session('error') }}
-            </div>
-        @endif
-    </div>
-
-    <!-- إحصائيات محسنة -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6">
-        <!-- إجمالي المهام -->
-        <div class="bg-blue-600 rounded-lg p-4 lg:p-6 transform hover:scale-105 transition-transform duration-200 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-2xl lg:text-3xl font-bold text-white">{{ $tasks->count() }}</div>
-                    <div class="text-sm lg:text-base text-blue-100 font-medium mt-1">إجمالي المهام</div>
-                </div>
-                <div class="text-white">
-                    <svg class="w-8 h-8 lg:w-10 lg:h-10" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        
-        <!-- قيد التنفيذ -->
-        <div class="bg-yellow-500 rounded-lg p-4 lg:p-6 transform hover:scale-105 transition-transform duration-200 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-2xl lg:text-3xl font-bold text-white">{{ $tasks->where('status', 'pending')->count() }}</div>
-                    <div class="text-sm lg:text-base text-yellow-100 font-medium mt-1">قيد التنفيذ</div>
-                </div>
-                <div class="text-white">
-                    <svg class="w-8 h-8 lg:w-10 lg:h-10" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        
-        <!-- مكتملة -->
-        <div class="bg-green-600 rounded-lg p-4 lg:p-6 transform hover:scale-105 transition-transform duration-200 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-2xl lg:text-3xl font-bold text-white">{{ $tasks->where('status', 'completed')->count() }}</div>
-                    <div class="text-sm lg:text-base text-green-100 font-medium mt-1">مكتملة</div>
-                </div>
-                <div class="text-white">
-                    <svg class="w-8 h-8 lg:w-10 lg:h-10" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- قائمة المهام المحسنة -->
     <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 lg:p-5 border-b border-gray-200">

@@ -8,7 +8,7 @@
 <div class="space-y-6">
     <!-- Classification Tabs with Stats -->
     <div class="bg-white shadow rounded-lg">
-        <div class="bg-blue-600 text-white px-4 py-3">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3">
             <h3 class="text-lg font-bold flex items-center">
                 <i class="fas fa-users ml-2"></i>
                 تصنيفات العملاء المحتملين
@@ -19,7 +19,7 @@
             <!-- All Customers Tab -->
             <div class="flex flex-wrap gap-2 mb-4">
                 <a href="{{ route('employee.potential-customers', array_merge(request()->query(), ['classification' => ''])) }}" 
-                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ !request('classification') ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ !request('classification') ? 'bg-gradient-to-r from-red-400 to-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                     <i class="fas fa-users ml-1"></i>
                     جميع العملاء
                     <span class="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs mr-1">
@@ -52,7 +52,7 @@
 
     <!-- Add New Customer Form -->
     <div class="bg-white shadow rounded-lg">
-        <div class="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 flex items-center justify-between">
             <h3 class="font-bold flex items-center">
                 <i class="fas fa-plus ml-2"></i>
                 إضافة عميل محتمل جديد
@@ -63,7 +63,7 @@
             </button>
         </div>
 
-        <div id="customerForm" class="hidden bg-blue-50 border-b border-blue-200 p-4">
+        <div id="customerForm" class="hidden bg-red-50 border-b border-red-200 p-4">
             <form action="{{ route('employee.potential-customers.store') }}" method="POST">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,7 +121,7 @@
                 </div>
                 
                 <div class="flex space-x-2 space-x-reverse mt-4">
-                    <button type="submit" class="flex-1 h-9 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
+                    <button type="submit" class="flex-1 h-9 bg-red-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
                         حفظ العميل
                     </button>
                     <button type="button" onclick="toggleForm('customerForm')" class="h-9 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
@@ -162,7 +162,7 @@
 
     <!-- Main Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 flex items-center justify-between">
             <h3 class="font-bold flex items-center">
                 <i class="fas fa-users ml-2"></i>
                 العملاء المحتملين ({{ $customers->total() }})
@@ -268,7 +268,7 @@
                     @endif
                 </p>
                 <button onclick="toggleForm('customerForm')" 
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:bg-blue-700">
                     <i class="fas fa-plus ml-2"></i>
                     إضافة أول عميل محتمل
                 </button>

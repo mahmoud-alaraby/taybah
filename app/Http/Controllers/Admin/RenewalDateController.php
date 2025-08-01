@@ -9,67 +9,70 @@ use Carbon\Carbon;
 
 class RenewalDateController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = RenewalDate::query();
+   public function index(Request $request)
+{
+    $query = RenewalDate::query();
 
-        // فلترة حسب التاريخ من
-        if ($request->filled('date_from')) {
-            $query->where('renewal_date', '>=', $request->date_from);
-        }
+    // فلترة حسب التاريخ المحدد (نفس اليوم أو بعده حسب اختيارك)
+    if ($request->filled('date')) {
+        $date = Carbon::parse($request->date)->startOfDay();
 
-        // فلترة حسب التاريخ إلى
-        if ($request->filled('date_to')) {
-            $query->where('renewal_date', '<=', $request->date_to);
-        }
+        // إذا تريد فقط الأحداث التي في ذلك اليوم بالضبط:
+        // $query->whereDate('renewal_date', $date);
 
-        // فلترة حسب الحالة
-        if ($request->filled('status')) {
+        // إذا تريد كل الأحداث بعد ذلك التاريخ (تشمل التاريخ نفسه):
+        $query->where('renewal_date', '>=', $date);
+    }
+
+    // فلترة حسب الحالة
+    if ($request->filled('status')) {
+        $allowedStatuses = ['active', 'completed', 'cancelled'];
+        if (in_array($request->status, $allowedStatuses)) {
             $query->where('status', $request->status);
         }
+    }
 
-        // فلترة حسب التكرار
-        if ($request->filled('frequency')) {
+    // فلترة حسب التكرار (اختياري)
+    if ($request->filled('frequency')) {
+        $allowedFrequencies = ['yearly', 'quarterly', 'monthly'];
+        if (in_array($request->frequency, $allowedFrequencies)) {
             $query->where('frequency', $request->frequency);
         }
-
-        // البحث في العنوان والوصف
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $renewalDates = $query->orderBy('renewal_date', 'asc')->paginate(15);
-
-        // الإحصائيات
-        $statistics = [
-            'total' => RenewalDate::count(),
-            'active' => RenewalDate::active()->count(),
-            'upcoming' => RenewalDate::upcoming(3)->count(),
-            'today' => RenewalDate::today()->count(),
-            'overdue' => RenewalDate::overdue()->count()
-        ];
-
-        // الأحداث القادمة (خلال 3 أيام)
-        $upcomingRenewals = RenewalDate::upcoming(3)->orderBy('renewal_date', 'asc')->get();
-
-        // أحداث اليوم
-        $todayRenewals = RenewalDate::today()->get();
-
-        // الأحداث المتأخرة
-        $overdueRenewals = RenewalDate::overdue()->orderBy('renewal_date', 'asc')->get();
-
-        return view('admin.renewal-dates.index', compact(
-            'renewalDates',
-            'upcomingRenewals',
-            'todayRenewals',
-            'overdueRenewals',
-            'statistics'
-        ));
     }
+
+    // فلترة نصية في العنوان أو الوصف (اختياري)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
+    }
+
+    $renewalDates = $query->orderBy('renewal_date', 'asc')->paginate(15);
+
+    // الإحصائيات وأجزاء إضافية كما هي (يمكنك تعديلها حسب حاجتك)
+    $statistics = [
+        'total' => RenewalDate::count(),
+        'active' => RenewalDate::active()->count(),
+        'upcoming' => RenewalDate::upcoming(3)->count(),
+        'today' => RenewalDate::today()->count(),
+        'overdue' => RenewalDate::overdue()->count()
+    ];
+
+    $upcomingRenewals = RenewalDate::upcoming(3)->orderBy('renewal_date', 'asc')->get();
+    $todayRenewals = RenewalDate::today()->get();
+    $overdueRenewals = RenewalDate::overdue()->orderBy('renewal_date', 'asc')->get();
+
+    return view('admin.renewal-dates.index', compact(
+        'renewalDates',
+        'upcomingRenewals',
+        'todayRenewals',
+        'overdueRenewals',
+        'statistics'
+    ));
+}
+
 
     public function create()
     {

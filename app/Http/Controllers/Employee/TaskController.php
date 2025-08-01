@@ -1,8 +1,6 @@
 <?php
 // app/Http/Controllers/Employee/TaskController.php
 
-
-
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
@@ -16,6 +14,7 @@ class TaskController extends Controller
     {
         $today = Carbon::now()->toDateString();
         $tasks = DailyTask::whereDate('task_date', $today)
+            ->where('created_by_employee', auth('employee')->id()) // إظهار المهام الخاصة بالمستخدم الحالي فقط
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -50,10 +49,9 @@ class TaskController extends Controller
         return redirect()->back();
     }
 
-    // إضافة دالة الحذف للموظف
+    // حذف المهمة مع تحقق الملكية
     public function destroy(DailyTask $task)
     {
-        // التأكد من أن الموظف يمكنه حذف المهمة (المهام التي أنشأها فقط)
         if ($task->created_by_employee !== auth('employee')->id()) {
             return redirect()->back()->with('error', 'غير مسموح لك بحذف هذه المهمة');
         }

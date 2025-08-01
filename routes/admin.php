@@ -145,6 +145,7 @@ Route::prefix('photography-booking')->name('admin.photography-booking.')->group(
     
     // Routes الإشعارات
     Route::get('/notifications', [PhotoGraphyBookingController::class, 'notifications'])->name('notifications');
+    
     Route::post('/notifications/{notification}/read', [PhotoGraphyBookingController::class, 'markNotificationRead'])->name('notification.read');
 });
 

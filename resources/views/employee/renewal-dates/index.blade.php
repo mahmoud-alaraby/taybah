@@ -262,22 +262,22 @@
                     </div>
 
                     <!-- من تاريخ -->
-                    <div>
+                    <!-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
                         <input type="date" name="date_from" 
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
                                value="{{ request('date_from') }}">
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <!-- إلى تاريخ -->
-                    <div>
+                    <!-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
                         <input type="date" name="date_to" 
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" 
                                value="{{ request('date_to') }}">
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3">

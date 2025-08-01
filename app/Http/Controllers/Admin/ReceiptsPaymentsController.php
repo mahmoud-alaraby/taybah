@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/ReceiptsPaymentsController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -9,7 +8,6 @@ use App\Models\Payment;
 use App\Models\MonthlyTarget;
 use App\Models\Employee;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReceiptsPaymentsController extends Controller
 {
@@ -20,75 +18,62 @@ class ReceiptsPaymentsController extends Controller
         $search = $request->get('search');
         $employeeId = $request->get('employee_id');
 
-        // الحصول على المقبوضات والمدفوعات للشهر المحدد
         $receiptsQuery = Receipt::with('employee')
-                              ->forPeriod($currentYear, $currentMonth)
-                              ->orderBy('date', 'desc');
-
+            ->forPeriod($currentYear, $currentMonth)
+            ->orderBy('date', 'desc');
         $paymentsQuery = Payment::with('employee')
-                              ->forPeriod($currentYear, $currentMonth)
-                              ->orderBy('date', 'desc');
+            ->forPeriod($currentYear, $currentMonth)
+            ->orderBy('date', 'desc');
 
-        // فلترة بالموظف
         if ($employeeId) {
             $receiptsQuery->where('employee_id', $employeeId);
             $paymentsQuery->where('employee_id', $employeeId);
         }
-
-        // البحث
         if ($search) {
             $receiptsQuery->search($search);
             $paymentsQuery->search($search);
         }
 
-        // حساب الإجماليات أولاً قبل pagination
         $totalReceipts = Receipt::forPeriod($currentYear, $currentMonth)
-                              ->when($employeeId, function($q) use ($employeeId) {
-                                  $q->where('employee_id', $employeeId);
-                              })
-                              ->when($search, function($q) use ($search) {
-                                  $q->search($search);
-                              })
-                              ->sum('amount');
+            ->when($employeeId, fn($q) => $q->where('employee_id', $employeeId))
+            ->when($search, fn($q) => $q->search($search))
+            ->sum('amount');
 
         $totalPayments = Payment::forPeriod($currentYear, $currentMonth)
-                              ->when($employeeId, function($q) use ($employeeId) {
-                                  $q->where('employee_id', $employeeId);
-                              })
-                              ->when($search, function($q) use ($search) {
-                                  $q->search($search);
-                              })
-                              ->sum('amount');
+            ->when($employeeId, fn($q) => $q->where('employee_id', $employeeId))
+            ->when($search, fn($q) => $q->search($search))
+            ->sum('amount');
 
-        // Pagination للعرض
         $receipts = $receiptsQuery->paginate(10, ['*'], 'receipts_page');
         $payments = $paymentsQuery->paginate(10, ['*'], 'payments_page');
 
         $netAmount = $totalReceipts - $totalPayments;
 
-        // الحصول على التارجت
         $targetAmount = 0;
         $achievementPercentage = 0;
-        
+
         if ($employeeId) {
             $monthlyTarget = MonthlyTarget::where('employee_id', $employeeId)
-                                        ->where('year', $currentYear)
-                                        ->where('month', $currentMonth)
-                                        ->first();
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->first();
             $targetAmount = $monthlyTarget ? $monthlyTarget->target_amount : 0;
             $achievementPercentage = $targetAmount > 0 ? round(($totalReceipts / $targetAmount) * 100, 2) : 0;
         } else {
-            // إجمالي كل التارجتات للشهر
             $targetAmount = MonthlyTarget::where('year', $currentYear)
-                                       ->where('month', $currentMonth)
-                                       ->sum('target_amount');
+                ->where('month', $currentMonth)
+                ->sum('target_amount');
             $achievementPercentage = $targetAmount > 0 ? round(($totalReceipts / $targetAmount) * 100, 2) : 0;
         }
 
-        // قائمة الموظفين للفلترة
-        $employees = Employee::active()->orderBy('name')->get();
+        // التعديل هنا: جلب الموظفين النشطين الديناميكي عبر البيرمشن
+        $employees = Employee::whereHas('roles.permissions', function($q){
+                $q->where('name', 'receipts_payments');
+            })
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
-        // قائمة الشهور للفلترة
         $months = [
             1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
             5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
@@ -135,7 +120,7 @@ class ReceiptsPaymentsController extends Controller
         ]);
 
         return redirect()->route('admin.receipts-payments.index')
-                       ->with('success', 'تم إضافة المقبوض بنجاح');
+            ->with('success', 'تم إضافة المقبوض بنجاح');
     }
 
     public function storePayment(Request $request)
@@ -161,7 +146,7 @@ class ReceiptsPaymentsController extends Controller
         ]);
 
         return redirect()->route('admin.receipts-payments.index')
-                       ->with('success', 'تم إضافة المدفوع بنجاح');
+            ->with('success', 'تم إضافة المدفوع بنجاح');
     }
 
     public function updateTarget(Request $request)
@@ -196,17 +181,15 @@ class ReceiptsPaymentsController extends Controller
     public function deleteReceipt(Receipt $receipt)
     {
         $receipt->delete();
-
         return redirect()->route('admin.receipts-payments.index')
-                       ->with('success', 'تم حذف المقبوض بنجاح');
+            ->with('success', 'تم حذف المقبوض بنجاح');
     }
 
     public function deletePayment(Payment $payment)
     {
         $payment->delete();
-
         return redirect()->route('admin.receipts-payments.index')
-                       ->with('success', 'تم حذف المدفوع بنجاح');
+            ->with('success', 'تم حذف المدفوع بنجاح');
     }
 
     public function printReport(Request $request)
@@ -225,7 +208,6 @@ class ReceiptsPaymentsController extends Controller
 
         $receipts = $receiptsQuery->get();
         $payments = $paymentsQuery->get();
-
         $totalReceipts = $receipts->sum('amount');
         $totalPayments = $payments->sum('amount');
         $netAmount = $totalReceipts - $totalPayments;
@@ -237,14 +219,14 @@ class ReceiptsPaymentsController extends Controller
         if ($employeeId) {
             $selectedEmployee = Employee::find($employeeId);
             $monthlyTarget = MonthlyTarget::where('employee_id', $employeeId)
-                                        ->where('year', $year)
-                                        ->where('month', $month)
-                                        ->first();
+                ->where('year', $year)
+                ->where('month', $month)
+                ->first();
             $targetAmount = $monthlyTarget ? $monthlyTarget->target_amount : 0;
         } else {
             $targetAmount = MonthlyTarget::where('year', $year)
-                                       ->where('month', $month)
-                                       ->sum('target_amount');
+                ->where('month', $month)
+                ->sum('target_amount');
         }
 
         $achievementPercentage = $targetAmount > 0 ? round(($totalReceipts / $targetAmount) * 100, 2) : 0;
@@ -254,6 +236,14 @@ class ReceiptsPaymentsController extends Controller
             5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
             9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
         ];
+
+        // التعديل هنا: الموظفين الديناميكي البيرمشن
+        $employees = Employee::whereHas('roles.permissions', function($q){
+                $q->where('name', 'receipts_payments');
+            })
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.receipts-payments.print', compact(
             'receipts',
@@ -266,7 +256,8 @@ class ReceiptsPaymentsController extends Controller
             'year',
             'month',
             'months',
-            'selectedEmployee'
+            'selectedEmployee',
+            'employees'
         ));
     }
 }

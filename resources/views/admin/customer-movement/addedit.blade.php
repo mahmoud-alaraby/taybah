@@ -5,200 +5,313 @@
 @section('page-subtitle', isset($customerMovement) ? 'تعديل بيانات حركة العميل والاتفاق' : 'إضافة حركة عميل جديد وتفاصيل الاتفاق')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow rounded-lg">
-        <div class="bg-blue-600 text-white px-6 py-4">
-            <h3 class="text-lg font-bold flex items-center">
-                <i class="fas fa-{{ isset($customerMovement) ? 'edit' : 'plus' }} ml-2"></i>
-                {{ isset($customerMovement) ? 'تعديل حركة العميل' : 'إضافة حركة عميل جديد' }}
-            </h3>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {{-- Header Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div class="bg-gradient-to-r from-red-700 to-red-800 px-6 py-5 rounded-t-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <div class="mr-4">
+                            <h1 class="text-xl sm:text-2xl font-bold text-white">
+                                {{ isset($customerMovement) ? 'تعديل حركة العميل' : 'إضافة حركة عميل جديد' }}
+                            </h1>
+                            <p class="text-red-100 text-sm mt-1">
+                                {{ isset($customerMovement) ? 'تحديث معلومات الاتفاق وتحرير بيانات العميل' : 'قم بإضافة حركة جديدة لعميل واتفاقه المالي' }}
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.customer-movement.index') }}"
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <form action="{{ isset($customerMovement) ? route('admin.customer-movement.update', $customerMovement) : route('admin.customer-movement.store') }}" method="POST" class="p-6">
-            @csrf
-            @if(isset($customerMovement))
-                @method('PUT')
-            @endif
+        {{-- Main Form Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <form action="{{ isset($customerMovement) ? route('admin.customer-movement.update', $customerMovement) : route('admin.customer-movement.store') }}"
+                  method="POST" class="p-6 sm:p-8" novalidate>
+                @csrf
+                @if(isset($customerMovement))
+                    @method('PUT')
+                @endif
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- معلومات العميل -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">معلومات العميل</h4>
-                    
+                <div class="space-y-8">
+
+                    {{-- معلومات العميل --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">الموظف المسؤول</label>
-                        <select name="employee_id" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">لا يوجد موظف محدد</option>
-                            @foreach($employees as $employee)
-                                <option value="{{ $employee->id }}" 
-                                    {{ (old('employee_id', $customerMovement->employee_id ?? '') == $employee->id) ? 'selected' : '' }}>
-                                    {{ $employee->name }} ({{ $employee->employee_id }})
-                                </option>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12a4 4 0 108 0 4 4 0 00-8 0zM12 14c-5.523 0-10 2.239-10 5v3"></path>
+                                </svg>
+                            </div>
+                            معلومات العميل
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- الموظف المسؤول --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 ml-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        الموظف المسؤول
+                                    </div>
+                                </label>
+                                <select name="employee_id"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('employee_id') border-red-600 ring-2 ring-red-200 @enderror">
+                                    <option value="">لا يوجد موظف محدد</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}" {{ (old('employee_id', $customerMovement->employee_id ?? '') == $employee->id) ? 'selected' : '' }}>
+                                            {{ $employee->name }} ({{ $employee->employee_id }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('employee_id')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            {{-- اسم العميل --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">اسم العميل <span class="text-red-600">*</span></label>
+                                <input type="text" name="customer_name" value="{{ old('customer_name', $customerMovement->customer_name ?? '') }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="أدخل اسم العميل" required>
+                                @error('customer_name')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            {{-- رقم جوال العميل --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">رقم جوال العميل <span class="text-red-600">*</span></label>
+                                <input type="text" name="customer_phone" value="{{ old('customer_phone', $customerMovement->customer_phone ?? '') }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_phone') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="مثال: 0501234567" required>
+                                @error('customer_phone')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            {{-- وصف العمل --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">وصف العمل <span class="text-red-600">*</span></label>
+                                <textarea name="work_description" rows="4"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('work_description') border-red-600 ring-2 ring-red-200 @enderror"
+                                          placeholder="وصف تفصيلي للعمل المتفق عليه" required>{{ old('work_description', $customerMovement->work_description ?? '') }}</textarea>
+                                @error('work_description')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">نوعية العميل <span class="text-red-600">*</span></label>
+                                <select name="customer_type"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_type') border-red-600 ring-2 ring-red-200 @enderror"
+                                        required>
+                                    @foreach($customerTypes as $key => $type)
+                                        <option value="{{ $key }}" {{ (old('customer_type', $customerMovement->customer_type ?? 'غير محدد') == $key) ? 'selected' : '' }}>
+                                            {{ $type }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('customer_type')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">حالة العمل <span class="text-red-600">*</span></label>
+                                <select name="work_status"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 transition-colors @error('work_status') border-red-600 ring-2 ring-red-200 @enderror"
+                                        required>
+                                    @foreach($workStatuses as $key => $status)
+                                        <option value="{{ $key }}" {{ (old('work_status', $customerMovement->work_status ?? 'جاري العمل') == $key) ? 'selected' : '' }}>
+                                            {{ $status }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('work_status')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- معلومات الاتفاق --}}
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8c1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 12 13"></path>
+                                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                                </svg>
+                            </div>
+                            معلومات الاتفاق
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">بداية الاتفاق <span class="text-red-600">*</span></label>
+                                <input type="date" name="agreement_start_date"
+                                       value="{{ old('agreement_start_date', isset($customerMovement) ? $customerMovement->agreement_start_date->format('Y-m-d') : '') }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                       required>
+                                @error('agreement_start_date')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">موعد التسليم الأولي <span class="text-red-600">*</span></label>
+                                <input type="date" name="initial_delivery_date"
+                                       value="{{ old('initial_delivery_date', isset($customerMovement) ? $customerMovement->initial_delivery_date->format('Y-m-d') : '') }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                       required>
+                                @error('initial_delivery_date')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                  clip-rule="evenodd"></path>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mt-6">
+                            <label class="block text-sm font-semibold text-gray-700">موعد التسليم النهائي <span class="text-red-600">*</span></label>
+                            <input type="date" name="final_delivery_date"
+                                   value="{{ old('final_delivery_date', isset($customerMovement) ? $customerMovement->final_delivery_date->format('Y-m-d') : '') }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                   required>
+                            @error('final_delivery_date')
+                                <p class="text-red-600 text-xs mt-1 flex items-center">
+                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                              clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <div class="space-y-2 mt-6">
+                            <label class="block text-sm font-semibold text-gray-700">المبلغ المتفق عليه (ريال) <span class="text-red-600">*</span></label>
+                            <input type="number" name="agreed_amount" step="0.01" min="0"
+                                   value="{{ old('agreed_amount', $customerMovement->agreed_amount ?? '') }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                   placeholder="0.00" required>
+                            @error('agreed_amount')
+                                <p class="text-red-600 text-xs mt-1 flex items-center">
+                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                              clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            @foreach(['first_payment'=>'الدفعة الأولى','second_payment'=>'الدفعة الثانية','third_payment'=>'الدفعة الثالثة','fourth_payment'=>'الدفعة الرابعة'] as $field=>$label)
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-gray-700">{{ $label }} (ريال)</label>
+                                    <input type="number" name="{{ $field }}" step="0.01" min="0"
+                                           value="{{ old($field, $customerMovement->$field ?? '0') }}"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('customer_name') border-red-600 ring-2 ring-red-200 @enderror"
+                                           placeholder="0.00">
+                                    @error($field)
+                                        <p class="text-red-600 text-xs mt-1 flex items-center">
+                                            <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                      clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
                             @endforeach
-                        </select>
-                        @error('employee_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">اسم العميل <span class="text-red-500">*</span></label>
-                        <input type="text" name="customer_name" value="{{ old('customer_name', $customerMovement->customer_name ?? '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                               placeholder="أدخل اسم العميل" required>
-                        @error('customer_name')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">رقم جوال العميل <span class="text-red-500">*</span></label>
-                        <input type="text" name="customer_phone" value="{{ old('customer_phone', $customerMovement->customer_phone ?? '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                               placeholder="مثال: 0501234567" required>
-                        @error('customer_phone')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">وصف العمل <span class="text-red-500">*</span></label>
-                        <textarea name="work_description" rows="4" 
-                                  class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                                  placeholder="وصف تفصيلي للعمل المتفق عليه" required>{{ old('work_description', $customerMovement->work_description ?? '') }}</textarea>
-                        @error('work_description')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">نوعية العميل <span class="text-red-500">*</span></label>
-                            <select name="customer_type" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                @foreach($customerTypes as $key => $type)
-                                    <option value="{{ $key }}" 
-                                        {{ (old('customer_type', $customerMovement->customer_type ?? 'غير محدد') == $key) ? 'selected' : '' }}>
-                                        {{ $type }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('customer_type')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">حالة العمل <span class="text-red-500">*</span></label>
-                            <select name="work_status" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                @foreach($workStatuses as $key => $status)
-                                    <option value="{{ $key }}" 
-                                        {{ (old('work_status', $customerMovement->work_status ?? 'جاري العمل') == $key) ? 'selected' : '' }}>
-                                        {{ $status }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('work_status')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <!-- معلومات الاتفاق -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">معلومات الاتفاق</h4>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">بداية الاتفاق <span class="text-red-500">*</span></label>
-                        <input type="date" name="agreement_start_date" 
-                               value="{{ old('agreement_start_date', isset($customerMovement) ? $customerMovement->agreement_start_date->format('Y-m-d') : '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                        @error('agreement_start_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">موعد التسليم الأولي <span class="text-red-500">*</span></label>
-                        <input type="date" name="initial_delivery_date" 
-                               value="{{ old('initial_delivery_date', isset($customerMovement) ? $customerMovement->initial_delivery_date->format('Y-m-d') : '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                        @error('initial_delivery_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">موعد التسليم النهائي <span class="text-red-500">*</span></label>
-                        <input type="date" name="final_delivery_date" 
-                               value="{{ old('final_delivery_date', isset($customerMovement) ? $customerMovement->final_delivery_date->format('Y-m-d') : '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                        @error('final_delivery_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ المتفق عليه (ريال) <span class="text-red-500">*</span></label>
-                        <input type="number" name="agreed_amount" step="0.01" min="0" 
-                               value="{{ old('agreed_amount', $customerMovement->agreed_amount ?? '') }}" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                               placeholder="0.00" required>
-                        @error('agreed_amount')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">الدفعة الأولى (ريال)</label>
-                            <input type="number" name="first_payment" step="0.01" min="0" 
-                                   value="{{ old('first_payment', $customerMovement->first_payment ?? '0') }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="0.00">
-                            @error('first_payment')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">الدفعة الثانية (ريال)</label>
-                            <input type="number" name="second_payment" step="0.01" min="0" 
-                                   value="{{ old('second_payment', $customerMovement->second_payment ?? '0') }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="0.00">
-                            @error('second_payment')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">الدفعة الثالثة (ريال)</label>
-                            <input type="number" name="third_payment" step="0.01" min="0" 
-                                   value="{{ old('third_payment', $customerMovement->third_payment ?? '0') }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="0.00">
-                            @error('third_payment')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">الدفعة الرابعة (ريال)</label>
-                            <input type="number" name="fourth_payment" step="0.01" min="0" 
-                                   value="{{ old('fourth_payment', $customerMovement->fourth_payment ?? '0') }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="0.00">
-                            @error('fourth_payment')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    @if(isset($customerMovement))
-                        <div class="bg-gray-50 p-4 rounded-lg">
+                        @if(isset($customerMovement))
+                        <div class="bg-gray-50 p-4 rounded-lg mt-6">
                             <h5 class="text-sm font-medium text-gray-700 mb-2">ملخص المبالغ</h5>
                             <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div>
@@ -211,25 +324,33 @@
                                 </div>
                             </div>
                         </div>
-                    @endif
-                </div>
-            </div>
+                        @endif
+                    </div>
 
-            <!-- Action Buttons -->
-            <div class="flex items-center justify-between pt-6 border-t mt-6">
-                <a href="{{ route('admin.customer-movement.index') }}" 
-                   class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
-                    <i class="fas fa-arrow-right ml-2"></i>
-                    العودة للقائمة
-                </a>
-                
-                <button type="submit" 
-                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium">
-                    <i class="fas fa-save ml-2"></i>
-                    {{ isset($customerMovement) ? 'تحديث' : 'حفظ' }}
-                </button>
-            </div>
-        </form>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row justify-between sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse pt-8 border-t border-gray-200 mt-8">
+                    <a href="{{ route('admin.customer-movement.index') }}"
+                       class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        إلغاء
+                    </a>
+                    <button type="submit"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-700 to-red-800 hover:from-red-800 hover:to-red-900 text-white font-medium rounded-lg shadow-sm transition-all duration-200">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        {{ isset($customerMovement) ? 'تحديث' : 'حفظ' }}
+                    </button>
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
 @endsection
@@ -237,54 +358,42 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // حساب المتبقي عند تغيير المبالغ
     function calculateRemaining() {
         const agreedAmount = parseFloat(document.querySelector('input[name="agreed_amount"]').value) || 0;
         const firstPayment = parseFloat(document.querySelector('input[name="first_payment"]').value) || 0;
         const secondPayment = parseFloat(document.querySelector('input[name="second_payment"]').value) || 0;
         const thirdPayment = parseFloat(document.querySelector('input[name="third_payment"]').value) || 0;
         const fourthPayment = parseFloat(document.querySelector('input[name="fourth_payment"]').value) || 0;
-        
+
         const totalPaid = firstPayment + secondPayment + thirdPayment + fourthPayment;
         const remaining = agreedAmount - totalPaid;
-        
-        // تحديث العرض إذا كان موجود
+
         const totalPaidElement = document.getElementById('totalPaid');
         const remainingElement = document.getElementById('remaining');
-        
+
         if (totalPaidElement && remainingElement) {
             totalPaidElement.textContent = totalPaid.toLocaleString('ar-SA', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-            
+
             remainingElement.textContent = remaining.toLocaleString('ar-SA', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-            
-            // تغيير لون المتبقي حسب القيمة
-            remainingElement.className = remaining < 0 ? 
-                'font-medium text-red-600' : 
-                'font-medium text-green-600';
+
+            remainingElement.className = remaining < 0 ? 'font-medium text-red-600' : 'font-medium text-green-600';
         }
     }
-    
-    // إضافة event listeners للحقول المالية
-    const financialInputs = [
-        'input[name="agreed_amount"]',
-        'input[name="first_payment"]',
-        'input[name="second_payment"]',
-        'input[name="third_payment"]',
-        'input[name="fourth_payment"]'
-    ];
-    
-    financialInputs.forEach(selector => {
-        const input = document.querySelector(selector);
-        if (input) {
+
+    ['agreed_amount', 'first_payment', 'second_payment', 'third_payment', 'fourth_payment'].forEach(name => {
+        const input = document.querySelector(`input[name="${name}"]`);
+        if(input){
             input.addEventListener('input', calculateRemaining);
         }
     });
+
+    calculateRemaining();
 });
 </script>
 @endpush

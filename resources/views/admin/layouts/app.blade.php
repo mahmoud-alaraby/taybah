@@ -232,8 +232,8 @@
                                     <p class="text-sm font-medium text-gray-900">{{ auth('admin')->user()->name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth('admin')->user()->email }}</p>
                                 </div>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الملف الشخصي</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الإعدادات</a>
+                                <!-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الملف الشخصي</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الإعدادات</a> -->
                                 <div class="border-t border-gray-100"></div>
                                 <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf

@@ -18,7 +18,7 @@
             <!-- Actions with Notifications -->
             <div class="flex items-center gap-3">
                 <!-- Notifications Bell -->
-                <a href="{{ route('admin.photography-booking.notifications') }}" 
+                <!-- <a href="{{ route('admin.photography-booking.notifications') }}" 
                    class="relative p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                     <i class="fas fa-bell text-xl"></i>
                     @if(class_exists('\App\Models\BookingNotification'))
@@ -37,7 +37,7 @@
                             </span>
                         @endif
                     @endif
-                </a>
+                </a> -->
                 <!-- Add Booking Button -->
                 <a href="{{ route('admin.photography-booking.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
@@ -133,7 +133,7 @@
 
 
     <!-- إضافة قسم الإشعارات السريعة مع الكود الأصلي -->
-    @if(class_exists('\App\Models\BookingNotification'))
+    <!-- @if(class_exists('\App\Models\BookingNotification'))
         @php
             try {
                 $unreadBookingCount = \App\Models\BookingNotification::unread()
@@ -162,7 +162,7 @@
                 </div>
             </div>
         @endif
-    @endif
+    @endif -->
 
     <!-- Search and Filter Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
@@ -249,6 +249,9 @@
             <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 رقم الحجز
             </th>
+               <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              أنشئ بواسطة
+            </th>
             <th class="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 اسم العميل
             </th>
@@ -286,6 +289,19 @@
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-2 py-2 whitespace-nowrap">
                     <span class="text-xs font-bold text-red-600">#{{ $booking->id }}</span>
+                </td>
+                  <td class="px-2 py-2 whitespace-nowrap">
+                
+@if($booking->employeeCreator)
+  <span class="text-xs font-bold text-green-600"> {{ $booking->employeeCreator->name }}</span>
+@elseif($booking->creator)
+    {{ $booking->creator->name }}
+@else
+    غير محدد
+@endif
+
+
+                    
                 </td>
                 <td class="px-2 py-2 whitespace-nowrap">
                     <div class="text-xs font-medium text-gray-900">{{ Str::limit($booking->client_name, 12) }}</div>

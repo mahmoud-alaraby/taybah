@@ -59,12 +59,17 @@ class OperationSystemController extends Controller
         // ترتيب النتائج
         $tasks = $query->orderBy('operation_tasks.created_at', 'desc')->get()->groupBy('task_date');
         
-        // إنشاء مصفوفة أيام الشهر
+        // إنشاء مصفوفة أيام الشهر مع استبعاد الأيام الماضية بدون مهام
         $days = [];
         for ($day = 1; $day <= $startDate->daysInMonth; $day++) {
             $currentDay = $startDate->copy()->day($day);
             $dayTasks = $tasks->get($currentDay->format('Y-m-d'), collect());
-            
+
+            // تجاهل الأيام الماضية بدون مهام
+            if ($currentDay->lt(Carbon::today()) && $dayTasks->count() == 0) {
+                continue;
+            }
+
             $days[] = [
                 'date' => $currentDay->format('Y-m-d'),
                 'day' => $day,
@@ -72,8 +77,8 @@ class OperationSystemController extends Controller
                 'is_today' => $currentDay->isToday(),
                 'is_weekend' => $currentDay->isWeekend(),
                 'tasks' => $dayTasks,
-                'design_tasks' => $dayTasks->where('task_type', 'design'),
-                'marketing_tasks' => $dayTasks->where('task_type', 'marketing'),
+                'design_tasks' => $dayTasks->where('task_type', 'design')->count(),
+                'marketing_tasks' => $dayTasks->where('task_type', 'marketing')->count(),
                 'total_tasks' => $dayTasks->count(),
                 'reserved_tasks' => $dayTasks->where('is_reserved', 1)->count()
             ];
@@ -101,7 +106,7 @@ class OperationSystemController extends Controller
             'marketing_tasks' => $tasks->flatten()->where('task_type', 'marketing')->count(),
             'reserved_tasks' => $tasks->flatten()->where('is_reserved', 1)->count(),
             'completed_tasks' => $tasks->flatten()->where('status', 'completed')->count(),
-            'pending_tasks' => $tasks->flatten()->where('status', 'pending')->count(),
+            'pending_tasks' => $tasks->flatten()->whereIn('status', ['pending', 'in_progress'])->count(),
         ];
         
         return view('admin.operation-system.index', compact(
@@ -115,6 +120,7 @@ class OperationSystemController extends Controller
         ));
     }
 
+
     /**
      * عرض صفحة إضافة مهمة جديدة
      */
@@ -127,6 +133,7 @@ class OperationSystemController extends Controller
         
         return view('admin.operation-system.create', compact('employees'));
     }
+
 
     /**
      * حفظ مهمة جديدة
@@ -151,7 +158,7 @@ class OperationSystemController extends Controller
             'notes.max' => 'الملاحظات لا يجب أن تتجاوز 500 حرف'
         ]);
 
-        // التحقق من عدم وجود مهمة مكررة لنفس الموظف في نفس اليوم ونفس النوع
+        // التحقق من عدم وجود مهمة من نفس النوع لنفس الموظف في نفس اليوم (للسماح بأكثر من مهمة لكن من أنواع مختلفة)
         $existingTask = DB::table('operation_tasks')
             ->where('task_date', $request->task_date)
             ->where('task_type', $request->task_type)
@@ -186,6 +193,7 @@ class OperationSystemController extends Controller
         }
     }
 
+
     /**
      * عرض تفاصيل مهمة محددة
      */
@@ -210,6 +218,7 @@ class OperationSystemController extends Controller
 
         return view('admin.operation-system.show', compact('task'));
     }
+
 
     /**
      * عرض نموذج تعديل المهمة
@@ -236,6 +245,7 @@ class OperationSystemController extends Controller
 
         return view('admin.operation-system.edit', compact('task', 'employees'));
     }
+
 
     /**
      * تحديث مهمة موجودة
@@ -282,6 +292,7 @@ class OperationSystemController extends Controller
             return redirect()->back()->with('error', 'حدث خطأ أثناء تحديث المهمة')->withInput();
         }
     }
+
 
     /**
      * حذف مهمة

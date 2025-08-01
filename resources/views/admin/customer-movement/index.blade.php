@@ -9,7 +9,7 @@
     <!-- Header with Target & Summary Stats -->
     <div class="bg-white shadow rounded-lg">
         <!-- Target Setting Section -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
+        <div class="bg-gradient-to-r from-red-500 to-red-700 p-4 text-white">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold flex items-center">
                     <i class="fas fa-bullseye ml-2"></i>
@@ -68,31 +68,62 @@
                 </div>
             </form>
         </div>
-
-        <!-- Summary Stats -->
-        <div class="p-4 bg-gray-50">
-            <div class="grid grid-cols-4 gap-4">
-                <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-center">
-                    <div class="text-lg font-bold text-green-600">{{ number_format($totalAgreed, 2) }}</div>
-                    <div class="text-xs text-green-700">المبالغ المتفق عليها</div>
+<!-- Statistics Cards - متابعة حركة العملاء بالتنسيق العصري -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- المبالغ المتفق عليها -->
+        <div class="bg-gradient-to-r from-green-400 to-green-600 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">المبالغ المتفق عليها</p>
+                    <p class="text-2xl font-bold">{{ number_format($totalAgreed, 2) }}</p>
                 </div>
-                
-                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 text-center">
-                    <div class="text-lg font-bold text-blue-600">{{ number_format($totalPaid, 2) }}</div>
-                    <div class="text-xs text-blue-700">المبالغ المدفوعة</div>
-                </div>
-                
-                <div class="bg-red-50 p-3 rounded-lg border border-red-200 text-center">
-                    <div class="text-lg font-bold text-red-600">{{ number_format($totalDebts, 2) }}</div>
-                    <div class="text-xs text-red-700">الديون</div>
-                </div>
-                
-                <div class="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                    <div class="text-lg font-bold text-purple-600">{{ number_format($targetAmount, 2) }}</div>
-                    <div class="text-xs text-purple-700">{{ $employeeId ? 'تارجت الموظف' : 'إجمالي التارجتات' }}</div>
-                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v5a2 2 0 002 2h2v2a2 2 0 002 2h0a2 2 0 002-2v-2h2a2 2 0 002-2v-5a2 2 0 00-2-2z"></path>
+                </svg>
             </div>
         </div>
+        <!-- المبالغ المدفوعة -->
+        <div class="bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">المبالغ المدفوعة</p>
+                    <p class="text-2xl font-bold">{{ number_format($totalPaid, 2) }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path>
+                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                </svg>
+            </div>
+        </div>
+        <!-- الديون -->
+        <div class="bg-gradient-to-r from-red-400 to-red-600 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">الديون</p>
+                    <p class="text-2xl font-bold">{{ number_format($totalDebts, 2) }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414 1.414A9 9 0 1 0 12 21v0"></path>
+                </svg>
+            </div>
+        </div>
+        <!-- التارجتات -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">{{ $employeeId ? 'تارجت الموظف' : 'إجمالي التارجتات' }}</p>
+                    <p class="text-2xl font-bold">{{ number_format($targetAmount, 2) }}</p>
+                </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 12 13"></path>
+                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
     </div>
 
     <!-- Filters & Actions -->
@@ -100,7 +131,7 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900">البحث والفلترة</h3>
             <a href="{{ route('admin.customer-movement.create') }}" 
-               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
+               class="bg-red-400 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors font-medium text-sm">
                 <i class="fas fa-plus ml-1"></i>
                 إضافة عميل جديد
             </a>
@@ -184,7 +215,7 @@
 
     <!-- Main Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+        <div class=" bg-red-700 text-white px-4 py-3 flex items-center justify-between">
             <h3 class="font-bold flex items-center">
                 <i class="fas fa-users ml-2"></i>
                 حركة العملاء ({{ $movements->total() }})

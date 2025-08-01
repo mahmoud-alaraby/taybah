@@ -8,7 +8,7 @@
 <div class="space-y-6">
     <!-- Classification Tabs with Stats -->
     <div class="bg-white shadow rounded-lg">
-        <div class="bg-blue-600 text-white px-4 py-3">
+        <div class="bg-red-600 text-white px-4 py-3">
             <h3 class="text-lg font-bold flex items-center">
                 <i class="fas fa-users ml-2"></i>
                 تصنيفات العملاء المحتملين
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900">البحث والفلترة</h3>
             <a href="{{ route('admin.potential-customers.create') }}" 
-               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
+               class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
                 <i class="fas fa-plus ml-1"></i>
                 إضافة عميل جديد
             </a>
@@ -101,7 +101,7 @@
 
     <!-- Main Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+        <div class="bg-red-600 text-white px-4 py-3 flex items-center justify-between">
             <h3 class="font-bold flex items-center">
                 <i class="fas fa-users ml-2"></i>
                 العملاء المحتملين ({{ $customers->total() }})
