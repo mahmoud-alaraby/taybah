@@ -189,6 +189,19 @@
     @endif
 </a>
 
+<a href="{{ route('admin.photography-costs.index') }}"
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-costs.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-camera-retro ml-3 text-sm"></i>
+    تكاليف التصوير
+</a>
+<a href="{{ route('admin.customer-response.index') }}"
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.customer-response.*') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <svg ... class="w-5 h-5 text-indigo-400 ml-2"></svg>
+    قاموس الردود
+</a>
+
+
+
                             <div class="mt-6 pt-6 border-t border-gray-700">
                                 <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf

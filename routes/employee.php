@@ -8,6 +8,8 @@ use App\Http\Controllers\Employee\CustomerMovementController;
 use App\Http\Controllers\Employee\PhotoGraphyBookingController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateController ;
+use App\Http\Controllers\Employee\PhotographyCostController as EmployeePhotographyCostController;
+use App\Http\Controllers\Employee\CustomerResponseController ;
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
@@ -119,16 +121,25 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
             });
         });
 
+        // سيستم قاموس الرد على العملاء 
+
     Route::middleware('employee.permission:designers_account')->group(function () {
-        Route::get('/designers-account', function () {
-            return view('employee.systems.designers-account');
-        })->name('employee.designers-account');
+      
     });
 
     Route::middleware('employee.permission:customer_response')->group(function () {
-        Route::get('/customer-response', function () {
-            return view('employee.systems.customer-response');
-        })->name('employee.customer-response');
+   Route::middleware('employee.permission:customer_response')->group(function () {
+    Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
+        Route::get('/', [CustomerResponseController::class, 'index'])->name('index');
+        Route::get('/create', [CustomerResponseController::class, 'create'])->name('create');
+        Route::post('/', [CustomerResponseController::class, 'store'])->name('store');
+        Route::get('/{customerResponse}', [CustomerResponseController::class, 'show'])->name('show');
+        Route::get('/{customerResponse}/edit', [CustomerResponseController::class, 'edit'])->name('edit');
+        Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
+        Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
+    });
+});
+
     });
 
     Route::middleware('employee.permission:task_list')->group(function () {
@@ -153,11 +164,19 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
 
     });
 
-    Route::middleware('employee.permission:photography_costs')->group(function () {
-        Route::get('/photography-costs', function () {
-            return view('employee.systems.photography-costs');
-        })->name('employee.photography-costs');
+    // سيستم تكاليف التصوير 
+ 
+Route::middleware('employee.permission:photography_costs')->group(function () {
+    Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
+        Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
+        Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
+        Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
+        Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
+        Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
+        Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
+        Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
     });
+});
 
     Route::middleware('employee.permission:customer_communication')->group(function () {
         Route::get('/customer-communication', function () {

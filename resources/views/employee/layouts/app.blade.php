@@ -187,7 +187,7 @@
                             @endif
                             
                             @if(auth('employee')->user()->hasPermission('customer_response'))
-                                <a href="{{ route('employee.customer-response') }}" 
+                                <a href="{{ route('employee.customer-response.index') }}" 
                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.customer-response') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                     <i class="fas fa-comments ml-3 text-sm"></i>
                                     قاموس الرد على العملاء
@@ -205,7 +205,7 @@
                        
                             
                             @if(auth('employee')->user()->hasPermission('photography_costs'))
-                                <a href="{{ route('employee.photography-costs') }}" 
+                                <a href="{{ route('employee.photography-costs.index') }}" 
                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.photography-costs') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                     <i class="fas fa-dollar-sign ml-3 text-sm"></i>
                                     تكاليف التصوير

@@ -146,4 +146,5 @@ class Employee extends Authenticatable
               ->orWhere('position', 'like', '%' . $search . '%');
         });
     }
+    
 }

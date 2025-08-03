@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\OperationSystemController;
 use App\Http\Controllers\Admin\PhotoGraphyBookingController;
 use App\Http\Controllers\Admin\TaskController as AdminTaskController ;
 use App\Http\Controllers\Admin\RenewalDateController as AdminRenewalDateController;
+use App\Http\Controllers\Admin\PhotographyCostController;
+use App\Http\Controllers\Admin\CustomerResponseController as AdminCustomerResponseController;
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
@@ -149,7 +151,7 @@ Route::prefix('photography-booking')->name('admin.photography-booking.')->group(
     Route::post('/notifications/{notification}/read', [PhotoGraphyBookingController::class, 'markNotificationRead'])->name('notification.read');
 });
 
-// سيسام المهام 
+// سيستم قائمة المهام 
 
 // مسارات الأدمن
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -162,6 +164,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
+// نظام مواعيد التجديد
 
 Route::prefix('renewal-dates')->name('admin.renewal-dates.')->group(function () {
     Route::get('/', [AdminRenewalDateController::class, 'index'])->name('index');
@@ -175,5 +178,29 @@ Route::prefix('renewal-dates')->name('admin.renewal-dates.')->group(function () 
     Route::post('/{renewalDate}/complete', [AdminRenewalDateController::class, 'markCompleted'])->name('complete');
     Route::post('/{renewalDate}/renew', [AdminRenewalDateController::class, 'renew'])->name('renew');
 });
+
+// نظام تكاليف التصوير
+// الأدمن
+Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
+    Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
+    Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
+    Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
+    Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
+    Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
+    Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
+    Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
+});
+
+// سيستم الرد على العملاء 
+Route::prefix('customer-response')->name('admin.customer-response.')->group(function () {
+    Route::get('/', [AdminCustomerResponseController::class, 'index'])->name('index');
+    Route::get('/create', [AdminCustomerResponseController::class, 'create'])->name('create');
+    Route::post('/', [AdminCustomerResponseController::class, 'store'])->name('store');
+    Route::get('/{customerResponse}', [AdminCustomerResponseController::class, 'show'])->name('show');
+    Route::get('/{customerResponse}/edit', [AdminCustomerResponseController::class, 'edit'])->name('edit');
+    Route::put('/{customerResponse}', [AdminCustomerResponseController::class, 'update'])->name('update');
+    Route::delete('/{customerResponse}', [AdminCustomerResponseController::class, 'destroy'])->name('destroy');
+});
+
 
 });
