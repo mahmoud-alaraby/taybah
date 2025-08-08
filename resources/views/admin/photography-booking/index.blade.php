@@ -10,7 +10,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-camera text-red-600 mr-2"></i>
+                    <i class="fas fa-camera text-red-600 ml-2"></i>
                     نظام حجز التصوير والمونتاج
                 </h1>
                 <p class="text-gray-600 mt-1">إدارة وتنظيم جميع الحجوزات</p>
@@ -41,7 +41,7 @@
                 <!-- Add Booking Button -->
                 <a href="{{ route('admin.photography-booking.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة حجز جديد
                 </a>
             </div>
@@ -168,7 +168,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-search text-red-600 mr-2"></i>
+                <i class="fas fa-search text-red-600 ml-2"></i>
                 البحث والتصفية
             </h3>
         </div>
@@ -213,12 +213,12 @@
 
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                        <i class="fas fa-search mr-2"></i>
+                        <i class="fas fa-search ml-2"></i>
                         بحث
                     </button>
                     <a href="{{ route('admin.photography-booking.index') }}" 
                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="fas fa-times ml-2"></i>
                         إلغاء
                     </a>
                 </div>
@@ -231,7 +231,7 @@
         <div class="p-6 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-table text-red-600 mr-2"></i>
+                    <i class="fas fa-table text-red-600 ml-2"></i>
                     قائمة الحجوزات
                 </h3>
                 <span class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
@@ -309,7 +309,7 @@
                 <td class="px-2 py-2 whitespace-nowrap">
                     @if($booking->client_phone)
                         <a href="tel:{{ $booking->client_phone }}" class="text-xs text-blue-600 hover:text-blue-800 transition-colors">
-                            <i class="fas fa-phone text-xs"></i>{{ $booking->client_phone }}
+                            <i class="fas fa-phone text-xs ml-1"></i>{{ $booking->client_phone }}
                         </a>
                     @else
                         <span class="text-xs text-gray-400">-</span>
@@ -338,17 +338,17 @@
                 <td class="px-2 py-2 whitespace-nowrap">
                     @if($booking->status == 'in_progress')
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <i class="fas fa-clock text-xs"></i>
+                            <i class="fas fa-clock text-xs ml-1"></i>
                             جاري
                         </span>
                     @elseif($booking->status == 'completed')
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <i class="fas fa-check text-xs"></i>
+                            <i class="fas fa-check text-xs ml-1"></i>
                             مكتمل
                         </span>
                     @else
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <i class="fas fa-exclamation-triangle text-xs"></i>
+                            <i class="fas fa-exclamation-triangle text-xs ml-1"></i>
                             ديون
                         </span>
                     @endif
@@ -393,17 +393,17 @@
                             <div class="flex items-center gap-2">
                                 @if($booking->status == 'in_progress')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <i class="fas fa-clock mr-1"></i>
+                                        <i class="fas fa-clock ml-1"></i>
                                         جاري العمل
                                     </span>
                                 @elseif($booking->status == 'completed')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-check mr-1"></i>
+                                        <i class="fas fa-check ml-1"></i>
                                         مكتمل
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        <i class="fas fa-exclamation-triangle ml-1"></i>
                                         ديون معدومة
                                     </span>
                                 @endif
@@ -444,11 +444,11 @@
                         <div class="flex items-center justify-end gap-4">
                             <a href="{{ route('admin.photography-booking.show', $booking) }}" 
                                class="text-blue-600 hover:text-blue-900 transition-colors">
-                                <i class="fas fa-eye mr-1"></i> عرض
+                                <i class="fas fa-eye ml-1"></i> عرض
                             </a>
                             <a href="{{ route('admin.photography-booking.edit', $booking) }}" 
                                class="text-yellow-600 hover:text-yellow-900 transition-colors">
-                                <i class="fas fa-edit mr-1"></i> تعديل
+                                <i class="fas fa-edit ml-1"></i> تعديل
                             </a>
                             <form action="{{ route('admin.photography-booking.destroy', $booking) }}" 
                                   method="POST" class="inline">
@@ -456,7 +456,7 @@
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 transition-colors" 
                                         onclick="return confirm('هل أنت متأكد من الحذف؟')">
-                                    <i class="fas fa-trash mr-1"></i> حذف
+                                    <i class="fas fa-trash ml-1"></i> حذف
                                 </button>
                             </form>
                         </div>
@@ -480,7 +480,7 @@
                 <p class="text-gray-600 mb-6">لم يتم العثور على أي حجوزات تطابق معايير البحث</p>
                 <a href="{{ route('admin.photography-booking.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة حجز جديد
                 </a>
             </div>

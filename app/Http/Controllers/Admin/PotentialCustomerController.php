@@ -22,7 +22,7 @@ class PotentialCustomerController extends Controller
         if ($classification) $query->withClassification($classification);
         if ($search) $query->search($search);
     
-        $customers = $query->paginate(15);
+        $customers = $query->paginate(10);
     
         $employees = Employee::whereHas('roles.permissions', function($q){
             $q->where('name', 'potential_customers');

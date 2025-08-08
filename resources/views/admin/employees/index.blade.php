@@ -21,53 +21,54 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <form method="GET" action="{{ route('admin.employees.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       placeholder="البحث بالاسم، البريد، رقم الموظف..."
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">القسم</label>
-                <select name="department" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                    <option value="">جميع الأقسام</option>
-                    <option value="financial" {{ request('department') == 'financial' ? 'selected' : '' }}>الشؤون المالية</option>
-                    <option value="customers" {{ request('department') == 'customers' ? 'selected' : '' }}>خدمة العملاء</option>
-                    <option value="operations" {{ request('department') == 'operations' ? 'selected' : '' }}>العمليات</option>
-                    <option value="production" {{ request('department') == 'production' ? 'selected' : '' }}>الإنتاج</option>
-                    <option value="design" {{ request('department') == 'design' ? 'selected' : '' }}>التصميم</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
-                <select name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                    <option value="">جميع الحالات</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الدور</label>
-                <select name="role" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                    <option value="">جميع الأدوار</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="md:col-span-4 flex justify-end space-x-2 space-x-reverse">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    <i class="fas fa-search ml-1"></i> بحث
-                </button>
-                <a href="{{ route('admin.employees.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
-                    <i class="fas fa-times ml-1"></i> إلغاء
-                </a>
-            </div>
-        </form>
-    </div>
+<!-- Filters -->
+<div class="bg-white rounded-lg p-6 border border-gray-300">
+    <form method="GET" action="{{ route('admin.employees.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
+            <input type="text" name="search" value="{{ request('search') }}" 
+                   placeholder="البحث بالاسم، البريد، رقم الموظف..."
+                   class="w-full border p-2 border-gray-300 rounded-md focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">القسم</label>
+            <select name="department" class="w-full border p-1 border-gray-300 rounded-md focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                <option value="">جميع الأقسام</option>
+                <option value="financial" {{ request('department') == 'financial' ? 'selected' : '' }}>الشؤون المالية</option>
+                <option value="customers" {{ request('department') == 'customers' ? 'selected' : '' }}>خدمة العملاء</option>
+                <option value="operations" {{ request('department') == 'operations' ? 'selected' : '' }}>العمليات</option>
+                <option value="production" {{ request('department') == 'production' ? 'selected' : '' }}>الإنتاج</option>
+                <option value="design" {{ request('department') == 'design' ? 'selected' : '' }}>التصميم</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+            <select name="status" class="w-full p-1 border border-gray-300 rounded-md focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                <option value="">جميع الحالات</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">الدور</label>
+            <select name="role" class="w-full border border-gray-300 p-1 rounded-md focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                <option value="">جميع الأدوار</option>
+                @foreach($roles as $role)
+                    <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="md:col-span-4 flex justify-end space-x-2 space-x-reverse">
+            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-blue-700">
+                <i class="fas fa-search ml-1"></i> بحث
+            </button>
+            <a href="{{ route('admin.employees.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                <i class="fas fa-times ml-1"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
 
     <!-- Table Card -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">

@@ -42,7 +42,7 @@ class PhotoGraphyBookingController extends Controller
         $bookings = $query->with(['assignedPerson', 'creator', 'employeeCreator'])
             ->orderBy('booking_date', 'desc')
             ->orderBy('booking_time', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         // تعديل: جلب الموظفين النشطين الذين لديهم صلاحية photography_booking فقط
         $employees = Employee::whereHas('roles.permissions', function($q){

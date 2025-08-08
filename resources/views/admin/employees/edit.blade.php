@@ -5,263 +5,277 @@
 @section('page-subtitle', 'تعديل بيانات الموظف: ' . $employee->name)
 
 @section('content')
-<div class="max-w-3xl mx-auto w-full">
-    <div class="bg-white border-2 border-gray-200 rounded-2xl mt-8">
-        <div class="px-6 py-10 sm:px-10">
-            <form action="{{ route('admin.employees.update', $employee) }}" method="POST" class="space-y-8">
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {{-- Header Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5 rounded-t-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <div class="mr-4">
+                            <h1 class="text-xl sm:text-2xl font-bold text-white">تعديل موظف</h1>
+                            <p class="text-red-100 text-sm mt-1">
+                                تحديث بيانات الموظف وتفاصيله الإدارية
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.employees.index') }}"
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Main Form Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <form action="{{ route('admin.employees.update', $employee) }}" method="POST" class="p-6 sm:p-8" novalidate>
                 @csrf
                 @method('PUT')
+                <div class="space-y-8">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- اسم الموظف -->
+                    {{-- معلومات الموظف --}}
                     <div>
-                        <label for="name" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                            <i class="fas fa-user text-red-600 text-lg"></i>
-                            الاسم الكامل
-                        </label>
-                        <input type="text"
-                            name="name"
-                            id="name"
-                            value="{{ old('name', $employee->name) }}"
-                            class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('name') border-red-400 @enderror"
-                            placeholder="أدخل الاسم الكامل" required>
-                        @error('name')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- البريد الإلكتروني -->
-                    <div>
-                        <label for="email" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                            <i class="fas fa-envelope text-red-600 text-lg"></i>
-                            البريد الإلكتروني
-                        </label>
-                        <input type="email"
-                            name="email"
-                            id="email"
-                            value="{{ old('email', $employee->email) }}"
-                            class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('email') border-red-400 @enderror"
-                            placeholder="employee@taiba.com" required>
-                        @error('email')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- رقم الهاتف -->
-                    <div>
-                        <label for="phone" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                            <i class="fas fa-phone text-red-600 text-lg"></i>
-                            رقم الهاتف
-                        </label>
-                        <input type="text"
-                            name="phone"
-                            id="phone"
-                            value="{{ old('phone', $employee->phone) }}"
-                            class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('phone') border-red-400 @enderror"
-                            placeholder="05xxxxxxxx">
-                        @error('phone')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- رقم الموظف -->
-                    <div>
-                        <label for="employee_id" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                            <i class="fas fa-id-card text-red-600 text-lg"></i>
-                            رقم الموظف
-                        </label>
-                        <input type="text"
-                            name="employee_id"
-                            id="employee_id"
-                            value="{{ old('employee_id', $employee->employee_id) }}"
-                            class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('employee_id') border-red-400 @enderror"
-                            placeholder="EMP001" required>
-                        @error('employee_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
-                        <i class="fas fa-briefcase text-red-500"></i>
-                        المعلومات الوظيفية
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- القسم -->
-                        <div>
-                            <label for="department" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-building text-red-600 text-lg"></i>
-                                القسم
-                            </label>
-                            <select name="department" id="department"
-                                    class="w-full py-3 px-5 border-2 border-gray-300 bg-white rounded-lg focus:border-gray-500 focus:ring-1 focus:ring-gray-500 text-base transition @error('department') border-red-400 @enderror" required>
-                                <option value="">اختر القسم</option>
-                                @foreach($departments as $key => $name)
-                                    <option value="{{ $key }}" {{ old('department', $employee->department) == $key ? 'selected' : '' }}>
-                                        {{ $name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('department')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- المنصب -->
-                        <div>
-                            <label for="position" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-user-tag text-red-600 text-lg"></i>
-                                المنصب
-                            </label>
-                            <input type="text"
-                                name="position"
-                                id="position"
-                                value="{{ old('position', $employee->position) }}"
-                                class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('position') border-red-400 @enderror"
-                                placeholder="مدير، موظف، أخصائي..." required>
-                            @error('position')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- الراتب -->
-                        <div>
-                            <label for="salary" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-money-bill-alt text-red-600 text-lg"></i>
-                                الراتب (اختياري)
-                            </label>
-                            <input type="number"
-                                name="salary"
-                                id="salary"
-                                value="{{ old('salary', $employee->salary) }}"
-                                class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('salary') border-red-400 @enderror"
-                                placeholder="0.00"
-                                step="0.01"
-                                min="0">
-                            @error('salary')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- تاريخ التوظيف -->
-                        <div>
-                            <label for="hire_date" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-calendar-alt text-red-600 text-lg"></i>
-                                تاريخ التوظيف
-                            </label>
-                            <input type="date"
-                                name="hire_date"
-                                id="hire_date"
-                                value="{{ old('hire_date', $employee->hire_date ? $employee->hire_date->format('Y-m-d') : '') }}"
-                                class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('hire_date') border-red-400 @enderror"
-                                required>
-                            @error('hire_date')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- الحالة -->
-                        <div>
-                            <label for="status" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-toggle-on text-red-600 text-lg"></i>
-                                الحالة
-                            </label>
-                            <select name="status" id="status"
-                                class="w-full py-3 px-5 border-2 border-gray-300 bg-white rounded-lg focus:border-gray-500 focus:ring-1 focus:ring-gray-500 text-base transition @error('status') border-red-400 @enderror"
-                                required>
-                                <option value="active" {{ old('status', $employee->status) == 'active' ? 'selected' : '' }}>نشط</option>
-                                <option value="inactive" {{ old('status', $employee->status) == 'inactive' ? 'selected' : '' }}>غير نشط</option>
-                            </select>
-                            @error('status')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
-                        <i class="fas fa-key text-red-500"></i>
-                        معلومات الدخول
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- كلمة المرور (اختياري!) -->
-                        <div>
-                            <label for="password" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-lock text-red-600 text-lg"></i>
-                                كلمة المرور الجديدة
-                            </label>
-                            <input type="password"
-                                name="password"
-                                id="password"
-                                class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition @error('password') border-red-400 @enderror"
-                                placeholder="اتركها فارغة إذا كنت لا تريد تغييرها">
-                            @error('password')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <!-- تأكيد كلمة المرور -->
-                        <div>
-                            <label for="password_confirmation" class="flex items-center gap-2 text-base font-semibold text-black mb-2">
-                                <i class="fas fa-lock text-red-600 text-lg"></i>
-                                تأكيد كلمة المرور
-                            </label>
-                            <input type="password"
-                                name="password_confirmation"
-                                id="password_confirmation"
-                                class="w-full py-3 px-5 border-2 border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 rounded-lg bg-gray-50 text-base transition"
-                                placeholder="أعد إدخال كلمة المرور">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
-                        <i class="fas fa-user-shield text-red-500"></i>
-                        الأدوار والصلاحيات
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @php
-                            $selectedRoles = old('roles', $employee->roles->pluck('id')->toArray());
-                        @endphp
-                        @foreach($roles as $role)
-                            <div class="flex items-start space-x-2 space-x-reverse">
-                                <input id="role_{{ $role->id }}"
-                                    name="roles[]"
-                                    type="checkbox"
-                                    value="{{ $role->id }}"
-                                    {{ in_array($role->id, $selectedRoles) ? 'checked' : '' }}
-                                    class="h-5 w-5 text-red-500 focus:ring-red-500 border-gray-300 rounded mt-1">
-                                <div>
-                                    <label for="role_{{ $role->id }}" class="font-medium text-gray-700 cursor-pointer">
-                                        {{ $role->name }}
-                                    </label>
-                                    <div class="text-xs text-gray-500">{{ $role->description }}</div>
-                                </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
                             </div>
-                        @endforeach
+                            بيانات الموظف الأساسية
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">الاسم الكامل <span class="text-red-600">*</span></label>
+                                <input type="text" name="name" value="{{ old('name', $employee->name) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('name') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="أدخل الاسم الكامل" required>
+                                @error('name')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">البريد الإلكتروني <span class="text-red-600">*</span></label>
+                                <input type="email" name="email" value="{{ old('email', $employee->email) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('email') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="employee@taiba.com" required>
+                                @error('email')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">رقم الهاتف</label>
+                                <input type="text" name="phone" value="{{ old('phone', $employee->phone) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('phone') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="05xxxxxxxx">
+                                @error('phone')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">رقم الموظف <span class="text-red-600">*</span></label>
+                                <input type="text" name="employee_id" value="{{ old('employee_id', $employee->employee_id) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('employee_id') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="EMP001" required>
+                                @error('employee_id')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
-                    @error('roles')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+
+                    {{-- البيانات الوظيفية --}}
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </div>
+                            البيانات الوظيفية
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">القسم <span class="text-red-600">*</span></label>
+                                <select name="department"
+                                        class="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('department') border-red-600 ring-2 ring-red-200 @enderror"
+                                        required>
+                                    <option value="">اختر القسم</option>
+                                    @foreach($departments as $key => $name)
+                                        <option value="{{ $key }}" {{ old('department', $employee->department) == $key ? 'selected' : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('department')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">المنصب <span class="text-red-600">*</span></label>
+                                <input type="text" name="position" value="{{ old('position', $employee->position) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('position') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="مدير، موظف، أخصائي..." required>
+                                @error('position')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">الراتب (اختياري)</label>
+                                <input type="number" name="salary" value="{{ old('salary', $employee->salary) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('salary') border-red-600 ring-2 ring-red-200 @enderror"
+                                       placeholder="0.00" step="0.01" min="0">
+                                @error('salary')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">تاريخ التوظيف <span class="text-red-600">*</span></label>
+                                <input type="date" name="hire_date"
+                                    value="{{ old('hire_date', $employee->hire_date ? $employee->hire_date->format('Y-m-d') : '') }}"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('hire_date') border-red-600 ring-2 ring-red-200 @enderror"
+                                    required>
+                                @error('hire_date')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">الحالة <span class="text-red-600">*</span></label>
+                                <select name="status"
+                                    class="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('status') border-red-600 ring-2 ring-red-200 @enderror"
+                                    required>
+                                    <option value="active" {{ old('status', $employee->status) == 'active' ? 'selected' : '' }}>نشط</option>
+                                    <option value="inactive" {{ old('status', $employee->status) == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                                </select>
+                                @error('status')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- بيانات تسجيل الدخول --}}
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 11c0-.552.447-1 1-1s1 .448 1 1c0 1.104-.895 2-2 2s-2-.896-2-2"></path>
+                                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                                </svg>
+                            </div>
+                            معلومات الدخول
+                        </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {{-- كلمة المرور الجديدة --}}
+    <div class="space-y-2 relative">
+        <label class="block text-sm font-semibold text-gray-700">كلمة المرور الجديدة</label>
+        <div class="relative">
+            <input type="password" name="password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('password') border-red-600 ring-2 ring-red-200 @enderror pr-12"
+                placeholder="اتركها فارغة إذا كنت لا تريد تغييرها">
+            <span onclick="togglePasswordVisibility('password', 'eyePasswordEdit')" id="eyePasswordEdit"
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer select-none text-gray-400">
+                <!-- أيقونة عين مغلقة -->
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-.524.048-1.03.136-1.52m1.663-3.227A9.953 9.953 0 0121.2 9m-8.383 5.238a3 3 0 004.243-4.243"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+                </svg>
+            </span>
+        </div>
+        @error('password')
+            <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+    {{-- تأكيد كلمة المرور --}}
+    <div class="space-y-2 relative">
+        <label class="block text-sm font-semibold text-gray-700">تأكيد كلمة المرور</label>
+        <div class="relative">
+            <input type="password" name="password_confirmation"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 pr-12"
+                placeholder="أعد إدخال كلمة المرور">
+            <span onclick="togglePasswordVisibility('password_confirmation', 'eyePasswordConfirmationEdit')" id="eyePasswordConfirmationEdit"
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer select-none text-gray-400">
+                <!-- أيقونة عين مغلقة -->
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-.524.048-1.03.136-1.52m1.663-3.227A9.953 9.953 0 0121.2 9m-8.383 5.238a3 3 0 004.243-4.243"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+                </svg>
+            </span>
+        </div>
+    </div>
+</div>
+
+                    </div>
+
+                    {{-- الأدوار --}}
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3"></path>
+                                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                                </svg>
+                            </div>
+                            الأدوار والصلاحيات
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @php $selectedRoles = old('roles', $employee->roles->pluck('id')->toArray()); @endphp
+                            @foreach($roles as $role)
+                                <div class="flex items-start space-x-2 space-x-reverse">
+                                    <input id="role_{{ $role->id }}" name="roles[]" type="checkbox" value="{{ $role->id }}"
+                                           {{ in_array($role->id, $selectedRoles) ? 'checked' : '' }}
+                                           class="h-5 w-5 text-red-500 focus:ring-red-500 border-gray-300 rounded mt-1">
+                                    <div>
+                                        <label for="role_{{ $role->id }}" class="font-medium text-gray-700 cursor-pointer">{{ $role->name }}</label>
+                                        <div class="text-xs text-gray-500">{{ $role->description }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @error('roles')
+                            <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                 </div>
 
-                <!-- الأزرار -->
-                <div class="mt-10 flex flex-col md:flex-row items-center justify-end gap-4">
+                {{-- الأزرار --}}
+                <div class="flex flex-col sm:flex-row justify-between sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse pt-8 border-t border-gray-200 mt-8">
                     <a href="{{ route('admin.employees.show', $employee) }}"
-                       class="bg-white py-3 px-8 border-2 border-gray-300 rounded-xl text-base font-bold text-gray-700 hover:bg-red-50 focus:ring-2 focus:ring-red-400 flex items-center gap-2 transition-colors">
-                        <i class="fas fa-eye text-red-500"></i>
+                       class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         عرض
                     </a>
                     <a href="{{ route('admin.employees.index') }}"
-                       class="bg-white py-3 px-8 border-2 border-gray-300 rounded-xl text-base font-bold text-gray-700 hover:bg-red-50 focus:ring-2 focus:ring-red-400 flex items-center gap-2 transition-colors">
-                        <i class="fas fa-times text-red-500"></i>
+                       class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         إلغاء
                     </a>
                     <button type="submit"
-                        class="bg-gradient-to-l from-red-600 to-red-500 py-3 px-12 border border-red-600 rounded-xl text-base font-bold text-white hover:from-red-700 hover:to-red-600 focus:ring-2 focus:ring-red-400 flex items-center gap-2 transition-colors">
-                        <i class="fas fa-save"></i>
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-700 to-red-800 hover:from-red-800 hover:to-red-900 text-white font-medium rounded-lg shadow-sm transition-all duration-200">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
                         تحديث الموظف
                     </button>
                 </div>
@@ -269,4 +283,23 @@
         </div>
     </div>
 </div>
+
+<script>
+function togglePasswordVisibility(inputName, iconId) {
+    const input = document.getElementsByName(inputName)[0];
+    const icon = document.getElementById(iconId);
+
+    const eyeClosedSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-.524.048-1.03.136-1.52m1.663-3.227A9.953 9.953 0 0121.2 9m-8.383 5.238a3 3 0 004.243-4.243"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/></svg>`;
+    const eyeOpenSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.275 4.057-5.065 7-9.543 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = eyeOpenSVG;
+    } else {
+        input.type = 'password';
+        icon.innerHTML = eyeClosedSVG;
+    }
+}
+</script>
+
 @endsection

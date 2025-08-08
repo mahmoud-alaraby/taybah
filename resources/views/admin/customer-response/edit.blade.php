@@ -3,16 +3,37 @@
 @section('content')
 <div class="max-w-3xl mx-auto">
     <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-6 sm:p-8">
-            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2 text-black">
-               <i class="fas fa-edit text-red-500 text-3xl"></i>
-                تعديل رد في القاموس
-            </h2>
+        <div class="">
+            {{-- Header Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5 rounded-t-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <div class="mr-4">
+                            <h1 class="text-xl sm:text-2xl font-bold text-white"> تعديل رد موجود بالفعل   </h1>
+                           
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.customer-response.index') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
          
             <form action="{{ route('admin.customer-response.update', $customerResponse) }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="space-y-6">
+                <div class="space-y-6 px-4 py-6 sm:p-8">
                     <div>
                         <label class="font-medium text-gray-700 flex items-center mb-1">
                             <svg class="w-5 h-5 text-indigo-400 ml-1"></svg> التصنيف
@@ -44,7 +65,7 @@
                         @error('body')<p class="text-sm mt-1 text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
-                <div class="flex justify-end gap-4 mt-10">
+                <div class="flex justify-end gap-4 mt-10 p-1 mb-10">
                     <a href="{{ route('admin.customer-response.index') }}"
                         class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md border">إلغاء</a>
                     <button type="submit"

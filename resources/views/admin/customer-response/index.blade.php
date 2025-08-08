@@ -28,6 +28,16 @@ $catIcons = [
                 class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold transition">+ إضافة رد جديد</a>
         </div>
     </div>
+    <div class="flex flex-row justify-between gap-4 mb-6">
+
+    <div class="flex gap-2">
+
+        <a href="{{route('admin.customer-response.categories.index') }}"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold transition">إدارة التصنيفات</a>
+    </div>
+</div>
+
+
     <form method="get" class="flex flex-wrap items-center gap-3 mb-8">
         <select name="category_id" class="border border-gray-300 rounded px-3 py-2">
             <option value="">كل التصنيفات</option>
@@ -41,7 +51,7 @@ $catIcons = [
             <option value="me" @selected(request('creator_source')=='me')>تم الإنشاء بواسطتي</option>
             <option value="others" @selected(request('creator_source')=='others')>تم الإنشاء بواسطة آخرين</option>
         </select>
-        <button type="submit" class="bg-gray-800 mt-16 text-white px-3 py-2 rounded-lg"><i class="fas fa-search ml-1"></i>بحث</button>
+        <button type="submit" class="bg-gray-800  text-white px-3 py-2 rounded-lg"><i class="fas fa-search ml-1"></i>بحث</button>
     </form>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">

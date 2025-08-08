@@ -5,55 +5,41 @@
 
 @section('content')
 <div class="container-fluid p-6">
-    <!-- Header Section -->
-    <div class="mb-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-calendar-edit text-red-600 mr-2"></i>
-                    تعديل حدث التجديد
-                </h1>
-                <p class="text-gray-600 mt-1">تعديل بيانات الحدث الموجود</p>
-            </div>
-            <!-- Breadcrumb -->
-            <nav class="flex" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-red-600">
-                            <i class="fas fa-home ml-3"></i>
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li>
-                        <div class="flex items-center">
-                            <i class="fas fa-chevron-left text-gray-400 mx-2"></i>
-                            <a href="{{ route('admin.renewal-dates.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-red-600">
-                                مواعيد التجديد
-                            </a>
-                        </div>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <i class="fas fa-chevron-left text-gray-400 mx-2"></i>
-                            <span class="ml-1 text-sm font-medium text-gray-500">تعديل الحدث</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+
 
     <!-- Main Form -->
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
             <!-- Form Header -->
-            <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-t-xl p-6">
-                <h3 class="text-xl font-semibold text-white flex items-center">
-                    <i class="fas fa-calendar-event mr-3"></i>
-                    تعديل بيانات الحدث
-                </h3>
-                <p class="text-red-100 mt-1">قم بتعديل البيانات المطلوبة</p>
+             {{-- Header Card --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5 rounded-t-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <div class="mr-4">
+                            <h1 class="text-xl sm:text-2xl font-bold text-white">تعديل بيانات الحدث</h1>
+                            <p class="text-red-100 text-sm mt-1">
+                                تحديث بيانات الحدث  وتفاصيله 
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.renewal-dates.index') }}"
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+                </div>
             </div>
+        </div>
 
             <!-- Current Status Banner -->
             <div class="p-4 
@@ -105,7 +91,7 @@
                     <!-- Event Title -->
                     <div class="mb-6">
                         <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-tag text-red-600 mr-1"></i>
+                            <i class="fas fa-tag text-red-600 ml-1"></i>
                             عنوان الحدث <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
@@ -114,7 +100,7 @@
                                placeholder="مثال: تجديد دومين شركة الحمد">
                         @error('title')
                             <p class="mt-1 text-sm text-red-600 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <i class="fas fa-exclamation-circle ml-1"></i>
                                 {{ $message }}
                             </p>
                         @enderror
@@ -125,7 +111,7 @@
                         <!-- Renewal Date -->
                         <div>
                             <label for="renewal_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-calendar text-red-600 mr-1"></i>
+                                <i class="fas fa-calendar text-red-600 ml-1"></i>
                                 تاريخ التجديد <span class="text-red-500">*</span>
                             </label>
                             <input type="date" 
@@ -133,7 +119,7 @@
                                    id="renewal_date" name="renewal_date" value="{{ old('renewal_date', $renewalDate->renewal_date->format('Y-m-d')) }}">
                             @error('renewal_date')
                                 <p class="mt-1 text-sm text-red-600 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    <i class="fas fa-exclamation-circle ml-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -142,7 +128,7 @@
                         <!-- Frequency -->
                         <div>
                             <label for="frequency" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-repeat text-red-600 mr-1"></i>
+                                <i class="fas fa-repeat text-red-600 ml-1"></i>
                                 تكرار الحدث <span class="text-red-500">*</span>
                             </label>
                             <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('frequency') border-red-500 bg-red-50 @enderror" 
@@ -154,7 +140,7 @@
                             </select>
                             @error('frequency')
                                 <p class="mt-1 text-sm text-red-600 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    <i class="fas fa-exclamation-circle ml-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -166,7 +152,7 @@
                         <!-- Amount -->
                         <div>
                             <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-money-bill text-red-600 mr-1"></i>
+                                <i class="fas fa-money-bill text-red-600 ml-1"></i>
                                 المبلغ (اختياري)
                             </label>
                             <div class="relative">
@@ -180,7 +166,7 @@
                             </div>
                             @error('amount')
                                 <p class="mt-1 text-sm text-red-600 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    <i class="fas fa-exclamation-circle ml-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -189,7 +175,7 @@
                         <!-- Status -->
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-flag text-red-600 mr-1"></i>
+                                <i class="fas fa-flag text-red-600 ml-1"></i>
                                 حالة الحدث <span class="text-red-500">*</span>
                             </label>
                             <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('status') border-red-500 bg-red-50 @enderror" 
@@ -200,7 +186,7 @@
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    <i class="fas fa-exclamation-circle ml-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -210,7 +196,7 @@
                     <!-- Description -->
                     <div class="mb-6">
                         <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-align-left text-red-600 mr-1"></i>
+                            <i class="fas fa-align-left text-red-600 ml-1"></i>
                             وصف الحدث (اختياري)
                         </label>
                         <textarea class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors @error('description') border-red-500 bg-red-50 @enderror" 
@@ -218,7 +204,7 @@
                                   placeholder="وصف تفصيلي للحدث، الجهة المسؤولة، تفاصيل إضافية...">{{ old('description', $renewalDate->description) }}</textarea>
                         @error('description')
                             <p class="mt-1 text-sm text-red-600 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <i class="fas fa-exclamation-circle ml-1"></i>
                                 {{ $message }}
                             </p>
                         @enderror
@@ -227,7 +213,7 @@
                     <!-- Next Renewal Preview -->
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6 hidden" id="nextRenewalPreview">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
                                 <i class="fas fa-calendar-check text-blue-600"></i>
                             </div>
                             <div>
@@ -241,7 +227,7 @@
                     @if($renewalDate->next_renewal_date)
                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 mb-6">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center ml-3">
                                 <i class="fas fa-calendar text-gray-600"></i>
                             </div>
                             <div>
@@ -256,12 +242,12 @@
                     <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
                         <button type="submit" 
                                 class="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center justify-center font-medium">
-                            <i class="fas fa-save mr-2"></i>
+                            <i class="fas fa-save ml-2"></i>
                             حفظ التعديلات
                         </button>
                         <a href="{{ route('admin.renewal-dates.show', $renewalDate) }}" 
                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors text-center inline-flex items-center justify-center font-medium">
-                            <i class="fas fa-times mr-2"></i>
+                            <i class="fas fa-times ml-2"></i>
                             إلغاء
                         </a>
                     </div>
@@ -272,30 +258,30 @@
         <!-- Help Card -->
         <div class="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
             <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                <i class="fas fa-lightbulb text-yellow-500 ml-2"></i>
                 ملاحظات مهمة
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
                 <div class="flex items-start">
-                    <i class="fas fa-info-circle text-blue-500 mr-2 mt-0.5"></i>
+                    <i class="fas fa-info-circle text-blue-500 ml-2 mt-0.5"></i>
                     <div>
                         <strong>تغيير التاريخ:</strong> سيؤثر على حساب التاريخ التالي للتجديد
                     </div>
                 </div>
                 <div class="flex items-start">
-                    <i class="fas fa-repeat text-green-500 mr-2 mt-0.5"></i>
+                    <i class="fas fa-repeat text-green-500 ml-2 mt-0.5"></i>
                     <div>
                         <strong>تغيير التكرار:</strong> سيعيد حساب التاريخ القادم تلقائياً
                     </div>
                 </div>
                 <div class="flex items-start">
-                    <i class="fas fa-bell text-red-500 mr-2 mt-0.5"></i>
+                    <i class="fas fa-bell text-red-500 ml-2 mt-0.5"></i>
                     <div>
                         <strong>التنبيهات:</strong> ستستمر حسب الحالة الجديدة
                     </div>
                 </div>
                 <div class="flex items-start">
-                    <i class="fas fa-history text-purple-500 mr-2 mt-0.5"></i>
+                    <i class="fas fa-history text-purple-500 ml-2 mt-0.5"></i>
                     <div>
                         <strong>السجل:</strong> سيتم حفظ معلومات المعدِّل
                     </div>

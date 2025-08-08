@@ -14,8 +14,6 @@
             </div>
         </div>
 
-
-
         <!-- رسائل النجاح والخطأ -->
         @if(session('success'))
             <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 text-sm lg:text-base">
@@ -30,88 +28,88 @@
         @endif
     </div>
 
-<!-- Statistics Cards - ثلاث كروت فقط -->
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Statistics Cards - ثلاث كروت فقط -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-        <!-- إجمالي المهام -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">إجمالي المهام</p>
-                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->count() }}</p>
+            <!-- إجمالي المهام -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">إجمالي المهام</p>
+                        <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->total() }}</p>
+                    </div>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                </svg>
             </div>
-        </div>
 
-        <!-- قيد التنفيذ -->
-        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">قيد التنفيذ</p>
-                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'pending')->count() }}</p>
+            <!-- قيد التنفيذ -->
+            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">قيد التنفيذ</p>
+                        <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'pending')->count() }}</p>
+                    </div>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
             </div>
-        </div>
 
-        <!-- مكتملة -->
-        <div class="bg-gradient-to-r from-green-500 to-green-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">مكتملة</p>
-                    <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'completed')->count() }}</p>
+            <!-- مكتملة -->
+            <div class="bg-gradient-to-r from-green-500 to-green-700 rounded-xl p-4 text-white shadow-lg flex flex-col justify-between h-full">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">مكتملة</p>
+                        <p class="text-2xl lg:text-3xl font-bold">{{ $tasks->where('status', 'completed')->count() }}</p>
+                    </div>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
             </div>
-        </div>
 
+        </div>
     </div>
-</div>
 
-
-            <!-- نموذج إضافة مهمة محسن -->
-        <div class="bg-white p-4 lg:p-5 rounded-lg border border-gray-200 shadow-sm mb-4">
-            <h3 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">➕ إضافة مهمة جديدة</h3>
+    <!-- نموذج إضافة مهمة محسن -->
+    <div class="bg-white p-4 lg:p-5 rounded-lg border border-gray-200 shadow-sm mb-4">
+        <h3 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">➕ إضافة مهمة جديدة</h3>
+        
+        <form method="POST" action="{{ route('admin.tasks.store') }}" class="space-y-4">
+            @csrf
             
-            <form method="POST" action="{{ route('admin.tasks.store') }}" class="space-y-4">
-                @csrf
-                
-                <!-- العنوان -->
-                <div>
-                    <label class="block text-sm lg:text-base font-medium text-gray-700 mb-2">عنوان المهمة *</label>
-                    <input name="title" required
-                           class="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                           placeholder="أكتب عنوان المهمة هنا...">
-                </div>
+            <!-- العنوان -->
+            <div>
+                <label class="block text-sm lg:text-base font-medium text-gray-700 mb-2">عنوان المهمة *</label>
+                <input name="title" required
+                       class="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                       placeholder="أكتب عنوان المهمة هنا...">
+            </div>
 
-                <!-- التفاصيل -->
-                <div>
-                    <label class="block text-sm lg:text-base font-medium text-gray-700 mb-2">تفاصيل المهمة (اختياري)</label>
-                    <textarea name="details" rows="3"
-                              class="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                              placeholder="اكتب تفاصيل إضافية للمهمة إذا كنت تريد..."></textarea>
-                </div>
+            <!-- التفاصيل -->
+            <div>
+                <label class="block text-sm lg:text-base font-medium text-gray-700 mb-2">تفاصيل المهمة (اختياري)</label>
+                <textarea name="details" rows="3"
+                          class="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                          placeholder="اكتب تفاصيل إضافية للمهمة إذا كنت تريد..."></textarea>
+            </div>
 
-                <!-- زر الإضافة -->
-                <div class="flex justify-end">
-                    <button type="submit" 
-                            class="px-6 py-2 lg:px-8 lg:py-3 text-sm lg:text-base bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
-                         إضافة المهمة
-                    </button>
-                </div>
-            </form>
-        </div>
+            <!-- زر الإضافة -->
+            <div class="flex justify-end">
+                <button type="submit" 
+                        class="px-6 py-2 lg:px-8 lg:py-3 text-sm lg:text-base bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    إضافة المهمة
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- قائمة المهام المحسنة -->
     <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 lg:p-5 border-b border-gray-200">
@@ -125,11 +123,11 @@
                     <div class="flex items-start space-x-3 lg:space-x-4 space-x-reverse flex-1">
                         <!-- Checkbox -->
                         <form method="POST" action="{{ route('admin.tasks.update', $task) }}" 
-                              class="mt-1" id="form-{{ $task->id }}">
+                              class="mt-1 ml-3" id="form-{{ $task->id }}">
                             @csrf
                             @method('PATCH')
                             <input type="checkbox" 
-                                   class="w-5 h-5 lg:w-6 lg:h-6 text-green-600 border-2 border-gray-300 rounded-lg focus:ring-green-500 cursor-pointer transition-all duration-200"
+                                   class="w-5 h-5 lg:w-6 lg:h-6 text-green-600 border-2 border-gray-300 rounded-lg  focus:ring-green-500 cursor-pointer transition-all duration-200"
                                    @if($task->status === 'completed') checked @endif
                                    onchange="document.getElementById('form-{{ $task->id }}').submit();">
                         </form>
@@ -211,6 +209,11 @@
             </div>
             @endforelse
         </div>
+
+        <!-- روابط الباجينيشن -->
+        <div class="px-6 py-4">
+            {{ $tasks->links() }}
+        </div>
     </div>
 
     <!-- معلومات الترحيل -->
@@ -226,5 +229,4 @@
         </div>
     </div>
 </div>
-
 @endsection

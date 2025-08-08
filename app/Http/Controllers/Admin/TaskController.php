@@ -9,15 +9,16 @@ use Carbon\Carbon;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // ترحيل المهام تلقائياً عند فتح الصفحة
         DailyTask::carryOverTasks();
-        
+
         $today = Carbon::now()->toDateString();
+        // تغيير get() إلى paginate(10)
         $tasks = DailyTask::whereDate('task_date', $today)
-                         ->orderBy('created_at', 'desc')
-                         ->get();
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
 
         return view('admin.tasks.index', compact('tasks'));
     }
@@ -42,7 +43,7 @@ class TaskController extends Controller
     public function update(DailyTask $task, Request $request)
     {
         $newStatus = $task->status === 'pending' ? 'completed' : 'pending';
-        
+
         $task->update([
             'status' => $newStatus,
             'completed_at' => $newStatus === 'completed' ? now() : null,

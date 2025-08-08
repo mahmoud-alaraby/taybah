@@ -10,7 +10,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-calendar-alt text-red-600 mr-2"></i>
+                    <i class="fas fa-calendar-alt text-red-600 ml-2"></i>
                     نظام مواعيد التجديد
                 </h1>
                 <p class="text-gray-600 mt-1">إدارة وتنظيم جميع مواعيد التجديد</p>
@@ -20,7 +20,7 @@
                 <!-- Add Event Button -->
                 <a href="{{ route('employee.renewal-dates.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة حدث جديد
                 </a>
             </div>
@@ -119,8 +119,8 @@
             @if($todayRenewals->count() > 0)
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <div class="flex items-center ">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
                             <i class="fas fa-calendar-day text-blue-600"></i>
                         </div>
                         <div>
@@ -131,7 +131,7 @@
                 </div>
                 <div class="max-h-48 overflow-y-auto space-y-2">
                     @foreach($todayRenewals as $renewal)
-                    <div class="bg-white rounded-lg p-3 border border-blue-100">
+                    <div class="bg-white rounded-lg p-3 border border-blue-100 ">
                         <h6 class="font-medium text-gray-900 text-sm">{{ $renewal->title }}</h6>
                         @if($renewal->amount)
                             <p class="text-xs text-gray-600">المبلغ: {{ number_format($renewal->amount, 2) }} ريال</p>
@@ -153,7 +153,7 @@
             <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center ml-3">
                             <i class="fas fa-clock text-yellow-600"></i>
                         </div>
                         <div>
@@ -188,7 +188,7 @@
             <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center ml-3">
                             <i class="fas fa-exclamation-triangle text-red-600"></i>
                         </div>
                         <div>
@@ -224,7 +224,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-search text-red-600 mr-2"></i>
+                <i class="fas fa-search text-red-600 ml-2"></i>
                 البحث والتصفية
             </h3>
         </div>
@@ -282,12 +282,12 @@
 
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                        <i class="fas fa-search mr-2"></i>
+                        <i class="fas fa-search ml-2"></i>
                         بحث
                     </button>
                     <a href="{{ route('employee.renewal-dates.index') }}" 
                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="fas fa-times ml-2"></i>
                         إلغاء
                     </a>
                 </div>
@@ -300,7 +300,7 @@
         <div class="p-6 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-table text-red-600 mr-2"></i>
+                    <i class="fas fa-table text-red-600 ml-2"></i>
                     قائمة مواعيد التجديد
                 </h3>
                 <span class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
@@ -357,15 +357,15 @@
                             <td class="px-3 py-4 whitespace-nowrap">
                                 @if($renewal->status == 'active')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-check mr-1"></i>نشط
+                                        <i class="fas fa-check ml-1"></i>نشط
                                     </span>
                                 @elseif($renewal->status == 'completed')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-check-circle mr-1"></i>مكتمل
+                                        <i class="fas fa-check-circle ml-1"></i>مكتمل
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        <i class="fas fa-times mr-1"></i>ملغي
+                                        <i class="fas fa-times ml-1"></i>ملغي
                                     </span>
                                 @endif
                             </td>
@@ -449,11 +449,11 @@
                             <div class="flex items-center gap-2">
                                 @if($renewal->status == 'active')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-check mr-1"></i>نشط
+                                        <i class="fas fa-check ml-1"></i>نشط
                                     </span>
                                 @elseif($renewal->status == 'completed')
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-check-circle mr-1"></i>مكتمل
+                                        <i class="fas fa-check-circle ml-1"></i>مكتمل
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -557,7 +557,7 @@
                 <p class="text-gray-600 mb-6">لم يتم العثور على أي مواعيد تطابق معايير البحث</p>
                 <a href="{{ route('employee.renewal-dates.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة حدث جديد
                 </a>
             </div>

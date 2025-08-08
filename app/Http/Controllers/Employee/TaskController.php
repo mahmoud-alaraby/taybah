@@ -16,7 +16,7 @@ class TaskController extends Controller
         $tasks = DailyTask::whereDate('task_date', $today)
             ->where('created_by_employee', auth('employee')->id()) // إظهار المهام الخاصة بالمستخدم الحالي فقط
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // إضافة الباجينيشن
 
         return view('employee.tasks.index', compact('tasks'));
     }

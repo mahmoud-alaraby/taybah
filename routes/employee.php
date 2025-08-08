@@ -10,6 +10,7 @@ use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateController ;
 use App\Http\Controllers\Employee\PhotographyCostController as EmployeePhotographyCostController;
 use App\Http\Controllers\Employee\CustomerResponseController ;
+use App\Http\Controllers\Employee\EmployeeDesignerTaskAccountEmployeeController;
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
@@ -121,15 +122,22 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
             });
         });
 
-        // سيستم قاموس الرد على العملاء 
+    //    سيستم تكاليف التصميم
 
-    Route::middleware('employee.permission:designers_account')->group(function () {
-      
-    });
 
-    Route::middleware('employee.permission:customer_response')->group(function () {
-   Route::middleware('employee.permission:customer_response')->group(function () {
+
+Route::middleware('employee.permission:designers_account')
+    ->prefix('designer-task-accounts')
+    ->name('employee.designer-task-accounts.')
+    ->group(function () {
+        Route::get('/', [EmployeeDesignerTaskAccountEmployeeController::class, 'index'])->name('index');
+        Route::get('/{id}', [EmployeeDesignerTaskAccountEmployeeController::class, 'show'])->name('show');
+});
+
+
+Route::middleware('employee.permission:customer_response')->group(function () {
     Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
+        // الردود
         Route::get('/', [CustomerResponseController::class, 'index'])->name('index');
         Route::get('/create', [CustomerResponseController::class, 'create'])->name('create');
         Route::post('/', [CustomerResponseController::class, 'store'])->name('store');
@@ -137,10 +145,17 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
         Route::get('/{customerResponse}/edit', [CustomerResponseController::class, 'edit'])->name('edit');
         Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
         Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
+
+        // التصنيفات
+        // Route::get('/categories', [EmployeeCustomerResponseCategoryController::class, 'index'])->name('categories.index');
+        // Route::get('/categories/create', [EmployeeCustomerResponseCategoryController::class, 'create'])->name('categories.create');
+        // Route::post('/categories', [EmployeeCustomerResponseCategoryController::class, 'store'])->name('categories.store');
+        // Route::get('/categories/{category}/edit', [EmployeeCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
+        // Route::put('/categories/{category}', [EmployeeCustomerResponseCategoryController::class, 'update'])->name('categories.update');
+     
     });
 });
 
-    });
 
     Route::middleware('employee.permission:task_list')->group(function () {
         Route::get('/task-list', function () {

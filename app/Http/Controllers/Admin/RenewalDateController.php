@@ -49,7 +49,7 @@ class RenewalDateController extends Controller
         });
     }
 
-    $renewalDates = $query->orderBy('renewal_date', 'asc')->paginate(15);
+    $renewalDates = $query->orderBy('renewal_date', 'asc')->paginate(10);
 
     // الإحصائيات وأجزاء إضافية كما هي (يمكنك تعديلها حسب حاجتك)
     $statistics = [

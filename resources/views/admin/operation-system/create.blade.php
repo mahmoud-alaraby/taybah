@@ -1,15 +1,14 @@
-{{-- resources/views/admin/operation-system/create.blade.php --}}
 @extends('admin.layouts.app')
 
 @section('title', 'إضافة مهمة جديدة')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- Header Card --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5 rounded-t-xl">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5 rounded-t-xl">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -55,14 +54,12 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {{-- Task Date --}}
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 ml-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                        تاريخ المهمة
-                                        <span class="text-red-500 mr-1">*</span>
-                                    </div>
+                                <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 ml-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    تاريخ المهمة
+                                    <span class="text-red-500 mr-1">*</span>
                                 </label>
                                 <input type="date" 
                                        name="task_date" 
@@ -84,18 +81,16 @@
 
                             {{-- Task Type --}}
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 ml-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                                        </svg>
-                                        نوع المهمة
-                                        <span class="text-red-500 mr-1">*</span>
-                                    </div>
+                                <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 ml-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    نوع المهمة
+                                    <span class="text-red-500 mr-1">*</span>
                                 </label>
                                 <select name="task_type" 
                                         required 
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('task_type') border-red-500 ring-2 ring-red-200 @enderror">
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('task_type') border-red-500 ring-2 ring-red-200 @enderror">
                                     <option value="">اختر نوع المهمة</option>
                                     <option value="design" {{ old('task_type') == 'design' ? 'selected' : '' }}>
                                         🎨 تصميم
@@ -116,6 +111,7 @@
                         </div>
                     </div>
 
+
                     {{-- Employee Assignment Section --}}
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -128,18 +124,19 @@
                         </h3>
                         
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">
+                            <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 ml-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
                                 الموظف المكلف
                                 <span class="text-red-500 mr-1">*</span>
                             </label>
                             <select name="assigned_person_id" 
                                     required 
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors @error('assigned_person_id') border-red-500 ring-2 ring-red-200 @enderror">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors @error('assigned_person_id') border-red-500 ring-2 ring-red-200 @enderror">
                                 <option value="">اختر الموظف المكلف</option>
                                 @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}" 
-                                            {{ old('assigned_person_id') == $employee->id ? 'selected' : '' }} 
-                                            data-department="{{ $employee->department }}">
+                                    <option value="{{ $employee->id }}" {{ old('assigned_person_id') == $employee->id ? 'selected' : '' }} data-department="{{ $employee->department }}">
                                         {{ $employee->name }} - {{ $employee->department }} ({{ $employee->position }})
                                     </option>
                                 @endforeach
@@ -155,6 +152,7 @@
                         </div>
                     </div>
 
+
                     {{-- Task Details Section --}}
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -169,55 +167,53 @@
                         <div class="space-y-6">
                             {{-- Task Description --}}
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">
+                                <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479L12 14z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l-6.16 3.422a12.083 12.083 0 00-.665-6.479L12 14z"></path>
+                                    </svg>
                                     وصف المهمة
                                 </label>
+                                <textarea name="task_description" rows="4" maxlength="1000" placeholder="أدخل وصفاً مفصلاً للمهمة المطلوبة..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none @error('task_description') border-red-500 ring-2 ring-red-200 @enderror">{{ old('task_description') }}</textarea>
                                 <div class="relative">
-                                    <textarea name="task_description" 
-                                              rows="4" 
-                                              maxlength="1000" 
-                                              placeholder="أدخل وصفاً مفصلاً للمهمة المطلوبة..."
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none @error('task_description') border-red-500 ring-2 ring-red-200 @enderror">{{ old('task_description') }}</textarea>
                                     <div class="absolute bottom-3 left-3 text-xs text-gray-400">
                                         <span id="desc-counter">{{ strlen(old('task_description', '')) }}</span>/1000
                                     </div>
                                 </div>
                                 @error('task_description')
-                                    <p class="text-red-500 text-xs mt-1 flex items-center">
-                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @else
-                                    <p class="text-xs text-gray-500 mt-1">حد أقصى 1000 حرف</p>
+                                <p class="text-red-500 text-xs mt-1 flex items-center">
+                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                                 @enderror
                             </div>
 
                             {{-- Notes --}}
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">
+                                <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479L12 14z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l-6.16 3.422a12.083 12.083 0 00-.665-6.479L12 14z"></path>
+                                    </svg>
                                     ملاحظات إضافية
                                 </label>
+                                <textarea name="notes" rows="3" maxlength="500" placeholder="أي ملاحظات أو تعليمات إضافية..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none @error('notes') border-red-500 ring-2 ring-red-200 @enderror">{{ old('notes') }}</textarea>
                                 <div class="relative">
-                                    <textarea name="notes" 
-                                              rows="3" 
-                                              maxlength="500" 
-                                              placeholder="أي ملاحظات أو تعليمات إضافية..."
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none @error('notes') border-red-500 ring-2 ring-red-200 @enderror">{{ old('notes') }}</textarea>
                                     <div class="absolute bottom-3 left-3 text-xs text-gray-400">
                                         <span id="notes-counter">{{ strlen(old('notes', '')) }}</span>/500
                                     </div>
                                 </div>
                                 @error('notes')
-                                    <p class="text-red-500 text-xs mt-1 flex items-center">
-                                        <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @else
-                                    <p class="text-xs text-gray-500 mt-1">حد أقصى 500 حرف</p>
+                                <p class="text-red-500 text-xs mt-1 flex items-center">
+                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                                 @enderror
                             </div>
                         </div>
@@ -281,6 +277,7 @@
         </div>
     </div>
 </div>
+
 
 {{-- JavaScript للتحسينات --}}
 <script>

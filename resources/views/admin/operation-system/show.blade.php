@@ -8,7 +8,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Header --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-            <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-t-xl">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 rounded-t-xl">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
                     <div class="flex items-center">
                         <svg class="w-8 h-8 text-white ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,17 +17,17 @@
                         </svg>
                         <div>
                             <h1 class="text-xl sm:text-2xl font-bold text-white">تفاصيل المهمة</h1>
-                            <p class="text-green-100 text-sm">{{ $task->employee_name }} - {{ Carbon\Carbon::parse($task->task_date)->translatedFormat('d F Y') }}</p>
+                            <p class="text-red-100 text-sm">{{ $task->employee_name }} - {{ Carbon\Carbon::parse($task->task_date)->translatedFormat('d F Y') }}</p>
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
-                        <a href="{{ route('admin.operation-system.edit', $task->id) }}" class="inline-flex items-center px-4 py-2 bg-white text-green-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.operation-system.edit', $task->id) }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             تعديل المهمة
                         </a>
-                        <a href="{{ route('admin.operation-system.index') }}" class="inline-flex items-center px-4 py-2 bg-white text-green-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.operation-system.index') }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
@@ -39,19 +39,19 @@
         </div>
 
         {{-- Employee Info Card --}}
-        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200 mb-6">
+        <div class="bg-gradient-to-r from-red-50 to-red-50 rounded-xl p-6 border border-red-200 mb-6">
             <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0">
                 @if($task->employee_avatar)
                     <img src="{{ asset('storage/' . $task->employee_avatar) }}" alt="{{ $task->employee_name }}" 
-                         class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-green-200 shadow-lg">
+                         class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-red-200 shadow-lg">
                 @else
-                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-r from-red-400 to-red-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                         {{ substr($task->employee_name, 0, 1) }}
                     </div>
                 @endif
                 <div class="sm:mr-6 flex-1 text-center sm:text-right">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ $task->employee_name }}</h2>
-                    <p class="text-green-600 font-semibold text-lg mb-1">{{ $task->department }} - {{ $task->position }}</p>
+                    <p class="text-red-600 font-semibold text-lg mb-1">{{ $task->department }} - {{ $task->position }}</p>
                     @if($task->employee_id)
                         <p class="text-gray-600 text-sm">رقم الموظف: {{ $task->employee_id }}</p>
                     @endif

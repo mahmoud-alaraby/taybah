@@ -66,7 +66,7 @@ class PhotographyCostController extends Controller
                 ->where('created_by', $request->employee_id);
         }
 
-        $costs = $query->latest('date')->paginate(15)->withQueryString();
+        $costs = $query->latest('date')->paginate(10)->withQueryString();
 
         $employeesWithPermission = Employee::whereHas('roles.permissions', function ($q) {
             $q->where('name', 'photography_costs');

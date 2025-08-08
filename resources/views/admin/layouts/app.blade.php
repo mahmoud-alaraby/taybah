@@ -67,155 +67,137 @@
 </head>
 <body class="bg-gray-50 font-cairo">
     <div class="flex h-screen bg-gray-50">
-        <!-- Sidebar -->
-        <aside class="hidden md:flex md:flex-shrink-0">
-            <div class="flex flex-col w-64" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%)">
-                <!-- Logo -->
-                <div class="flex items-center justify-center h-16 px-4" style="background-color: #dddddd1a;">
+       <aside class="hidden md:flex md:flex-shrink-0 h-screen">
+    <div class="flex flex-col w-64 overflow-y-auto" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%)">
+        <!-- Logo -->
+        <div class="flex items-center justify-center h-16 px-4" style="background-color: #dddddd1a;">
+            <div class="flex items-center">
+                <div class="h-14 flex items-center justify-center ml-2">
+                    <img src="{{ asset('assets/images/taiba-logo.png') }}" alt="شركة طيبة" class="h-14">    
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col flex-1">
+            <!-- Admin Info -->
+            <div class="px-3 py-4">
+                <div class="mb-6 p-3 rounded-lg" style="background-color: #374151;">
                     <div class="flex items-center">
-                        <div class="h-14 flex items-center justify-center ml-2">
-                            <img src="{{ asset('assets/images/taiba-logo.png') }}" alt="شركة طيبة" class="h-14">    
+                        <div class="flex-shrink-0">
+                            <div class="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+                                <span class="text-white font-medium">
+                                    {{ mb_substr(auth('admin')->user()->name, 0, 1) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mr-3">
+                            <p class="text-sm font-medium text-white">{{ auth('admin')->user()->name }}</p>
+                            <p class="text-xs text-gray-300 flex items-center">
+                                <i class="fas fa-user-shield ml-1"></i>
+                                {{ auth('admin')->user()->role == 'super_admin' ? 'مدير النظام' : 'مدير عام' }}
+                            </p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex flex-col flex-1">
-                    <!-- Admin Info -->
-                    <div class="px-3 py-4">
-                        <div class="mb-6 p-3 rounded-lg" style="background-color: #374151;">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
-                                        <span class="text-white font-medium">
-                                            {{ mb_substr(auth('admin')->user()->name, 0, 1) }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="mr-3">
-                                    <p class="text-sm font-medium text-white">{{ auth('admin')->user()->name }}</p>
-                                    <p class="text-xs text-gray-300 flex items-center">
-                                        <i class="fas fa-user-shield ml-1"></i>
-                                        {{ auth('admin')->user()->role == 'super_admin' ? 'مدير النظام' : 'مدير عام' }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Navigation -->
-                        <nav class="space-y-1">
-                            <a href="{{ route('admin.dashboard') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
-                                الرئيسية
-                            </a>
-                            
-                            <a href="{{ route('admin.admins.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-users-cog ml-3 text-sm"></i>
-                                إدارة المديرين
-                            </a>
-                            
-                            <a href="{{ route('admin.employees.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.employees.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-users ml-3 text-sm"></i>
-                                إدارة الموظفين
-                            </a>
-                            
-                            <a href="{{ route('admin.roles.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.roles.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-user-tag ml-3 text-sm"></i>
-                                إدارة الأدوار
-                            </a>
-
-                            <!-- رابط قائمة المهام الجديد -->
-                            <a href="{{ route('admin.tasks.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-tasks ml-3 text-sm"></i>
-                                قائمة المهام
-                            </a>
-                        <!-- رابط نظام مواعيد التجديد -->
-<a href="{{ route('admin.renewal-dates.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-calendar-alt ml-3 text-sm"></i>
-    مواعيد التجديد
-    @if(isset($upcomingRenewalsCount) && $upcomingRenewalsCount > 0)
-        <span class="bg-yellow-500 text-white text-xs rounded-full px-2 py-1 mr-2">
-            {{ $upcomingRenewalsCount }}
-        </span>
-    @endif
+                <!-- Navigation -->
+                <nav class="space-y-1">
+                    <a href="{{ route('admin.dashboard') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
+                        الرئيسية
+                    </a>
+                    <a href="{{ route('admin.admins.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-users-cog ml-3 text-sm"></i>
+                        إدارة المديرين
+                    </a>
+                    <a href="{{ route('admin.employees.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.employees.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-users ml-3 text-sm"></i>
+                        إدارة الموظفين
+                    </a>
+                    <a href="{{ route('admin.roles.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.roles.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-user-tag ml-3 text-sm"></i>
+                        إدارة الأدوار
+                    </a>
+                    <a href="{{ route('admin.tasks.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-tasks ml-3 text-sm"></i>
+                        قائمة المهام
+                    </a>
+                    <a href="{{ route('admin.renewal-dates.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-calendar-alt ml-3 text-sm"></i>
+                        مواعيد التجديد
+                        @if(isset($upcomingRenewalsCount) && $upcomingRenewalsCount > 0)
+                            <span class="bg-yellow-500 text-white text-xs rounded-full px-2 py-1 mr-2">
+                                {{ $upcomingRenewalsCount }}
+                            </span>
+                        @endif
+                    </a>
+                    <a href="{{ route('admin.receipts-payments.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-money-bill-wave ml-3 text-sm"></i>
+                        المقبوضات والمدفوعات
+                    </a>
+                    <a href="{{ route('admin.customer-movement.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.customer-movement.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-users ml-3 text-sm"></i>
+                        متابعة حركة العملاء
+                    </a>
+                    <a href="{{ route('admin.potential-customers.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.potential-customers.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-user-plus ml-3 text-sm"></i>
+                        العملاء المحتملين
+                    </a>
+                    <a href="{{ route('admin.operation-system.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-calendar-check ml-3 text-sm"></i>
+                        نظام التشغيل العام
+                    </a>
+                    <a href="{{ route('admin.photography-booking.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-camera ml-3 text-sm"></i>
+                        <span class="flex-1">حجوزات التصوير والمونتاج</span>
+                    </a>
+                    <a href="{{ route('admin.photography-costs.index') }}"
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-costs.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-camera-retro ml-3 text-sm"></i>
+                        تكاليف التصوير
+                    </a>
+                <a href="{{ route('admin.customer-response.index') }}"
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.customer-response.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+   
+   <!-- أيقونة جديدة مناسبة بدلاً من svg الفارغ -->
+   <i class="fas fa-comments ml-3 text-sm "></i> 
+   
+   <span class="flex-1">قاموس الردود على العملاء</span>
 </a>
 
+                    <a href="{{ route('admin.designer-task-accounts.index') }}"
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                        {{ request()->routeIs('admin.designer-task-accounts.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-pencil-ruler ml-3 text-sm"></i>
+                        حساب المصممين بالتاسك
+                    </a>
 
-                            <a href="{{ route('admin.receipts-payments.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-money-bill-wave ml-3 text-sm"></i>
-    المقبوضات والمدفوعات
-</a>
-
-<a href="{{ route('admin.customer-movement.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.customer-movement.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-users ml-3 text-sm"></i>
-    متابعة حركة العملاء
-</a>
-
-                            <a href="{{ route('admin.potential-customers.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.potential-customers.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                <i class="fas fa-user-plus ml-3 text-sm"></i>
-                                العملاء المحتملين
-                            </a>
-<a href="{{ route('admin.operation-system.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-calendar-check ml-3 text-sm"></i>
-    نظام التشغيل العام
-</a>
-
-   <a href="{{ route('admin.photography-booking.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-camera ml-3 text-sm"></i>
-    <span class="flex-1">حجوزات التصوير والمونتاج</span>
-    @if(class_exists('\App\Models\BookingNotification'))
-        @php
-            try {
-                $unreadCount = \App\Models\BookingNotification::unread()
-                    ->forAdmin(auth()->guard('admin')->id())
-                    ->count();
-            } catch (Exception $e) {
-                $unreadCount = 0;
-            }
-        @endphp
-        @if($unreadCount > 0)
-            <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2">{{ $unreadCount }}</span>
-        @endif
-    @endif
-</a>
-
-<a href="{{ route('admin.photography-costs.index') }}"
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-costs.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-camera-retro ml-3 text-sm"></i>
-    تكاليف التصوير
-</a>
-<a href="{{ route('admin.customer-response.index') }}"
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.customer-response.*') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <svg ... class="w-5 h-5 text-indigo-400 ml-2"></svg>
-    قاموس الردود
-</a>
-
-
-
-                            <div class="mt-6 pt-6 border-t border-gray-700">
-                                <form method="POST" action="{{ route('admin.logout') }}">
-                                    @csrf
-                                    <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">
-                                        <i class="fas fa-sign-out-alt ml-3 text-sm"></i>
-                                        تسجيل خروج
-                                    </button>
-                                </form>
-                            </div>
-                        </nav>
+                    <div class="mt-6 pt-6 border-t border-gray-700">
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">
+                                <i class="fas fa-sign-out-alt ml-3 text-sm"></i>
+                                تسجيل خروج
+                            </button>
+                        </form>
                     </div>
-                </div>
+                </nav>
             </div>
-        </aside>
+        </div>
+    </div>
+</aside>
+
         
         <!-- Main content -->
         <div class="flex flex-col w-0 flex-1">

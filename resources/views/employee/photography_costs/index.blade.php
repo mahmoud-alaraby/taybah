@@ -7,7 +7,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-money-bill-wave text-red-600 mr-2"></i>
+                    <i class="fas fa-money-bill-wave text-red-600 ml-2"></i>
                     نظام تكاليف التصوير
                 </h1>
                 <p class="text-gray-600 mt-1">إدارة جميع المقبوضات والمدفوعات الخاصة بالتصوير</p>
@@ -15,7 +15,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('employee.photography-costs.create') }}"
                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة قيد جديد
                 </a>
             </div>
@@ -57,7 +57,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-search text-red-600 mr-2"></i>
+                <i class="fas fa-search text-red-600 ml-2"></i>
                 البحث والتصفية
             </h3>
         </div>
@@ -101,12 +101,12 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                        <i class="fas fa-search mr-2"></i>
+                        <i class="fas fa-search ml-2"></i>
                         بحث
                     </button>
                     <a href="{{ route('employee.photography-costs.index') }}"
                     class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="fas fa-times ml-2"></i>
                         إلغاء
                     </a>
                 </div>
@@ -118,7 +118,7 @@
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-table text-red-600 mr-2"></i>
+                    <i class="fas fa-table text-red-600 ml-2"></i>
                     قائمة المقبوضات والمدفوعات
                 </h3>
                 <span class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
@@ -188,7 +188,7 @@
                 <p class="text-gray-600 mb-6">لم يتم العثور على أي سجلات تطابق معايير البحث</p>
                 <a href="{{ route('employee.photography-costs.create') }}"
                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus ml-2"></i>
                     إضافة قيد جديد
                 </a>
             </div>
