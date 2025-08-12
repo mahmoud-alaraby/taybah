@@ -100,6 +100,15 @@
                         <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
                         الرئيسية
                     </a>
+
+                         @if(auth('employee')->user()->hasPermission('customer_communication'))
+                    <a href="{{ route('employee.customer-communication.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.customer-communication*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-calendar-alt ml-3 text-sm"></i>
+                      التواصل مع العملاء 
+                    </a>
+                    @endif
+ 
                     <a href="{{ route('employee.tasks.index') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-tasks ml-3 text-sm"></i>
@@ -197,13 +206,7 @@
                     </a>
                     @endif
 
-                    @if(auth('employee')->user()->hasPermission('customer_communication'))
-                    <a href="{{ route('employee.customer-communication') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.customer-communication') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-phone ml-3 text-sm"></i>
-                        التواصل مع العملاء
-                    </a>
-                    @endif
+               
 
                     @if(auth('employee')->user()->hasPermission('design_follow_up'))
                     <a href="{{ route('employee.design-follow-up') }}" 

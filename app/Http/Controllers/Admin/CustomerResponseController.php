@@ -9,14 +9,14 @@ use Illuminate\Http\Request;
 
 class CustomerResponseController extends Controller
 {
-  
     public function index(Request $request)
     {
-        $categories = CustomerResponseCategory::all();
+        $categories = CustomerResponseCategory::orderBy('name')->get();
+
         $category_id = $request->category_id;
         $creator_source = $request->creator_source;
 
-        $query = CustomerResponse::query();
+        $query = CustomerResponse::query()->with('category');
 
         if ($category_id) {
             $query->where('category_id', $category_id);
@@ -28,9 +28,9 @@ class CustomerResponseController extends Controller
             $query->where('created_by_type', 'admin')
                   ->where('created_by', auth('admin')->id());
         } elseif ($creator_source === 'others') {
-            $query->where(function($q) {
+            $query->where(function($q){
                 $q->where('created_by_type', 'employee');
-            })->orWhere(function($q) {
+            })->orWhere(function($q){
                 $q->where('created_by_type', 'admin')
                   ->where('created_by', '!=', auth('admin')->id());
             });
@@ -38,12 +38,23 @@ class CustomerResponseController extends Controller
 
         $responses = $query->orderBy('id', 'desc')->get();
 
-        return view('admin.customer-response.index', compact('responses', 'categories', 'category_id', 'creator_source'));
+        // قائمة الأيقونات لواجهة المودال
+        $iconPool = [
+            'fas fa-id-card', 'fas fa-camera-retro', 'fas fa-laptop-code', 'fas fa-paint-brush',
+            'fas fa-bullhorn', 'fas fa-print', 'fas fa-comments', 'fas fa-question-circle',
+            'fas fa-headset', 'fas fa-envelope-open-text', 'fas fa-lightbulb', 'fas fa-file-alt',
+            'fas fa-clipboard-list', 'fas fa-chart-line', 'fas fa-check-circle', 'fas fa-star',
+            'fas fa-tag', 'fas fa-sitemap', 'fas fa-tools', 'fas fa-bolt',
+        ];
+
+        return view('admin.customer-response.index', compact(
+            'responses', 'categories', 'category_id', 'creator_source', 'iconPool'
+        ));
     }
 
     public function create()
     {
-        $categories = CustomerResponseCategory::all();
+        $categories = CustomerResponseCategory::orderBy('name')->get();
         return view('admin.customer-response.create', compact('categories'));
     }
 
@@ -54,16 +65,17 @@ class CustomerResponseController extends Controller
             'title'       => 'required|string|max:80',
             'body'        => 'required|string|max:1000',
         ]);
+
         CustomerResponse::create([
-            'category_id'      => $request->category_id,
-            'title'            => $request->title,
-            'body'             => $request->body,
-            'created_by'       => auth('admin')->id(),
-            'created_by_type'  => 'admin',
+            'category_id'     => $request->category_id,
+            'title'           => $request->title,
+            'body'            => $request->body,
+            'created_by'      => auth('admin')->id(),
+            'created_by_type' => 'admin',
         ]);
+
         return redirect()->route('admin.customer-response.index')->with('success', 'تمت الإضافة');
     }
-
 
     public function show(CustomerResponse $customerResponse)
     {
@@ -72,7 +84,7 @@ class CustomerResponseController extends Controller
 
     public function edit(CustomerResponse $customerResponse)
     {
-        $categories = CustomerResponseCategory::all();
+        $categories = CustomerResponseCategory::orderBy('name')->get();
         return view('admin.customer-response.edit', compact('customerResponse', 'categories'));
     }
 
@@ -83,6 +95,7 @@ class CustomerResponseController extends Controller
             'title'       => 'required|string|max:80',
             'body'        => 'required|string|max:1000',
         ]);
+
         $customerResponse->update($request->only('category_id','title','body'));
         return redirect()->route('admin.customer-response.index')->with('success','تم التعديل');
     }

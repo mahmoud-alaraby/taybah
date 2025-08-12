@@ -11,6 +11,8 @@ use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateCo
 use App\Http\Controllers\Employee\PhotographyCostController as EmployeePhotographyCostController;
 use App\Http\Controllers\Employee\CustomerResponseController ;
 use App\Http\Controllers\Employee\EmployeeDesignerTaskAccountEmployeeController;
+use App\Http\Controllers\employee\CustomerCommunicationController;
+use App\Http\Controllers\Employee\CustomerResponseCategoryInlineController as EmployeeCategoryInlineController;
 // Employee Guest Routes (غير مسجل دخول)
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
@@ -146,6 +148,14 @@ Route::middleware('employee.permission:customer_response')->group(function () {
         Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
         Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
 
+        
+            // إدارة التصنيفات من داخل index (للعمل ضمن نفس الصفحة)
+            Route::post('/categories', [EmployeeCategoryInlineController::class, 'store'])->name('categories.store');
+            Route::put('/categories/{category}', [EmployeeCategoryInlineController::class, 'update'])->name('categories.update');
+            Route::delete('/categories/{category}', [EmployeeCategoryInlineController::class, 'destroy'])->name('categories.destroy');
+            Route::get('/categories/icons', [EmployeeCategoryInlineController::class, 'icons'])->name('categories.icons');
+    
+
         // التصنيفات
         // Route::get('/categories', [EmployeeCustomerResponseCategoryController::class, 'index'])->name('categories.index');
         // Route::get('/categories/create', [EmployeeCustomerResponseCategoryController::class, 'create'])->name('categories.create');
@@ -193,11 +203,14 @@ Route::middleware('employee.permission:photography_costs')->group(function () {
     });
 });
 
-    Route::middleware('employee.permission:customer_communication')->group(function () {
-        Route::get('/customer-communication', function () {
-            return view('employee.systems.customer-communication');
-        })->name('employee.customer-communication');
-    });
+Route::middleware(['employee.auth', 'employee.permission:customer_communication'])->prefix('customer-communication')->name('employee.customer-communication.')->group(function () {
+    Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
+    Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
+    Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
+    Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
+});
+
+
 
     Route::middleware('employee.permission:design_follow_up')->group(function () {
         Route::get('/design-follow-up', function () {

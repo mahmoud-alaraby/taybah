@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\PhotographyCostController;
 use App\Http\Controllers\Admin\CustomerResponseController as AdminCustomerResponseController;
 use App\Http\Controllers\Admin\AdminCustomerResponseCategoryController;
 use App\Http\Controllers\Admin\DesignerTaskAccountAdminController;
+use App\Http\Controllers\Admin\CustomerCommunicationController  as AdminCustomerCommunicationController;
+use App\Http\Controllers\Admin\CustomerResponseCategoryInlineController as  AdminCategoryInlineController;
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
@@ -205,12 +207,21 @@ Route::prefix('customer-response')->name('admin.customer-response.')->group(func
     Route::delete('/{customerResponse}', [AdminCustomerResponseController::class, 'destroy'])->name('destroy');
     
     // التصنيفات
-    Route::get('/categories', [AdminCustomerResponseCategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/create', [AdminCustomerResponseCategoryController::class, 'create'])->name('categories.create');
-    Route::post('/categories', [AdminCustomerResponseCategoryController::class, 'store'])->name('categories.store');
-    Route::get('/categories/{category}/edit', [AdminCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
-    Route::put('/categories/{category}', [AdminCustomerResponseCategoryController::class, 'update'])->name('categories.update');
-    Route::delete('/categories/{category}', [AdminCustomerResponseCategoryController::class, 'destroy'])->name('categories.destroy');
+    // Route::get('/categories', [AdminCustomerResponseCategoryController::class, 'index'])->name('categories.index');
+    // Route::get('/categories/create', [AdminCustomerResponseCategoryController::class, 'create'])->name('categories.create');
+    // Route::post('/categories', [AdminCustomerResponseCategoryController::class, 'store'])->name('categories.store');
+    // Route::get('/categories/{category}/edit', [AdminCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
+    // Route::put('/categories/{category}', [AdminCustomerResponseCategoryController::class, 'update'])->name('categories.update');
+    // Route::delete('/categories/{category}', [AdminCustomerResponseCategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // إدارة التصنيفات من داخل index
+        Route::post('/categories', [AdminCategoryInlineController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{category}', [AdminCategoryInlineController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminCategoryInlineController::class, 'destroy'])->name('categories.destroy');
+        // إن رغبت بإرجاع قائمة الأيقونات
+        Route::get('/categories/icons', [AdminCategoryInlineController::class, 'icons'])->name('categories.icons');
+    
+
 });
 
 
@@ -229,6 +240,14 @@ Route::prefix('designer-task-accounts')->name('admin.designer-task-accounts.')->
     // حذف جميع المهام ليوم معين
     Route::post('/destroy-all', [DesignerTaskAccountAdminController::class, 'destroyAllTasksForDay'])->name('destroyAllTasksForDay');
 });
+
+
+Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
+        Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+        Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
+        Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
+    });
 
 
 });

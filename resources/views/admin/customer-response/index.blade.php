@@ -1,110 +1,143 @@
 @extends('admin.layouts.app')
 @section('title', 'قاموس الردود الجاهزة')
 
-@php
-// تعيين الأيقونة واللون المناسب لكل تصنيف
-$catIcons = [
-    'أسئلة بروفايل'       => ['icon' => 'fas fa-id-card',            'bg' => 'bg-blue-100',    'color' => 'text-blue-700'],
-    'أسئلة تصوير'         => ['icon' => 'fas fa-camera-retro',       'bg' => 'bg-yellow-100',  'color' => 'text-yellow-800'],
-    'أسئلة تصميم مواقع'   => ['icon' => 'fas fa-laptop-code',        'bg' => 'bg-green-100',   'color' => 'text-green-700'],
-    'أسئلة تصميم بشكل عام'=> ['icon' => 'fas fa-paint-brush',        'bg' => 'bg-indigo-100',  'color' => 'text-indigo-700'],
-    'أسئلة تسويق'         => ['icon' => 'fas fa-bullhorn',           'bg' => 'bg-rose-100',    'color' => 'text-rose-700'],
-    'أسئلة طباعة'         => ['icon' => 'fas fa-print',              'bg' => 'bg-orange-100',  'color' => 'text-orange-700'],
-];
-@endphp
-
 @section('content')
-<div class="max-w-6xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+<div class="p-6 space-y-8">
+
+    {{-- فلاتر الردود --}}
+    <form method="GET" class="flex flex-wrap gap-3 items-end">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <svg class="w-8 h-8 text-indigo-600" fill="none"><!-- icon --></svg>
-                قاموس الردود الجاهزة
-            </h1>
-            <p class="text-gray-500 mt-1">نصوص جاهزة للرد على العملاء حسب التصنيف</p>
+            <label class="block text-sm mb-1">التصنيف</label>
+            <select name="category_id" class="border rounded p-2">
+                <option value="">الكل</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ (string)$cat->id === (string)request('category_id') ? 'selected' : '' }}>
+                        {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
         </div>
         <div>
-            <a href="{{ route('admin.customer-response.create') }}"
-                class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold transition">+ إضافة رد جديد</a>
+            <label class="block text-sm mb-1">مصدر الإنشاء</label>
+            <select name="creator_source" class="border rounded p-2">
+                <option value="">الكل</option>
+                <option value="admin" {{ request('creator_source')==='admin' ? 'selected':'' }}>أدمن</option>
+                <option value="me" {{ request('creator_source')==='me' ? 'selected':'' }}>أنا</option>
+                <option value="others" {{ request('creator_source')==='others' ? 'selected':'' }}>موظفين آخرين</option>
+            </select>
         </div>
-    </div>
-    <div class="flex flex-row justify-between gap-4 mb-6">
-
-    <div class="flex gap-2">
-
-        <a href="{{route('admin.customer-response.categories.index') }}"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold transition">إدارة التصنيفات</a>
-    </div>
-</div>
-
-
-    <form method="get" class="flex flex-wrap items-center gap-3 mb-8">
-        <select name="category_id" class="border border-gray-300 rounded px-3 py-2">
-            <option value="">كل التصنيفات</option>
-            @foreach($categories as $cat)
-                <option value="{{ $cat->id }}" @selected(request('category_id')==$cat->id)>{{ $cat->name }}</option>
-            @endforeach
-        </select>
-        <select name="creator_source" class="border border-gray-300 rounded px-3 py-2">
-            <option value="">جميع المنشئين</option>
-            <option value="admin" @selected(request('creator_source')=='admin')>تم الإنشاء بواسطة الأدمن</option>
-            <option value="me" @selected(request('creator_source')=='me')>تم الإنشاء بواسطتي</option>
-            <option value="others" @selected(request('creator_source')=='others')>تم الإنشاء بواسطة آخرين</option>
-        </select>
-        <button type="submit" class="bg-gray-800  text-white px-3 py-2 rounded-lg"><i class="fas fa-search ml-1"></i>بحث</button>
+        <button class="bg-blue-600 text-white rounded px-4 py-2">تطبيق</button>
+        <a href="{{ route('admin.customer-response.index') }}" class="bg-gray-200 px-4 py-2 rounded">إعادة ضبط</a>
+        <a href="{{ route('admin.customer-response.create') }}" class="bg-green-600 text-white rounded px-4 py-2">إضافة رد</a>
     </form>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        @foreach($responses as $res)
-            @php
-                $cat = $catIcons[$res->category->name] ?? ['icon'=>'fas fa-question-circle', 'bg'=>'bg-gray-100', 'color'=>'text-gray-500'];
-            @endphp
-            <div class="relative bg-white shadow p-5 flex flex-col border border-gray-200 rounded-2xl min-h-[260px] group transition duration-200 hover:-translate-y-1 hover:shadow-lg"
-                style="height:270px;">
-                <div class="flex items-start gap-4 mb-2">
-                    <div class="shrink-0 {{$cat['bg']}} rounded-lg flex items-center justify-center w-12 h-12">
-                        <i class="{{ $cat['icon'] }} {{$cat['color']}} text-xl"></i>
-                    </div>
-                    <span class="block flex-1 text-md font-bold text-gray-800 truncate">
-                        {{ $res->title }}
-                    </span>
+    {{-- عنوان التصنيفات + زر إضافة --}}
+    <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold">التصنيفات</h2>
+        <button class="bg-indigo-600 text-white px-4 py-2 rounded" onclick="document.getElementById('addCategoryModal').showModal();">إضافة تصنيف</button>
+    </div>
 
-                         <div class="flex items-center gap-1">
-                        <a href="{{ route('admin.customer-response.edit', $res) }}" title="تعديل"
-                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border border-yellow-200 ml-1">
-                            <i class="fas fa-edit text-base"></i>
-                        </a>
-                        <form action="{{ route('admin.customer-response.destroy',$res) }}" method="POST" onsubmit="return confirm('تأكيد الحذف؟')" class="inline">
+    {{-- Collapsible لعرض التصنيفات --}}
+    <div class="border rounded mb-6">
+        <button type="button" class="w-full text-right px-4 py-3 bg-gray-100 hover:bg-gray-200 font-semibold" onclick="toggleCategories()">
+            عرض/إخفاء قائمة التصنيفات
+        </button>
+        <div id="categoriesPanel" class="p-4 space-y-2 hidden">
+            @forelse($categories as $cat)
+                <div class="flex items-center justify-between border rounded p-3">
+                    <div class="flex items-center gap-5">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-indigo-600 text-xl">
+                            <i class="{{ $cat->icon ?? 'fas fa-tag' }}"></i>
+                        </span>
+                        <span class="font-semibold text-lg">{{ $cat->name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="text-blue-600 hover:text-blue-900" onclick="openEditCategory({{ $cat->id }}, '{{ e($cat->name) }}', '{{ e($cat->icon ?? 'fas fa-tag') }}')" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="{{ route('admin.customer-response.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('حذف التصنيف؟');" class="inline">
                             @csrf @method('DELETE')
-                            <button type="submit" title="حذف"
-                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 ml-1">
-                                <i class="fas fa-trash text-base"></i>
+                            <button class="text-red-600 hover:text-red-900" title="حذف">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
-                        <button type="button"
-                                onclick="navigator.clipboard.writeText(`{!! str_replace(['`','\\'],['\`','\\\\'],preg_replace('/\r?\n/','\\n',$res->body)) !!}`);"
-                                title="نسخ النص"
-                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 hover:bg-green-200 text-green-800 border border-green-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V8.828a2 2 0 0 0-.586-1.414l-4.828-4.828A2 2 0 0 0 10.828 2H8zm2 2l6 6m-5-1v5a1 1 0 0 1-2 0V8m0-2h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h2z"/></svg>
-                        </button>
                     </div>
                 </div>
-                <div class="text-gray-700 text-sm mb-3 break-all flex-1 overflow-hidden" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">
-                    {{ $res->body }}
-                </div>
-                <div class="flex items-end justify-between mt-auto">
-                    <span class="text-xs text-gray-500 flex items-center gap-2">
-                        <i class="fas fa-folder text-gray-400"></i> {{ $res->category->name }}
-                        <span class="inline-block w-1 h-1 rounded-full mx-1 bg-gray-300"></span>
-                        <i class="fas fa-user text-gray-400"></i>
-                        <span class="font-semibold text-indigo-600">
-                            {{ $res->created_by_type == 'admin' ? ($res->admin->name ?? 'أدمن') : ($res->employee->name ?? 'موظف') }}
+            @empty
+                <p class="text-gray-500">لا توجد تصنيفات بعد.</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- قائمة الردود --}}
+    <div>
+        <h2 class="text-xl font-bold mb-3">نصوص جاهزة للرد على العملاء حسب التصنيف</h2>
+        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+            @forelse($responses as $resp)
+                <div class="border rounded p-4 space-y-2 relative">
+                    {{-- أيقونة التصنيف بارزة --}}
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-indigo-600 text-xl">
+                            <i class="{{ $resp->category->icon ?? 'fas fa-tag' }}"></i>
                         </span>
-                    </span>
-               
+                        <span class="font-semibold">{{ $resp->category->name ?? 'بدون تصنيف' }}</span>
+                    </div>
+                    <div class="font-bold">{{ $resp->title }}</div>
+                    <div class="text-sm text-gray-700 whitespace-pre-line" id="text_{{ $resp->id }}">{{ $resp->body }}</div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <button title="نسخ النص" class="text-gray-600 hover:text-indigo-600" onclick="copyText({{ $resp->id }})">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <a href="{{ route('admin.customer-response.edit', $resp->id) }}" class="text-yellow-600 hover:text-yellow-800" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ route('admin.customer-response.destroy', $resp->id) }}" method="POST" onsubmit="return confirm('حذف الرد؟');" class="inline">
+                            @csrf @method('DELETE')
+                            <button class="text-red-600 hover:text-red-800" title="حذف">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="text-xs text-gray-500">المنشئ: {{ $resp->creator_name }} ({{ $resp->created_by_type }})</div>
                 </div>
-            </div>
-        @endforeach
+            @empty
+                <p class="text-gray-500">لا توجد ردود.</p>
+            @endforelse
+        </div>
     </div>
 </div>
+
+{{-- Modal إضافة وتعديل نفس السابق (انظر الرد السابق) --}}
+{{-- ... --}}
+<script>
+function toggleCategories(){
+    const el = document.getElementById('categoriesPanel');
+    el.classList.toggle('hidden');
+}
+function openEditCategory(id, name, icon){
+    const form = document.getElementById('editCategoryForm');
+    form.action = "{{ route('admin.customer-response.categories.update', ':id') }}".replace(':id', id);
+    document.getElementById('editCatName').value = name;
+    const sel = document.getElementById('editCatIcon');
+    sel.value = icon || 'fas fa-tag';
+    syncPreview('editCatIcon', 'editIconPreview');
+    document.getElementById('editCategoryModal').showModal();
+}
+function syncPreview(selectId, previewId){
+    const sel = document.getElementById(selectId);
+    const cls = sel.value || 'fas fa-tag';
+    const holder = document.getElementById(previewId);
+    holder.innerHTML = '<i class=\"'+cls+'\"></i>';
+}
+function copyText(id){
+    let el = document.getElementById('text_'+id);
+    let text = el.innerText || el.textContent || ''; // يحصل على النص كما يظهر مع الأسطر
+    navigator.clipboard.writeText(text).then(function(){
+        // يمكن إضافة رسالة "تم النسخ" إن أحببت
+    });
+}
+document.addEventListener('DOMContentLoaded', function(){
+    syncPreview('addCatIcon','addIconPreview');
+});
+</script>
 @endsection

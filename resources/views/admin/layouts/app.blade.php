@@ -107,6 +107,12 @@
                         <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
                         الرئيسية
                     </a>
+                   
+    <a href="{{ route('admin.customer-communication.index') }}" class="flex items-center p-2 text-gray-700 hover:bg-gray-200">
+        📞 <span class="ml-2">التواصل مع العملاء</span>
+    </a>
+
+
                     <a href="{{ route('admin.admins.index') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-users-cog ml-3 text-sm"></i>
