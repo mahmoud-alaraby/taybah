@@ -18,15 +18,31 @@ class ProjectTrackingController extends Controller
         $employeeId = auth('employee')->id();
         $today = Carbon::today();
 
-        // المشاريع النشطة للموظف
+        // المشاريع التي يعمل عليها الموظف (له مهام فيها)
         $activeProjects = Project::active()
             ->whereHas('tasks', function($q) use ($employeeId) {
                 $q->where('assigned_to', $employeeId);
             })
             ->with(['tasks' => function($q) use ($employeeId) {
-                $q->where('assigned_to', $employeeId)->orderBy('status');
+                $q->where('assigned_to', $employeeId)
+                  ->orderBy('status')
+                  ->orderBy('created_at', 'desc');
             }])
             ->get();
+
+        // إذا لم توجد مشاريع مخصصة للموظف، اجعله يرى المشاريع التي أنشأها
+        if ($activeProjects->isEmpty()) {
+            $activeProjects = Project::active()
+                ->where('created_by', $employeeId)
+                ->where('created_by_type', 'employee')
+                ->with(['tasks' => function($q) use ($employeeId) {
+                    $q->where('assigned_to', $employeeId)
+                      ->orWhereNull('assigned_to')
+                      ->orderBy('status')
+                      ->orderBy('created_at', 'desc');
+                }])
+                ->get();
+        }
 
         // حالة البصمة اليوم
         $todayAttendance = EmployeeAttendance::where('employee_id', $employeeId)
@@ -260,6 +276,8 @@ class ProjectTrackingController extends Controller
             'end_date' => 'nullable|date|after:start_date',
         ]);
 
+        $employeeId = auth('employee')->id();
+
         $project = Project::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -267,7 +285,7 @@ class ProjectTrackingController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'status' => 'active',
-            'created_by' => auth('employee')->id(),
+            'created_by' => $employeeId,
             'created_by_type' => 'employee',
         ]);
 
@@ -278,6 +296,8 @@ class ProjectTrackingController extends Controller
         ]);
     }
 
+
+
     public function addTaskToProject(Request $request)
     {
         $request->validate([
@@ -287,13 +307,33 @@ class ProjectTrackingController extends Controller
             'estimated_hours' => 'required|numeric|min:0',
         ]);
 
+        $employeeId = auth('employee')->id();
+        
+        // التأكد من أن المشروع متاح للموظف
+        $project = Project::where('id', $request->project_id)
+            ->where(function($q) use ($employeeId) {
+                $q->where('created_by', $employeeId)
+                  ->where('created_by_type', 'employee')
+                  ->orWhereHas('tasks', function($q2) use ($employeeId) {
+                      $q2->where('assigned_to', $employeeId);
+                  });
+            })
+            ->first();
+
+        if (!$project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية للإضافة إلى هذا المشروع'
+            ], 403);
+        }
+
         $task = ProjectTask::create([
             'project_id' => $request->project_id,
             'name' => $request->name,
             'description' => $request->description,
             'estimated_hours' => $request->estimated_hours,
-            'assigned_to' => auth('employee')->id(),
-            'created_by' => auth('employee')->id(),
+            'assigned_to' => $employeeId, // تلقائياً يخصص للموظف الحالي
+            'created_by' => $employeeId,
             'created_by_type' => 'employee',
             'status' => 'pending',
         ]);

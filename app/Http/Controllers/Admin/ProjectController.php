@@ -16,9 +16,9 @@ class ProjectController extends Controller
 
         // البحث
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('client_name', 'like', '%' . $request->search . '%');
+                    ->orWhere('client_name', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -35,7 +35,7 @@ class ProjectController extends Controller
             'active' => Project::where('status', 'active')->count(),
             'completed' => Project::where('status', 'completed')->count(),
             'total_hours' => Project::join('time_tracking', 'projects.id', '=', 'time_tracking.project_id')
-                          ->sum('time_tracking.total_seconds') / 3600,
+                ->sum('time_tracking.total_seconds') / 3600,
         ];
 
         return view('admin.projects.index', compact('projects', 'stats'));
@@ -70,13 +70,14 @@ class ProjectController extends Controller
         ]);
 
         return redirect()->route('admin.projects.show', $project)
-                       ->with('success', 'تم إنشاء المشروع بنجاح');
+            ->with('success', 'تم إنشاء المشروع بنجاح');
     }
+
 
     public function show(Project $project)
     {
         $project->load(['tasks.assignedEmployee', 'timeTracking.employee']);
-        
+
         // إحصائيات المشروع
         $projectStats = [
             'total_tasks' => $project->tasks()->count(),
@@ -86,7 +87,10 @@ class ProjectController extends Controller
             'estimated_hours' => $project->tasks()->sum('estimated_hours'),
         ];
 
-        return view('admin.projects.show', compact('project', 'projectStats'));
+        // قائمة الموظفين النشطين لإضافة المهام
+        $employees = Employee::active()->get();
+
+        return view('admin.projects.show', compact('project', 'projectStats', 'employees'));
     }
 
     public function edit(Project $project)
@@ -107,18 +111,23 @@ class ProjectController extends Controller
         ]);
 
         $project->update($request->only([
-            'name', 'description', 'client_name', 'start_date', 'end_date', 'status'
+            'name',
+            'description',
+            'client_name',
+            'start_date',
+            'end_date',
+            'status'
         ]));
 
         return redirect()->route('admin.projects.show', $project)
-                       ->with('success', 'تم تحديث المشروع بنجاح');
+            ->with('success', 'تم تحديث المشروع بنجاح');
     }
 
     public function destroy(Project $project)
     {
         $project->delete();
         return redirect()->route('admin.projects.index')
-                       ->with('success', 'تم حذف المشروع بنجاح');
+            ->with('success', 'تم حذف المشروع بنجاح');
     }
 
     public function addTask(Request $request, Project $project)
@@ -149,11 +158,11 @@ class ProjectController extends Controller
 
         // تقارير المشاريع
         $projectReports = Project::with(['tasks', 'timeTracking'])
-            ->whereHas('timeTracking', function($q) use ($year, $month) {
+            ->whereHas('timeTracking', function ($q) use ($year, $month) {
                 $q->whereYear('date', $year)->whereMonth('date', $month);
             })
             ->get()
-            ->map(function($project) use ($year, $month) {
+            ->map(function ($project) use ($year, $month) {
                 $monthlyHours = $project->timeTracking()
                     ->whereYear('date', $year)
                     ->whereMonth('date', $month)
