@@ -7,9 +7,9 @@ use App\Http\Controllers\Employee\DashboardController;
 use App\Http\Controllers\Employee\CustomerMovementController;
 use App\Http\Controllers\Employee\PhotoGraphyBookingController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
-use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateController ;
+use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateController;
 use App\Http\Controllers\Employee\PhotographyCostController as EmployeePhotographyCostController;
-use App\Http\Controllers\Employee\CustomerResponseController ;
+use App\Http\Controllers\Employee\CustomerResponseController;
 use App\Http\Controllers\Employee\EmployeeDesignerTaskAccountEmployeeController;
 use App\Http\Controllers\employee\CustomerCommunicationController;
 use App\Http\Controllers\Employee\CustomerResponseCategoryInlineController as EmployeeCategoryInlineController;
@@ -70,7 +70,7 @@ Route::middleware('employee.auth')->group(function () {
             ->name('employee.customer-movement.print');
     });
 
-Route::middleware('employee.permission:potential_customers')->group(function () {
+    Route::middleware('employee.permission:potential_customers')->group(function () {
         Route::get('/potential-customers', [App\Http\Controllers\Employee\PotentialCustomerController::class, 'index'])
             ->name('employee.potential-customers');
 
@@ -111,60 +111,60 @@ Route::middleware('employee.permission:potential_customers')->group(function () 
         })->name('employee.general-operations');
     });
 
-        // نظام حجز التصوير والمونتاج - تعديل الصلاحيات
-        Route::middleware(['employee.permission:photography_booking'])->group(function () {
-            Route::prefix('photography-booking')->name('employee.photography-booking.')->group(function () {
-                Route::get('/', [PhotoGraphyBookingController::class, 'index'])->name('index');
-                Route::get('/create', [PhotoGraphyBookingController::class, 'create'])->name('create');
-                Route::post('/', [PhotoGraphyBookingController::class, 'store'])->name('store');
-                Route::get('/{photographyBooking}', [PhotoGraphyBookingController::class, 'show'])->name('show');
-                Route::get('/{photographyBooking}/edit', [PhotoGraphyBookingController::class, 'edit'])->name('edit');
-                Route::put('/{photographyBooking}', [PhotoGraphyBookingController::class, 'update'])->name('update');
-                Route::delete('/{photographyBooking}', [PhotoGraphyBookingController::class, 'destroy'])->name('destroy');
-            });
+    // نظام حجز التصوير والمونتاج - تعديل الصلاحيات
+    Route::middleware(['employee.permission:photography_booking'])->group(function () {
+        Route::prefix('photography-booking')->name('employee.photography-booking.')->group(function () {
+            Route::get('/', [PhotoGraphyBookingController::class, 'index'])->name('index');
+            Route::get('/create', [PhotoGraphyBookingController::class, 'create'])->name('create');
+            Route::post('/', [PhotoGraphyBookingController::class, 'store'])->name('store');
+            Route::get('/{photographyBooking}', [PhotoGraphyBookingController::class, 'show'])->name('show');
+            Route::get('/{photographyBooking}/edit', [PhotoGraphyBookingController::class, 'edit'])->name('edit');
+            Route::put('/{photographyBooking}', [PhotoGraphyBookingController::class, 'update'])->name('update');
+            Route::delete('/{photographyBooking}', [PhotoGraphyBookingController::class, 'destroy'])->name('destroy');
         });
+    });
 
     //    سيستم تكاليف التصميم
 
 
 
-Route::middleware('employee.permission:designers_account')
-    ->prefix('designer-task-accounts')
-    ->name('employee.designer-task-accounts.')
-    ->group(function () {
-        Route::get('/', [EmployeeDesignerTaskAccountEmployeeController::class, 'index'])->name('index');
-        Route::get('/{id}', [EmployeeDesignerTaskAccountEmployeeController::class, 'show'])->name('show');
-});
+    Route::middleware('employee.permission:designers_account')
+        ->prefix('designer-task-accounts')
+        ->name('employee.designer-task-accounts.')
+        ->group(function () {
+            Route::get('/', [EmployeeDesignerTaskAccountEmployeeController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeeDesignerTaskAccountEmployeeController::class, 'show'])->name('show');
+        });
 
 
-Route::middleware('employee.permission:customer_response')->group(function () {
-    Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
-        // الردود
-        Route::get('/', [CustomerResponseController::class, 'index'])->name('index');
-        Route::get('/create', [CustomerResponseController::class, 'create'])->name('create');
-        Route::post('/', [CustomerResponseController::class, 'store'])->name('store');
-        Route::get('/{customerResponse}', [CustomerResponseController::class, 'show'])->name('show');
-        Route::get('/{customerResponse}/edit', [CustomerResponseController::class, 'edit'])->name('edit');
-        Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
-        Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
+    Route::middleware('employee.permission:customer_response')->group(function () {
+        Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
+            // الردود
+            Route::get('/', [CustomerResponseController::class, 'index'])->name('index');
+            Route::get('/create', [CustomerResponseController::class, 'create'])->name('create');
+            Route::post('/', [CustomerResponseController::class, 'store'])->name('store');
+            Route::get('/{customerResponse}', [CustomerResponseController::class, 'show'])->name('show');
+            Route::get('/{customerResponse}/edit', [CustomerResponseController::class, 'edit'])->name('edit');
+            Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
+            Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
 
-        
+
             // إدارة التصنيفات من داخل index (للعمل ضمن نفس الصفحة)
             Route::post('/categories', [EmployeeCategoryInlineController::class, 'store'])->name('categories.store');
             Route::put('/categories/{category}', [EmployeeCategoryInlineController::class, 'update'])->name('categories.update');
             Route::delete('/categories/{category}', [EmployeeCategoryInlineController::class, 'destroy'])->name('categories.destroy');
             Route::get('/categories/icons', [EmployeeCategoryInlineController::class, 'icons'])->name('categories.icons');
-    
 
-        // التصنيفات
-        // Route::get('/categories', [EmployeeCustomerResponseCategoryController::class, 'index'])->name('categories.index');
-        // Route::get('/categories/create', [EmployeeCustomerResponseCategoryController::class, 'create'])->name('categories.create');
-        // Route::post('/categories', [EmployeeCustomerResponseCategoryController::class, 'store'])->name('categories.store');
-        // Route::get('/categories/{category}/edit', [EmployeeCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
-        // Route::put('/categories/{category}', [EmployeeCustomerResponseCategoryController::class, 'update'])->name('categories.update');
-     
+
+            // التصنيفات
+            // Route::get('/categories', [EmployeeCustomerResponseCategoryController::class, 'index'])->name('categories.index');
+            // Route::get('/categories/create', [EmployeeCustomerResponseCategoryController::class, 'create'])->name('categories.create');
+            // Route::post('/categories', [EmployeeCustomerResponseCategoryController::class, 'store'])->name('categories.store');
+            // Route::get('/categories/{category}/edit', [EmployeeCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
+            // Route::put('/categories/{category}', [EmployeeCustomerResponseCategoryController::class, 'update'])->name('categories.update');
+
+        });
     });
-});
 
 
     Route::middleware('employee.permission:task_list')->group(function () {
@@ -174,41 +174,40 @@ Route::middleware('employee.permission:customer_response')->group(function () {
     });
 
     Route::middleware('employee.permission:renewal_dates')->group(function () {
-    Route::prefix('renewal-dates')->name('employee.renewal-dates.')->group(function () {
-        Route::get('/', [EmployeeRenewalDateController::class, 'index'])->name('index');
-        Route::get('/create', [EmployeeRenewalDateController::class, 'create'])->name('create');
-        Route::post('/', [EmployeeRenewalDateController::class, 'store'])->name('store');
-        Route::get('/{renewalDate}', [EmployeeRenewalDateController::class, 'show'])->name('show');
-        Route::get('/{renewalDate}/edit', [EmployeeRenewalDateController::class, 'edit'])->name('edit');
-        Route::put('/{renewalDate}', [EmployeeRenewalDateController::class, 'update'])->name('update');
-        Route::delete('/{renewalDate}', [EmployeeRenewalDateController::class, 'destroy'])->name('destroy');
-        Route::get('/calendar/view', [EmployeeRenewalDateController::class, 'calendar'])->name('calendar');
-        Route::post('/{renewalDate}/complete', [EmployeeRenewalDateController::class, 'markCompleted'])->name('complete');
-        Route::post('/{renewalDate}/renew', [EmployeeRenewalDateController::class, 'renew'])->name('renew');
-    });
-
+        Route::prefix('renewal-dates')->name('employee.renewal-dates.')->group(function () {
+            Route::get('/', [EmployeeRenewalDateController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeeRenewalDateController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeRenewalDateController::class, 'store'])->name('store');
+            Route::get('/{renewalDate}', [EmployeeRenewalDateController::class, 'show'])->name('show');
+            Route::get('/{renewalDate}/edit', [EmployeeRenewalDateController::class, 'edit'])->name('edit');
+            Route::put('/{renewalDate}', [EmployeeRenewalDateController::class, 'update'])->name('update');
+            Route::delete('/{renewalDate}', [EmployeeRenewalDateController::class, 'destroy'])->name('destroy');
+            Route::get('/calendar/view', [EmployeeRenewalDateController::class, 'calendar'])->name('calendar');
+            Route::post('/{renewalDate}/complete', [EmployeeRenewalDateController::class, 'markCompleted'])->name('complete');
+            Route::post('/{renewalDate}/renew', [EmployeeRenewalDateController::class, 'renew'])->name('renew');
+        });
     });
 
     // سيستم تكاليف التصوير 
- 
-Route::middleware('employee.permission:photography_costs')->group(function () {
-    Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
-        Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
-        Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
-        Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
-        Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
-        Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
-        Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
-        Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
-    });
-});
 
-Route::middleware(['employee.auth', 'employee.permission:customer_communication'])->prefix('customer-communication')->name('employee.customer-communication.')->group(function () {
-    Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
-    Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
-    Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
-    Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
-});
+    Route::middleware('employee.permission:photography_costs')->group(function () {
+        Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
+            Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
+            Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
+            Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
+            Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
+            Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
+            Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    Route::middleware(['employee.auth', 'employee.permission:customer_communication'])->prefix('customer-communication')->name('employee.customer-communication.')->group(function () {
+        Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
+        Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
+        Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
+        Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
+    });
 
 
 
@@ -225,19 +224,61 @@ Route::middleware(['employee.auth', 'employee.permission:customer_communication'
     });
 
 
-// سيستم المهام 
+    // سيستم المهام 
 
-// مسارات الموظفين
+    // مسارات الموظفين
 
-Route::prefix('employee')->name('employee.')->group(function () {
-    Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
-    Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
-    Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
-    Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route الحذف
+    Route::prefix('employee')->name('employee.')->group(function () {
+        Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
+        Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
+        Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route الحذف
+    });
+
+
+
+    // نظام متابعة المشاريع والمهام مع الاستوب ووتش
+    Route::middleware('employee.permission:project_tracking')->group(function () {
+        Route::prefix('project-tracking')->name('employee.project-tracking.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'index'])->name('index');
+
+            // البصمة
+            Route::post('/check-in', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'checkIn'])->name('check-in');
+            Route::post('/check-out', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'checkOut'])->name('check-out');
+
+            // الاستوب ووتش
+            Route::post('/start-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'startTimer'])->name('start-timer');
+            Route::post('/stop-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
+            Route::post('/pause-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
+            Route::get('/active-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
+            Route::get('/today-entries', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
+
+            // إنشاء مشاريع ومهام
+            Route::post('/create-project', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'createProject'])->name('create-project');
+            Route::post('/add-task', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
+
+            // التقارير
+            Route::get('/reports', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'reports'])->name('reports');
+        });
+    });
+
+    // نظام الحضور والانصراف
+    Route::middleware('employee.permission:attendance_tracking')->group(function () {
+        Route::prefix('attendance')->name('employee.attendance.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\AttendanceController::class, 'index'])->name('index');
+            Route::get('/today-status', [App\Http\Controllers\Employee\AttendanceController::class, 'todayStatus'])->name('today-status');
+            Route::get('/print', [App\Http\Controllers\Employee\AttendanceController::class, 'printReport'])->name('print');
+        });
+    });
+
+    // تقارير العمل
+    Route::middleware('employee.permission:work_reports')->group(function () {
+        Route::prefix('work-reports')->name('employee.work-reports.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\WorkReportsController::class, 'index'])->name('index');
+            Route::get('/print', [App\Http\Controllers\Employee\WorkReportsController::class, 'printReport'])->name('print');
+        });
+    });
+
+
+
 });
-
-});
-
-
-
-   

@@ -1,0 +1,176 @@
+/* أنيميشن الـ Stopwatch */
+.timer-active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 20, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 20, 60, 0);
+    }
+}
+
+/* أنيميشن للحالة النشطة */
+.status-active {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* تحسين شكل الاستوب ووتش */
+.stopwatch-display {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* تأثيرات الأزرار */
+.btn-timer {
+    transition: all 0.3s ease;
+    transform: scale(1);
+}
+
+.btn-timer:hover {
+    transform: scale(1.05);
+}
+
+.btn-timer:active {
+    transform: scale(0.95);
+}
+
+/* إشعارات مخصصة */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    min-width: 300px;
+    padding: 15px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    animation: slideInRight 0.3s ease;
+}
+
+.notification.success {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+}
+
+.notification.error {
+    background: linear-gradient(45deg, #f44336, #da190b);
+}
+
+.notification.warning {
+    background: linear-gradient(45deg, #ff9800, #f57000);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* تحسين الجداول */
+.table-hover tbody tr:hover {
+    background-color: rgba(220, 20, 60, 0.05);
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* شرائط التقدم المحسنة */
+.progress-bar {
+    transition: width 0.6s ease;
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+}
+
+.progress-bar.overtime {
+    background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+/* تحسين الكروت */
+.project-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #dc143c;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #dc143c;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تحسين الموبايل */
+@media (max-width: 768px) {
+    .stopwatch-display {
+        font-size: 1.5rem;
+    }
+    
+    .notification {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+    
+    .project-card {
+        margin-bottom: 1rem;
+    }
+}

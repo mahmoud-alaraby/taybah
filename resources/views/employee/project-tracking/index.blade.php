@@ -1,0 +1,701 @@
+@extends('employee.layouts.app')
+
+@section('title', 'متابعة المشاريع والمهام')
+@section('page-title', 'متابعة المشاريع والمهام')
+@section('page-subtitle', 'نظام متابعة المشاريع مع الاستوب ووتش والبصمة')
+
+@section('content')
+<div class="space-y-6" x-data="projectTracking()" x-init="init()">
+    
+    <!-- شريط الحالة العلوي -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- بصمة الحضور -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">البصمة</p>
+                    <p class="text-xs text-gray-500" x-text="currentTime"></p>
+                </div>
+                <div class="text-right">
+                    @if($todayAttendance)
+                        @if($todayAttendance->check_out_time)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                تم الانصراف
+                            </span>
+                        @else
+                            <button @click="checkOut()" 
+                                    class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700">
+                                <i class="fas fa-sign-out-alt mr-1"></i>
+                                انصراف
+                            </button>
+                        @endif
+                    @else
+                        <button @click="checkIn()" 
+                                class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700">
+                            <i class="fas fa-fingerprint mr-1"></i>
+                            حضور
+                        </button>
+                    @endif
+                </div>
+            </div>
+            @if($todayAttendance)
+                <div class="mt-2 text-xs">
+                    <div class="flex justify-between">
+                        <span>وقت الحضور:</span>
+                        <span>{{ $todayAttendance->check_in_time->format('H:i') }}</span>
+                    </div>
+                    @if($todayAttendance->is_late)
+                        <div class="flex justify-between text-red-600">
+                            <span>تأخير:</span>
+                            <span>{{ $todayAttendance->late_minutes }} دقيقة</span>
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        <!-- الاستوب ووتش -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-center">
+                <p class="text-sm font-medium text-gray-600 mb-2">الاستوب ووتش</p>
+                <div class="text-2xl font-mono font-bold" x-text="timerDisplay">00:00:00</div>
+                <div class="mt-2 space-x-1 space-x-reverse">
+                    <button x-show="!isTimerActive" @click="showStartTimerModal()" 
+                            class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button x-show="isTimerActive" @click="stopTimer()" 
+                            class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                    <button x-show="isTimerActive" @click="pauseTimer()" 
+                            class="px-2 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                </div>
+                <div x-show="activeTimer" class="mt-2 text-xs text-gray-600">
+                    <p x-text="activeTimer?.project?.name"></p>
+                    <p x-text="activeTimer?.task?.name"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- إحصائيات اليوم -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-center">
+                <p class="text-sm font-medium text-gray-600">ساعات اليوم</p>
+                <div class="text-xl font-bold text-blue-600">{{ number_format($todayStats['total_hours'], 1) }}</div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ min(100, $todayStats['target_percentage']) }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ number_format($todayStats['target_percentage'], 1) }}% من التارجت</p>
+            </div>
+        </div>
+
+        <!-- المشاريع النشطة -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-center">
+                <p class="text-sm font-medium text-gray-600">المشاريع النشطة</p>
+                <div class="text-xl font-bold text-purple-600">{{ $activeProjects->count() }}</div>
+                <div class="text-xs text-gray-500 mt-1">{{ $todayStats['projects_worked'] }} مشاريع اليوم</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات السريعة -->
+    <div class="bg-white p-4 rounded-lg shadow">
+        <div class="flex flex-wrap gap-2">
+            <button @click="showCreateProjectModal()" 
+                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>
+                مشروع جديد
+            </button>
+            <button @click="showAddTaskModal()" 
+                    class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">
+                <i class="fas fa-tasks mr-2"></i>
+                مهمة جديدة
+            </button>
+            <a href="{{ route('employee.work-reports.index') }}" 
+               class="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700">
+                <i class="fas fa-chart-line mr-2"></i>
+                التقارير
+            </a>
+            <button @click="refreshTodayEntries()" 
+                    class="inline-flex items-center px-3 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>
+                تحديث
+            </button>
+        </div>
+    </div>
+
+    <!-- قائمة المشاريع والمهام -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- المشاريع -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">مشاريعي النشطة</h3>
+            </div>
+            <div class="p-4">
+                @if($activeProjects->count() > 0)
+                    <div class="space-y-4">
+                        @foreach($activeProjects as $project)
+                            <div class="border border-gray-200 rounded-lg p-3">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">{{ $project->name }}</h4>
+                                        @if($project->client_name)
+                                            <p class="text-sm text-gray-500">العميل: {{ $project->client_name }}</p>
+                                        @endif
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $project->completion_percentage }}%
+                                    </span>
+                                </div>
+                                
+                                <!-- مهام المشروع -->
+                                <div class="space-y-2">
+                                    @foreach($project->tasks as $task)
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-900">{{ $task->name }}</p>
+                                                <div class="flex items-center space-x-4 space-x-reverse text-xs text-gray-500">
+                                                    <span>مقدر: {{ $task->estimated_hours }}ساعة</span>
+                                                    <span>فعلي: {{ number_format($task->total_tracked_hours, 1) }}ساعة</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                                                        {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                                           ($task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
+                                                        {{ $task->status === 'completed' ? 'مكتملة' : 
+                                                           ($task->status === 'in_progress' ? 'قيد التنفيذ' : 'معلقة') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @if($task->status !== 'completed')
+                                                <button @click="startTimerForTask({{ $project->id }}, {{ $task->id }})" 
+                                                        class="ml-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-project-diagram text-4xl mb-4"></i>
+                        <p>لا توجد مشاريع نشطة</p>
+                        <button @click="showCreateProjectModal()" 
+                                class="mt-2 text-blue-600 hover:text-blue-800">
+                            إنشاء مشروع جديد
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- سجل اليوم -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">سجل العمل اليوم</h3>
+            </div>
+            <div class="p-4">
+                <div class="space-y-3" x-show="todayEntries.length > 0">
+                    <template x-for="entry in todayEntries" :key="entry.id">
+                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div>
+                                <p class="text-sm font-medium" x-text="entry.project.name"></p>
+                                <p class="text-xs text-gray-500" x-text="entry.task.name"></p>
+                                <p class="text-xs text-gray-400" x-text="entry.start_time + ' - ' + (entry.end_time || 'جاري')"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium" x-text="entry.formatted_duration"></p>
+                                <p class="text-xs text-gray-500" x-text="entry.hours + ' ساعة'"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="todayEntries.length === 0" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-clock text-4xl mb-4"></i>
+                    <p>لم تبدأ العمل بعد اليوم</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال بدء العداد -->
+    <div x-show="showStartModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
+         @click="showStartModal = false">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">بدء العداد</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">المشروع</label>
+                    <select x-model="selectedProject" @change="loadProjectTasks()" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">اختر المشروع</option>
+                        @foreach($activeProjects as $project)
+                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">المهمة</label>
+                    <select x-model="selectedTask" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">اختر المهمة</option>
+                        <template x-for="task in projectTasks" :key="task.id">
+                            <option :value="task.id" x-text="task.name"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">وصف (اختياري)</label>
+                    <textarea x-model="timerDescription" rows="2" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 space-x-reverse">
+                    <button @click="showStartModal = false" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        إلغاء
+                    </button>
+                    <button @click="startTimer()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        بدء العداد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إنشاء مشروع -->
+    <div x-show="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
+         @click="showCreateModal = false">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">مشروع جديد</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">اسم المشروع *</label>
+                    <input type="text" x-model="newProject.name" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">اسم العميل</label>
+                    <input type="text" x-model="newProject.client_name" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">الوصف</label>
+                    <textarea x-model="newProject.description" rows="3" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">تاريخ البداية *</label>
+                        <input type="date" x-model="newProject.start_date" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">تاريخ النهاية</label>
+                        <input type="date" x-model="newProject.end_date" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 space-x-reverse">
+                    <button @click="showCreateModal = false" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        إلغاء
+                    </button>
+                    <button @click="createProject()" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        إنشاء المشروع
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إضافة مهمة -->
+    <div x-show="showTaskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
+         @click="showTaskModal = false">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">مهمة جديدة</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">المشروع *</label>
+                    <select x-model="newTask.project_id" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">اختر المشروع</option>
+                        @foreach($activeProjects as $project)
+                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">اسم المهمة *</label>
+                    <input type="text" x-model="newTask.name" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">الوصف</label>
+                    <textarea x-model="newTask.description" rows="3" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">الساعات المقدرة *</label>
+                    <input type="number" step="0.5" min="0" x-model="newTask.estimated_hours" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="flex justify-end space-x-2 space-x-reverse">
+                    <button @click="showTaskModal = false" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        إلغاء
+                    </button>
+                    <button @click="addTask()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        إضافة المهمة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function projectTracking() {
+    return {
+        // Timer state
+        isTimerActive: false,
+        activeTimer: null,
+        timerSeconds: 0,
+        timerDisplay: '00:00:00',
+        timerInterval: null,
+        currentTime: '',
+
+        // Modal states
+        showStartModal: false,
+        showCreateModal: false,
+        showTaskModal: false,
+
+        // Form data
+        selectedProject: '',
+        selectedTask: '',
+        timerDescription: '',
+        projectTasks: [],
+        todayEntries: [],
+
+        // New project/task data
+        newProject: {
+            name: '',
+            client_name: '',
+            description: '',
+            start_date: '',
+            end_date: ''
+        },
+        newTask: {
+            project_id: '',
+            name: '',
+            description: '',
+            estimated_hours: 1
+        },
+
+        init() {
+            this.updateCurrentTime();
+            this.checkActiveTimer();
+            this.loadTodayEntries();
+            
+            // Update time every second
+            setInterval(() => {
+                this.updateCurrentTime();
+                if (this.isTimerActive) {
+                    this.updateTimerDisplay();
+                }
+            }, 1000);
+        },
+
+        updateCurrentTime() {
+            const now = new Date();
+            this.currentTime = now.toLocaleTimeString('ar-SA');
+        },
+
+        async checkActiveTimer() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.active-timer") }}');
+                const data = await response.json();
+                
+                if (data.active) {
+                    this.isTimerActive = true;
+                    this.activeTimer = data.timer;
+                    this.timerSeconds = data.current_seconds;
+                    this.updateTimerDisplay();
+                }
+            } catch (error) {
+                console.error('Error checking active timer:', error);
+            }
+        },
+
+        updateTimerDisplay() {
+            if (this.isTimerActive) {
+                this.timerSeconds++;
+            }
+            
+            const hours = Math.floor(this.timerSeconds / 3600);
+            const minutes = Math.floor((this.timerSeconds % 3600) / 60);
+            const seconds = this.timerSeconds % 60;
+            
+            this.timerDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        },
+
+        async loadTodayEntries() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.today-entries") }}');
+                const data = await response.json();
+                this.todayEntries = data.entries;
+            } catch (error) {
+                console.error('Error loading today entries:', error);
+            }
+        },
+
+        refreshTodayEntries() {
+            this.loadTodayEntries();
+        },
+
+        async checkIn() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.check-in") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showAlert('تم تسجيل الحضور بنجاح', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    this.showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                this.showAlert('حدث خطأ أثناء تسجيل الحضور', 'error');
+            }
+        },
+
+        async checkOut() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.check-out") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showAlert('تم تسجيل الانصراف بنجاح', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    this.showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                this.showAlert('حدث خطأ أثناء تسجيل الانصراف', 'error');
+            }
+        },
+
+        showStartTimerModal() {
+            this.showStartModal = true;
+            this.selectedProject = '';
+            this.selectedTask = '';
+            this.timerDescription = '';
+            this.projectTasks = [];
+        },
+
+        loadProjectTasks() {
+            const project = @json($activeProjects).find(p => p.id == this.selectedProject);
+            if (project) {
+                this.projectTasks = project.tasks;
+            } else {
+                this.projectTasks = [];
+            }
+            this.selectedTask = '';
+        },
+
+        startTimerForTask(projectId, taskId) {
+            this.selectedProject = projectId;
+            this.selectedTask = taskId;
+            this.loadProjectTasks();
+            this.startTimer();
+        },
+
+        async startTimer() {
+            if (!this.selectedProject || !this.selectedTask) {
+                this.showAlert('يرجى اختيار المشروع والمهمة', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.start-timer") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        project_id: this.selectedProject,
+                        task_id: this.selectedTask,
+                        description: this.timerDescription
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.isTimerActive = true;
+                    this.activeTimer = data.timer;
+                    this.timerSeconds = 0;
+                    this.showStartModal = false;
+                    this.showAlert('تم بدء العداد بنجاح', 'success');
+                } else {
+                    this.showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                this.showAlert('حدث خطأ أثناء بدء العداد', 'error');
+            }
+        },
+
+        async stopTimer() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.stop-timer") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.isTimerActive = false;
+                    this.activeTimer = null;
+                    this.timerSeconds = 0;
+                    this.timerDisplay = '00:00:00';
+                    this.loadTodayEntries();
+                    this.showAlert(`تم إيقاف العداد - المدة: ${data.duration}`, 'success');
+                } else {
+                    this.showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
+            }
+        },
+
+        showCreateProjectModal() {
+            this.showCreateModal = true;
+            this.newProject = {
+                name: '',
+                client_name: '',
+                description: '',
+                start_date: new Date().toISOString().split('T')[0],
+                end_date: ''
+            };
+        },
+
+        async createProject() {
+            if (!this.newProject.name || !this.newProject.start_date) {
+                this.showAlert('يرجى ملء الحقول المطلوبة', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.create-project") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                   },
+                   body: JSON.stringify(this.newProject)
+               });
+               
+               const data = await response.json();
+               
+               if (data.success) {
+                   this.showCreateModal = false;
+                   this.showAlert('تم إنشاء المشروع بنجاح', 'success');
+                   setTimeout(() => location.reload(), 1000);
+               } else {
+                   this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
+               }
+           } catch (error) {
+               this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
+           }
+       },
+
+       showAddTaskModal() {
+           this.showTaskModal = true;
+           this.newTask = {
+               project_id: '',
+               name: '',
+               description: '',
+               estimated_hours: 1
+           };
+       },
+
+       async addTask() {
+           if (!this.newTask.project_id || !this.newTask.name || !this.newTask.estimated_hours) {
+               this.showAlert('يرجى ملء الحقول المطلوبة', 'error');
+               return;
+           }
+
+           try {
+               const response = await fetch('{{ route("employee.project-tracking.add-task") }}', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                   },
+                   body: JSON.stringify(this.newTask)
+               });
+               
+               const data = await response.json();
+               
+               if (data.success) {
+                   this.showTaskModal = false;
+                   this.showAlert('تم إضافة المهمة بنجاح', 'success');
+                   setTimeout(() => location.reload(), 1000);
+               } else {
+                   this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
+               }
+           } catch (error) {
+               this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
+           }
+       },
+
+       showAlert(message, type) {
+           if (type === 'success') {
+               Swal.fire({
+                   title: 'نجح!',
+                   text: message,
+                   icon: 'success',
+                   timer: 2000,
+                   showConfirmButton: false
+               });
+           } else {
+               Swal.fire({
+                   title: 'خطأ!',
+                   text: message,
+                   icon: 'error'
+               });
+           }
+       }
+   }
+}
+</script>
+@endpush
+@endsection

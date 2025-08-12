@@ -10,7 +10,9 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="{{ asset('css/project-tracking.css') }}">
+    <script src="{{ asset('js/project-tracking.js') }}"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -223,6 +225,32 @@
                         متابعة المونتاج
                     </a>
                     @endif
+
+
+                    @if(auth('employee')->user()->hasPermission('project_tracking'))
+<a href="{{ route('employee.project-tracking.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.project-tracking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-tasks ml-3 text-sm"></i>
+    متابعة المشاريع
+</a>
+@endif
+
+@if(auth('employee')->user()->hasPermission('attendance_tracking'))
+<a href="{{ route('employee.attendance.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.attendance.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-fingerprint ml-3 text-sm"></i>
+    الحضور والانصراف
+</a>
+@endif
+
+@if(auth('employee')->user()->hasPermission('work_reports'))
+<a href="{{ route('employee.work-reports.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.work-reports.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-chart-line ml-3 text-sm"></i>
+    تقارير العمل
+</a>
+@endif
+
 
                     <div class="mt-6 pt-6 border-t border-gray-700">
                         <form method="POST" action="{{ route('employee.logout') }}">
