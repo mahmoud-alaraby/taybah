@@ -237,6 +237,7 @@ Route::middleware('employee.auth')->group(function () {
 
 
 
+
     // نظام متابعة المشاريع والمهام مع الاستوب ووتش
     Route::middleware('employee.permission:project_tracking')->group(function () {
         Route::prefix('project-tracking')->name('employee.project-tracking.')->group(function () {

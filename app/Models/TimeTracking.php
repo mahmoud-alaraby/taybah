@@ -1,4 +1,5 @@
 <?php
+// تحديث TimeTracking Model لتحديث حالة المهام تلقائياً
 
 namespace App\Models;
 
@@ -66,7 +67,9 @@ class TimeTracking extends Model
         // إيقاف أي timer نشط للموظف
         self::where('employee_id', $employeeId)
             ->where('is_active', true)
-            ->update(['is_active' => false, 'end_time' => now()]);
+            ->each(function($timer) {
+                $timer->stopTimer();
+            });
 
         return self::create([
             'employee_id' => $employeeId,
@@ -76,6 +79,7 @@ class TimeTracking extends Model
             'description' => $description,
             'date' => Carbon::today(),
             'is_active' => true,
+            'total_seconds' => 0,
         ]);
     }
 
@@ -87,9 +91,42 @@ class TimeTracking extends Model
         $this->save();
 
         // تحديث actual_hours في المهمة
-        $this->task->increment('actual_hours', $this->hours);
+        if ($this->task) {
+            $oldActualHours = $this->task->actual_hours;
+            $this->task->increment('actual_hours', $this->hours);
+            
+            // تحديث حالة المهمة تلقائياً
+            $this->updateTaskStatus();
+        }
 
         return $this;
+    }
+
+    // تحديث حالة المهمة بناءً على الساعات المنجزة
+    private function updateTaskStatus()
+    {
+        $task = $this->task;
+        
+        if (!$task || $task->status === 'completed') {
+            return;
+        }
+
+        $completionPercentage = 0;
+        if ($task->estimated_hours > 0) {
+            $completionPercentage = ($task->actual_hours / $task->estimated_hours) * 100;
+        }
+
+        // تحديث الحالة بناءً على نسبة الإنجاز
+        if ($completionPercentage >= 100) {
+            $task->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+        } elseif ($completionPercentage >= 10 && $task->status === 'pending') {
+            $task->update([
+                'status' => 'in_progress'
+            ]);
+        }
     }
 
     // Scopes

@@ -527,9 +527,17 @@ function projectTracking() {
         },
 
         startTimerForTask(projectId, taskId) {
-            this.selectedProject = projectId;
-            this.selectedTask = taskId;
-            this.loadProjectTasks();
+            this.selectedProject = projectId.toString();
+            this.selectedTask = taskId.toString();
+            this.timerDescription = '';
+            
+            // تحميل مهام المشروع
+            const project = @json($activeProjects).find(p => p.id == projectId);
+            if (project) {
+                this.projectTasks = project.tasks;
+            }
+            
+            // بدء العداد مباشرة
             this.startTimer();
         },
 

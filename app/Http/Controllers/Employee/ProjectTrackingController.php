@@ -137,27 +137,45 @@ class ProjectTrackingController extends Controller
 
         $employeeId = auth('employee')->id();
 
-        // التأكد من أن المهمة مخصصة للموظف
+        // التأكد من أن المهمة مخصصة للموظف أو متاحة له
         $task = ProjectTask::where('id', $request->task_id)
-            ->where('assigned_to', $employeeId)
+            ->where(function($q) use ($employeeId) {
+                $q->where('assigned_to', $employeeId)
+                  ->orWhereNull('assigned_to')
+                  ->orWhereHas('project', function($q2) use ($employeeId) {
+                      $q2->where('created_by', $employeeId)
+                        ->where('created_by_type', 'employee');
+                  });
+            })
             ->first();
 
         if (!$task) {
             return response()->json([
                 'success' => false,
-                'message' => 'هذه المهمة غير مخصصة لك'
+                'message' => 'هذه المهمة غير متاحة لك'
             ], 403);
         }
+
+        // إيقاف أي timer نشط للموظف
+        TimeTracking::where('employee_id', $employeeId)
+            ->where('is_active', true)
+            ->each(function($timer) {
+                $timer->stopTimer();
+            });
 
         // تحديث حالة المهمة إلى "قيد التنفيذ"
         $task->update(['status' => 'in_progress']);
 
-        $timer = TimeTracking::startTimer(
-            $employeeId,
-            $request->project_id,
-            $request->task_id,
-            $request->description
-        );
+        $timer = TimeTracking::create([
+            'employee_id' => $employeeId,
+            'project_id' => $request->project_id,
+            'task_id' => $request->task_id,
+            'start_time' => now(),
+            'description' => $request->description,
+            'date' => Carbon::today(),
+            'is_active' => true,
+            'total_seconds' => 0,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -165,7 +183,6 @@ class ProjectTrackingController extends Controller
             'timer' => $timer->load(['project', 'task']),
         ]);
     }
-
     public function stopTimer(Request $request)
     {
         $employeeId = auth('employee')->id();
@@ -181,14 +198,28 @@ class ProjectTrackingController extends Controller
             ], 400);
         }
 
-        $activeTimer->stopTimer();
+        // حساب الوقت المنقضي
+        $endTime = now();
+        $totalSeconds = $activeTimer->start_time->diffInSeconds($endTime);
+        
+        // تحديث البيانات
+        $activeTimer->update([
+            'end_time' => $endTime,
+            'total_seconds' => $totalSeconds,
+            'is_active' => false,
+        ]);
+
+        // تحديث actual_hours في المهمة
+        if ($activeTimer->task) {
+            $activeTimer->task->increment('actual_hours', $totalSeconds / 3600);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'تم إيقاف العداد بنجاح',
             'timer' => $activeTimer,
-            'duration' => $activeTimer->formatted_duration,
-            'hours' => $activeTimer->hours,
+            'duration' => $this->formatSeconds($totalSeconds),
+            'hours' => round($totalSeconds / 3600, 2),
         ]);
     }
 
@@ -207,16 +238,28 @@ class ProjectTrackingController extends Controller
             ], 400);
         }
 
-        // إيقاف مؤقت
-        $activeTimer->end_time = now();
-        $activeTimer->total_seconds = $activeTimer->start_time->diffInSeconds($activeTimer->end_time);
-        $activeTimer->is_active = false;
-        $activeTimer->save();
+        // حساب الوقت المنقضي حتى الآن
+        $pauseTime = now();
+        $totalSeconds = $activeTimer->start_time->diffInSeconds($pauseTime);
+        
+        // إيقاف مؤقت - حفظ الوقت المنقضي
+        $activeTimer->update([
+            'end_time' => $pauseTime,
+            'total_seconds' => $totalSeconds,
+            'is_active' => false,
+        ]);
+
+        // تحديث actual_hours في المهمة
+        if ($activeTimer->task) {
+            $activeTimer->task->increment('actual_hours', $totalSeconds / 3600);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'تم إيقاف العداد مؤقتاً',
             'timer' => $activeTimer,
+            'duration' => $this->formatSeconds($totalSeconds),
+            'hours' => round($totalSeconds / 3600, 2),
         ]);
     }
 
@@ -249,20 +292,38 @@ class ProjectTrackingController extends Controller
         $employeeId = auth('employee')->id();
         $today = Carbon::today();
 
-        $entries = TimeTracking::forEmployee($employeeId)
-            ->forDate($today)
+        $entries = TimeTracking::where('employee_id', $employeeId)
+            ->where('date', $today)
             ->with(['project', 'task'])
             ->orderBy('start_time', 'desc')
-            ->get();
+            ->get()
+            ->map(function($entry) {
+                return [
+                    'id' => $entry->id,
+                    'project' => [
+                        'name' => $entry->project->name ?? 'مشروع محذوف',
+                    ],
+                    'task' => [
+                        'name' => $entry->task->name ?? 'مهمة محذوفة',
+                    ],
+                    'start_time' => $entry->start_time->format('H:i'),
+                    'end_time' => $entry->end_time ? $entry->end_time->format('H:i') : 'جاري',
+                    'formatted_duration' => $this->formatSeconds($entry->total_seconds),
+                    'hours' => round($entry->total_seconds / 3600, 2),
+                    'is_active' => $entry->is_active,
+                ];
+            });
 
         $totalHours = $entries->sum('hours');
-        $targetPercentage = min(100, ($totalHours / 7) * 100);
+        $targetPercentage = $totalHours > 0 ? min(100, ($totalHours / 7) * 100) : 0;
 
         return response()->json([
             'entries' => $entries,
             'total_hours' => round($totalHours, 2),
             'target_percentage' => round($targetPercentage, 2),
-            'formatted_total' => $this->formatSeconds($entries->sum('total_seconds')),
+            'formatted_total' => $this->formatSeconds($entries->sum(function($entry) {
+                return $entry['hours'] * 3600;
+            })),
         ]);
     }
 
@@ -348,7 +409,7 @@ class ProjectTrackingController extends Controller
     public function reports(Request $request)
     {
         $employeeId = auth('employee')->id();
-        $type = $request->get('type', 'daily'); // daily, weekly, monthly
+        $type = $request->get('type', 'daily'); 
         $date = $request->get('date', Carbon::today()->format('Y-m-d'));
 
         switch ($type) {
@@ -370,18 +431,51 @@ class ProjectTrackingController extends Controller
             ->first();
 
         if (!$summary) {
-            $summary = DailyWorkSummary::generateForEmployee($employeeId, $date);
-        }
+            // إنشاء ملخص جديد للتاريخ المحدد
+            $timeEntries = TimeTracking::where('employee_id', $employeeId)
+                ->where('date', $date)
+                ->with(['project', 'task'])
+                ->get();
 
-        $attendance = EmployeeAttendance::where('employee_id', $employeeId)
-            ->where('date', $date)
-            ->first();
+            $totalHours = $timeEntries->sum(function($entry) {
+                return $entry->total_seconds / 3600;
+            });
+            
+            $overtimeHours = max(0, $totalHours - 7);
+            $targetPercentage = $totalHours > 0 ? min(100, ($totalHours / 7) * 100) : 0;
+
+            $projectsWorked = $timeEntries->groupBy('project_id')->map(function($entries, $projectId) {
+                $project = $entries->first()->project;
+                return [
+                    'project_id' => $projectId,
+                    'project_name' => $project ? $project->name : 'مشروع محذوف',
+                    'hours' => round($entries->sum(function($entry) {
+                        return $entry->total_seconds / 3600;
+                    }), 2),
+                    'tasks' => $entries->map(function($entry) {
+                        return [
+                            'task_id' => $entry->task_id,
+                            'task_name' => $entry->task ? $entry->task->name : 'مهمة محذوفة',
+                            'hours' => round($entry->total_seconds / 3600, 2),
+                        ];
+                    })->toArray()
+                ];
+            })->values()->toArray();
+
+            $summary = DailyWorkSummary::create([
+                'employee_id' => $employeeId,
+                'date' => $date,
+                'total_work_hours' => round($totalHours, 2),
+                'overtime_hours' => round($overtimeHours, 2),
+                'projects_worked' => $projectsWorked,
+                'daily_target_percentage' => round($targetPercentage, 2),
+            ]);
+        }
 
         return response()->json([
             'type' => 'daily',
             'date' => $date,
             'summary' => $summary,
-            'attendance' => $attendance,
         ]);
     }
 
@@ -447,10 +541,14 @@ class ProjectTrackingController extends Controller
 
     private function formatSeconds($seconds)
     {
+        if ($seconds < 0) $seconds = 0;
+        
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
         $secs = $seconds % 60;
         
         return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
     }
+
+
 }
