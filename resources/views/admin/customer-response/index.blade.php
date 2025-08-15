@@ -75,7 +75,7 @@
         <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
             @forelse($responses as $resp)
                 <div class="border rounded p-4 space-y-2 relative">
-                    {{-- أيقونة التصنيف بارزة --}}
+                    {{-- أيقونة التصنيف --}}
                     <div class="flex items-center gap-3 mb-2">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-indigo-600 text-xl">
                             <i class="{{ $resp->category->icon ?? 'fas fa-tag' }}"></i>
@@ -107,12 +107,57 @@
     </div>
 </div>
 
-{{-- Modal إضافة وتعديل نفس السابق (انظر الرد السابق) --}}
-{{-- ... --}}
+{{-- Toast للنسخ --}}
+<div id="copyToast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300 z-50">
+    تم نسخ الرد!
+</div>
+
+{{-- مودال إضافة تصنيف --}}
+<dialog id="addCategoryModal" class="w-96 p-4 bg-white rounded shadow">
+    <form action="{{ route('admin.customer-response.categories.store') }}" method="POST">
+        @csrf
+        <h3 class="text-lg font-bold mb-4">إضافة تصنيف</h3>
+        <label class="block mb-2">الاسم</label>
+        <input type="text" name="name" class="w-full border p-2 mb-3" required>
+
+        <label class="block mb-2">الأيقونة</label>
+        <select name="icon" id="addCatIcon" class="w-full border p-2 mb-3" onchange="syncPreview('addCatIcon', 'addIconPreview')">
+            @foreach($iconPool as $icon)
+                <option value="{{ $icon }}">{{ $icon }}</option>
+            @endforeach
+        </select>
+        <div id="addIconPreview" class="text-2xl mb-3"></div>
+
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">حفظ</button>
+        <button type="button" onclick="this.closest('dialog').close()" class="ml-2 px-4 py-2 border rounded">إلغاء</button>
+    </form>
+</dialog>
+
+{{-- مودال تعديل تصنيف --}}
+<dialog id="editCategoryModal" class="w-96 p-4 bg-white rounded shadow">
+    <form id="editCategoryForm" method="POST">
+        @csrf
+        @method('PUT')
+        <h3 class="text-lg font-bold mb-4">تعديل تصنيف</h3>
+        <label class="block mb-2">الاسم</label>
+        <input type="text" name="name" id="editCatName" class="w-full border p-2 mb-3" required>
+
+        <label class="block mb-2">الأيقونة</label>
+        <select name="icon" id="editCatIcon" class="w-full border p-2 mb-3" onchange="syncPreview('editCatIcon', 'editIconPreview')">
+            @foreach($iconPool as $icon)
+                <option value="{{ $icon }}">{{ $icon }}</option>
+            @endforeach
+        </select>
+        <div id="editIconPreview" class="text-2xl mb-3"></div>
+
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">تحديث</button>
+        <button type="button" onclick="this.closest('dialog').close()" class="ml-2 px-4 py-2 border rounded">إلغاء</button>
+    </form>
+</dialog>
+
 <script>
 function toggleCategories(){
-    const el = document.getElementById('categoriesPanel');
-    el.classList.toggle('hidden');
+    document.getElementById('categoriesPanel').classList.toggle('hidden');
 }
 function openEditCategory(id, name, icon){
     const form = document.getElementById('editCategoryForm');
@@ -126,15 +171,22 @@ function openEditCategory(id, name, icon){
 function syncPreview(selectId, previewId){
     const sel = document.getElementById(selectId);
     const cls = sel.value || 'fas fa-tag';
-    const holder = document.getElementById(previewId);
-    holder.innerHTML = '<i class=\"'+cls+'\"></i>';
+    document.getElementById(previewId).innerHTML = '<i class="'+cls+'"></i>';
 }
 function copyText(id){
-    let el = document.getElementById('text_'+id);
-    let text = el.innerText || el.textContent || ''; // يحصل على النص كما يظهر مع الأسطر
-    navigator.clipboard.writeText(text).then(function(){
-        // يمكن إضافة رسالة "تم النسخ" إن أحببت
+    let text = document.getElementById('text_'+id).innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+        showCopyToast();
     });
+}
+function showCopyToast(){
+    const toast = document.getElementById('copyToast');
+    toast.classList.remove('opacity-0');
+    toast.classList.add('opacity-100');
+    setTimeout(()=>{
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+    }, 2000);
 }
 document.addEventListener('DOMContentLoaded', function(){
     syncPreview('addCatIcon','addIconPreview');

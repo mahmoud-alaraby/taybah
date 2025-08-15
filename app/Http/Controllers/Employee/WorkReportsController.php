@@ -45,7 +45,7 @@ class WorkReportsController extends Controller
             ->orderBy('start_time')
             ->get();
 
-        return view('employee.reports.daily', compact('summary', 'timeEntries', 'date'));
+        return view('employee.work-reports.index', compact('summary', 'timeEntries', 'date'));
     }
 
     private function weeklyReport($employeeId, $date)

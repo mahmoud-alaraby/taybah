@@ -149,13 +149,13 @@
                     </a>
                     @endif
 
-                    @if(auth('employee')->user()->hasPermission('stopwatch_system'))
+                    <!-- @if(auth('employee')->user()->hasPermission('stopwatch_system'))
                     <a href="{{ route('employee.stopwatch') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.stopwatch') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-stopwatch ml-3 text-sm"></i>
                         ستوب وتش
                     </a>
-                    @endif
+                    @endif -->
 
                     @if(auth('employee')->user()->hasPermission('general_operations'))
                     <a href="{{ route('employee.general-operations') }}" 

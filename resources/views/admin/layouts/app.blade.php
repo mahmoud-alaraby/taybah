@@ -201,6 +201,12 @@
     <i class="fas fa-clock ml-3 text-sm"></i>
     متابعة الحضور
 </a>
+<a href="{{ route('admin.work-reports.index') }}" 
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.work-reports.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+    <i class="fas fa-chart-line ml-3 text-sm"></i>
+    تقارير العمل
+</a>
+
 
 <a href="{{ route('admin.time-tracking.index') }}" 
    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.time-tracking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">

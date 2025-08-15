@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AdminCustomerResponseCategoryController;
 use App\Http\Controllers\Admin\DesignerTaskAccountAdminController;
 use App\Http\Controllers\Admin\CustomerCommunicationController  as AdminCustomerCommunicationController;
 use App\Http\Controllers\Admin\CustomerResponseCategoryInlineController as  AdminCategoryInlineController;
+use App\Http\Controllers\Admin\AdminWorkReportsController;
 
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
@@ -280,4 +281,10 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/reports', [App\Http\Controllers\Admin\TimeTrackingController::class, 'reports'])->name('reports');
         Route::get('/daily-summary', [App\Http\Controllers\Admin\TimeTrackingController::class, 'dailySummary'])->name('daily-summary');
     });
+// تقارير العمل 
+    Route::prefix('work-reports')->name('admin.work-reports.')->group(function(){
+    Route::get('/', [AdminWorkReportsController::class, 'index'])->name('index');
+    Route::get('/print', [AdminWorkReportsController::class, 'print'])->name('print');
+});
+
 });
