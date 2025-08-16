@@ -108,21 +108,43 @@
                         الرئيسية
                     </a>
                    
-    <a href="{{ route('admin.customer-communication.index') }}" class="flex items-center p-2 text-gray-700 hover:bg-gray-200">
-        📞 <span class="ml-2">التواصل مع العملاء</span>
+
+
+
+
+         <div x-data="{ open: false }" class="relative w-full">
+  <!-- زر القائمة الرئيسية -->
+  <button @click="open = !open"
+          class="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300  hover:bg-gray-700 hover:text-white transition-colors focus:outline-none"
+          aria-haspopup="true" aria-expanded="open" type="button">
+    <i class="fas fa-users-cog ml-3 text-sm"></i>
+    إدارة المستخدمين
+    <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-1 mt-1 text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- القائمة المنسدلة -->
+  <div x-show="open" @click.away="open = false"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:leave="transition ease-in duration-150"
+       class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
+    <a href="{{ route('admin.admins.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-users-cog ml-3 text-sm"></i>
+      إدارة المديرين
     </a>
+    <a href="{{ route('admin.employees.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.employees.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-users ml-3 text-sm"></i>
+      إدارة الموظفين
+    </a>
+  </div>
+</div>
 
+<!-- تأكد من تحميل alpine.js في مشروعك -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-                    <a href="{{ route('admin.admins.index') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.admins.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-users-cog ml-3 text-sm"></i>
-                        إدارة المديرين
-                    </a>
-                    <a href="{{ route('admin.employees.index') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.employees.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-users ml-3 text-sm"></i>
-                        إدارة الموظفين
-                    </a>
                     <a href="{{ route('admin.roles.index') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.roles.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-user-tag ml-3 text-sm"></i>
@@ -133,6 +155,101 @@
                         <i class="fas fa-tasks ml-3 text-sm"></i>
                         قائمة المهام
                     </a>
+
+                    <div x-data="{ open: false }" class="relative w-full">
+  <!-- زر القائمة الرئيسية -->
+  <button @click="open = !open"
+          class="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300  hover:bg-gray-700 hover:text-white transition-colors focus:outline-none"
+          aria-haspopup="true" aria-expanded="open" type="button">
+    <i class="fas fa-tasks ml-3 text-sm"></i>
+    إدارة العمل
+    <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-1 mt-1 text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- القائمة المنسدلة -->
+  <div x-show="open" @click.away="open = false"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:leave="transition ease-in duration-150"
+       class="absolute left-0  w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
+    <a href="{{ route('admin.projects.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.projects.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-project-diagram ml-3 text-sm"></i>
+      إدارة المشاريع
+    </a>
+    <a href="{{ route('admin.attendance.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.attendance.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-clock ml-3 text-sm"></i>
+      متابعة الحضور
+    </a>
+    <a href="{{ route('admin.work-reports.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.work-reports.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-chart-line ml-3 text-sm"></i>
+      تقارير العمل
+    </a>
+    <a href="{{ route('admin.time-tracking.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.time-tracking.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-stopwatch ml-3 text-sm"></i>
+      متابعة أوقات العمل
+    </a>
+  </div>
+</div>
+
+                    <div x-data="{ open: false }" class="relative w-full">
+
+
+<div x-data="{ open: false }" class="relative w-full">
+  <!-- زر القائمة الرئيسية -->
+  <button @click="open = !open"
+          class="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300  hover:bg-gray-700 hover:text-white transition-colors focus:outline-none"
+          aria-haspopup="true" aria-expanded="open" type="button">
+    <i class="fas fa-phone-alt ml-3 text-sm"></i>
+    التواصل مع العملاء
+    <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-1 mt-1 text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <!-- القائمة المنسدلة -->
+  <div x-show="open" @click.away="open = false"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:leave="transition ease-in duration-150"
+       class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
+
+                       <a href="{{ route('admin.customer-response.index') }}"
+   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.customer-response.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+   
+   <!-- أيقونة جديدة مناسبة بدلاً من svg الفارغ -->
+   <i class="fas fa-comments ml-3 text-sm "></i> 
+   
+   <span class="flex-1">قاموس الردود على العملاء</span>
+</a>
+    <a href="{{ route('admin.customer-communication.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.customer-communication.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-phone-alt ml-3 text-sm"></i>
+      التواصل مع العملاء
+    </a>
+    <a href="{{ route('admin.customer-movement.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.customer-movement.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-users ml-3 text-sm"></i>
+      متابعة حركة العملاء
+    </a>
+    <a href="{{ route('admin.potential-customers.index') }}"
+       class="flex items-center w-full px-3 py-2 my-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('admin.potential-customers.*') ? 'bg-red-600 text-white' : '' }}">
+      <i class="fas fa-user-plus ml-3 text-sm"></i>
+      العملاء المحتملين
+    </a>
+  </div>
+</div>
+
+<!-- تأكد من تحميل alpine.js في مشروعك -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+
+<!-- تأكد من تحميل alpine.js في مشروعك -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
                     <a href="{{ route('admin.renewal-dates.index') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-calendar-alt ml-3 text-sm"></i>
@@ -148,16 +265,7 @@
                         <i class="fas fa-money-bill-wave ml-3 text-sm"></i>
                         ال  مقبوضات والمدفوعات
                     </a>
-                    <a href="{{ route('admin.customer-movement.index') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.customer-movement.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-users ml-3 text-sm"></i>
-                        متابعة حركة العملاء
-                    </a>
-                    <a href="{{ route('admin.potential-customers.index') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.potential-customers.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-user-plus ml-3 text-sm"></i>
-                        العملاء المحتملين
-                    </a>
+               
                     <a href="{{ route('admin.operation-system.index') }}" 
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-calendar-check ml-3 text-sm"></i>
@@ -173,14 +281,7 @@
                         <i class="fas fa-camera-retro ml-3 text-sm"></i>
                         تكاليف التصوير
                     </a>
-                <a href="{{ route('admin.customer-response.index') }}"
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ request()->routeIs('admin.customer-response.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-   
-   <!-- أيقونة جديدة مناسبة بدلاً من svg الفارغ -->
-   <i class="fas fa-comments ml-3 text-sm "></i> 
-   
-   <span class="flex-1">قاموس الردود على العملاء</span>
-</a>
+
 
                     <a href="{{ route('admin.designer-task-accounts.index') }}"
                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
@@ -190,29 +291,8 @@
                     </a>
 
 
-                    <a href="{{ route('admin.projects.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.projects.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-project-diagram ml-3 text-sm"></i>
-    إدارة المشاريع
-</a>
-
-<a href="{{ route('admin.attendance.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.attendance.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-clock ml-3 text-sm"></i>
-    متابعة الحضور
-</a>
-<a href="{{ route('admin.work-reports.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.work-reports.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-chart-line ml-3 text-sm"></i>
-    تقارير العمل
-</a>
 
 
-<a href="{{ route('admin.time-tracking.index') }}" 
-   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.time-tracking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-    <i class="fas fa-stopwatch ml-3 text-sm"></i>
-    متابعة أوقات العمل
-</a>
 
 
                     <div class="mt-6 pt-6 border-t border-gray-700">
