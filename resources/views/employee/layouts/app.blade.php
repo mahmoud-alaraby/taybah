@@ -264,21 +264,42 @@
           </div>
           @endif
 
-          {{-- روابط فردية لصفحات لها صلاحيات منفصلة --}}
-          @if(auth('employee')->user()->hasPermission('design_follow_up'))
-          <a href="{{ route('employee.design-follow-up') }}"
-             class="flex items-center w-full px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.design-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
-            <i class="fas fa-pencil-ruler ml-3 text-sm"></i>
-            متابعة التصميم
-          </a>
-          @endif
-
-          @if(auth('employee')->user()->hasPermission('montage_follow_up'))
-          <a href="{{ route('employee.montage-follow-up') }}"
-             class="flex items-center w-full px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.montage-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
-            <i class="fas fa-video ml-3 text-sm"></i>
-            متابعة المونتاج
-          </a>
+      {{-- للموظف  --}}
+          @php
+            $hasWorkChatMenu = auth('employee')->user()->hasPermission('design_follow_up')
+              || auth('employee')->user()->hasPermission('montage_follow_up');
+          @endphp
+          @if($hasWorkChatMenu)
+          <div x-data="{ open: false }" class="relative w-full">
+            <button type="button" @click="open = !open"
+              class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
+              <i class="fas fa-comments ml-3 text-sm"></i>
+              شاتات العمل
+              <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
+                  x-transition:leave="transition ease-in duration-150"
+                  class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
+              
+              @if(auth('employee')->user()->hasPermission('design_follow_up'))
+              <a href="{{ route('employee.design-follow-up') }}"
+                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.design-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+                <i class="fas fa-pencil-ruler ml-3 text-sm"></i>
+                شاتات التصميم
+              </a>
+              @endif
+              
+              @if(auth('employee')->user()->hasPermission('montage_follow_up'))
+              <a href="{{ route('employee.montage-follow-up') }}"
+                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.montage-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+                <i class="fas fa-video ml-3 text-sm"></i>
+                شاتات المونتاج
+              </a>
+              @endif
+            </div>
+          </div>
           @endif
 
           @if(auth('employee')->user()->hasPermission('task_list'))

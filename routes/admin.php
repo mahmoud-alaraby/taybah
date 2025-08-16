@@ -281,10 +281,31 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/reports', [App\Http\Controllers\Admin\TimeTrackingController::class, 'reports'])->name('reports');
         Route::get('/daily-summary', [App\Http\Controllers\Admin\TimeTrackingController::class, 'dailySummary'])->name('daily-summary');
     });
-// تقارير العمل 
-    Route::prefix('work-reports')->name('admin.work-reports.')->group(function(){
-    Route::get('/', [AdminWorkReportsController::class, 'index'])->name('index');
-    Route::get('/print', [AdminWorkReportsController::class, 'print'])->name('print');
-});
+    // تقارير العمل 
+    Route::prefix('work-reports')->name('admin.work-reports.')->group(function () {
+        Route::get('/', [AdminWorkReportsController::class, 'index'])->name('index');
+        Route::get('/print', [AdminWorkReportsController::class, 'print'])->name('print');
+    });
 
+
+    Route::prefix('work-chat')->name('admin.work-chat.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\WorkChatController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\WorkChatController::class, 'create'])->name('create');
+        
+        // Storage Management Routes - يجب أن تكون قبل {workChat}
+        Route::get('/storage-info', [App\Http\Controllers\Admin\WorkChatController::class, 'getStorageInfo'])->name('storage-info');
+        Route::get('/storage-management', [App\Http\Controllers\Admin\WorkChatController::class, 'storageManagement'])->name('storage-management');
+        Route::post('/clear-old-files', [App\Http\Controllers\Admin\WorkChatController::class, 'clearOldFiles'])->name('clear-old-files');
+        Route::get('/backup-files', [App\Http\Controllers\Admin\WorkChatController::class, 'backupFiles'])->name('backup-files');
+        
+        // Routes with parameters - يجب أن تكون في النهاية
+        Route::post('/', [App\Http\Controllers\Admin\WorkChatController::class, 'store'])->name('store');
+        Route::get('/{workChat}', [App\Http\Controllers\Admin\WorkChatController::class, 'show'])->name('show');
+        Route::delete('/{workChat}', [App\Http\Controllers\Admin\WorkChatController::class, 'destroy'])->name('destroy');
+
+        // API Routes for chat functionality
+        Route::post('/{workChat}/send', [App\Http\Controllers\Admin\WorkChatController::class, 'sendMessage'])->name('send-message');
+        Route::get('/{workChat}/messages', [App\Http\Controllers\Admin\WorkChatController::class, 'getMessages'])->name('get-messages');
+        Route::post('/{workChat}/clear-files', [App\Http\Controllers\Admin\WorkChatController::class, 'clearFiles'])->name('clear-files');
+    });
 });

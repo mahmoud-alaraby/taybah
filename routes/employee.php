@@ -280,6 +280,27 @@ Route::middleware('employee.auth')->group(function () {
         });
     });
 
+    // نظام شات متابعة التصميم
+    Route::middleware('employee.permission:design_follow_up')->group(function () {
+        Route::get('/design-follow-up', [App\Http\Controllers\Employee\WorkChatController::class, 'index'])
+            ->defaults('type', 'design')
+            ->name('employee.design-follow-up');
+    });
 
+    // نظام شات متابعة المونتاج  
+    Route::middleware('employee.permission:montage_follow_up')->group(function () {
+        Route::get('/montage-follow-up', [App\Http\Controllers\Employee\WorkChatController::class, 'index'])
+            ->defaults('type', 'montage')
+            ->name('employee.montage-follow-up');
+    });
+
+    // Routes مشتركة لكلا النوعين
+        // التحقق من الصلاحية داخل الكونترولر حسب نوع الشات
+        Route::prefix('work-chat')->name('employee.work-chat.')->group(function () {
+            Route::get('/{workChat}', [App\Http\Controllers\Employee\WorkChatController::class, 'show'])->name('show');
+            Route::post('/{workChat}/send', [App\Http\Controllers\Employee\WorkChatController::class, 'sendMessage'])->name('send-message');
+            Route::get('/{workChat}/messages', [App\Http\Controllers\Employee\WorkChatController::class, 'getMessages'])->name('get-messages');
+        });
+        
 
 });
