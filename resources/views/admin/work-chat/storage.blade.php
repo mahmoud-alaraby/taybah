@@ -96,16 +96,16 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">إجراءات التنظيف</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                <!-- نسخة احتياطية -->
+                <!-- نسخة احتياطية شاملة -->
                 <div class="border rounded-lg p-4">
                     <div class="text-center">
                         <div class="mx-auto w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-download text-white"></i>
                         </div>
-                        <h4 class="text-sm font-medium text-gray-900 mb-2">نسخة احتياطية</h4>
-                        <p class="text-xs text-gray-500 mb-4">تحميل جميع الملفات كـ ZIP</p>
-                        <button onclick="createBackup()" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
-                            تحميل النسخة الاحتياطية
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">نسخة احتياطية شاملة</h4>
+                        <p class="text-xs text-gray-500 mb-4">تحميل جميع الملفات كـ ZIP منظم</p>
+                        <button onclick="createFullBackup()" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                            تحميل جميع الملفات
                         </button>
                     </div>
                 </div>
@@ -141,6 +141,108 @@
         </div>
     </div>
 
+    <!-- قائمة الشاتات مع خيار التحميل المنفرد -->
+    @if($userChats->count() > 0)
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-comments text-blue-600 ml-2"></i>
+                شاتاتك مع إمكانية التحميل المنفرد
+            </h3>
+            
+            <!-- مربع البحث -->
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" id="chatSearch" placeholder="البحث في الشاتات..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                معلومات الشات
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                النوع
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                الموظف
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                عدد الملفات
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                الإجراءات
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="chatsTableBody">
+                        @foreach($userChats as $chat)
+                        <tr class="hover:bg-gray-50 chat-row" data-chat-title="{{ strtolower($chat->title) }}" data-employee-name="{{ strtolower($chat->employee->name ?? '') }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-{{ $chat->type === 'design' ? 'purple' : 'indigo' }}-500 to-{{ $chat->type === 'design' ? 'purple' : 'indigo' }}-600 flex items-center justify-center">
+                                            <i class="fas {{ $chat->type === 'design' ? 'fa-pencil-ruler' : 'fa-video' }} text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ $chat->title }}</div>
+                                        <div class="text-sm text-gray-500">{{ $chat->created_at->format('Y-m-d') }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {{ $chat->type === 'design' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800' }}">
+                                    <i class="fas {{ $chat->type === 'design' ? 'fa-pencil-ruler' : 'fa-video' }} ml-1"></i>
+                                    {{ $chat->type === 'design' ? 'تصميم' : 'مونتاج' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ $chat->employee->name ?? 'غير محدد' }}</div>
+                                <div class="text-sm text-gray-500">{{ $chat->employee->employee_id ?? '' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-900">{{ $chat->file_count }}</span>
+                                    <span class="text-xs text-gray-500 mr-1">ملف</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2 space-x-reverse">
+                                    <button onclick="downloadChatFiles({{ $chat->id }}, '{{ $chat->title }}')" 
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <i class="fas fa-download ml-1"></i>
+                                        تحميل
+                                    </button>
+                                    <a href="{{ route('admin.work-chat.show', $chat) }}" 
+                                       class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-eye ml-1"></i>
+                                        عرض
+                                    </a>
+                                    <button onclick="clearChatFiles({{ $chat->id }}, '{{ $chat->title }}')" 
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <i class="fas fa-trash ml-1"></i>
+                                        مسح الملفات
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- تحذيرات -->
     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div class="flex">
@@ -152,7 +254,31 @@
                         <li>تأكد من أخذ نسخة احتياطية قبل حذف أي ملفات</li>
                         <li>حذف الملفات لا يمكن التراجع عنه</li>
                         <li>الملفات المحذوفة لن تكون متاحة في الشاتات</li>
+                        <li>النسخ الاحتياطية منظمة حسب الشاتات مع ملف README للشرح</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات التنظيم -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <i class="fas fa-info-circle text-blue-400 mt-0.5 ml-2"></i>
+            <div>
+                <h3 class="text-sm font-medium text-blue-800">هيكل النسخة الاحتياطية:</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <div class="bg-white p-3 rounded border font-mono text-xs">
+                        backup_file.zip/<br>
+                        ├── README.txt (معلومات الشاتات)<br>
+                        ├── backup_details.json (تفاصيل النسخة)<br>
+                        ├── Chat_1_design_اسم_المشروع/<br>
+                        │&nbsp;&nbsp;&nbsp;├── files/ (الملفات المرفقة)<br>
+                        │&nbsp;&nbsp;&nbsp;└── voices/ (التسجيلات الصوتية)<br>
+                        └── Chat_2_montage_اسم_آخر/<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── files/<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── voices/
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,32 +288,293 @@
 
 @push('scripts')
 <script>
-function createBackup() {
+// البحث في الشاتات
+document.getElementById('chatSearch').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.chat-row');
+    
+    rows.forEach(row => {
+        const title = row.getAttribute('data-chat-title');
+        const employee = row.getAttribute('data-employee-name');
+        
+        if (title.includes(searchTerm) || employee.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// تحميل جميع الملفات - محسن
+function createFullBackup() {
     Swal.fire({
-        title: 'إنشاء نسخة احتياطية',
-        text: 'سيتم تحميل جميع ملفات الشات كملف ZIP. قد يستغرق هذا بعض الوقت.',
+        title: 'إنشاء نسخة احتياطية شاملة',
+        text: 'سيتم تحميل جميع ملفات الشات كملف ZIP منظم. قد يستغرق هذا بعض الوقت.',
         icon: 'info',
         showCancelButton: true,
         confirmButtonText: 'تحميل',
-        cancelButtonText: 'إلغاء'
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#3b82f6'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '/admin/work-chat/backup-files';
+            // إظهار مؤشر التحميل
+            const loadingModal = Swal.fire({
+                title: 'جاري إنشاء النسخة الاحتياطية...',
+                html: 'يرجى الانتظار، قد يستغرق هذا عدة دقائق',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // إنشاء iframe مخفي للتحميل
+            const downloadFrame = document.createElement('iframe');
+            downloadFrame.style.display = 'none';
+            downloadFrame.src = '/admin/work-chat/backup-files';
+            document.body.appendChild(downloadFrame);
+            
+            // إزالة المؤشر بعد 3 ثواني (وقت كافي لبدء التحميل)
+            setTimeout(() => {
+                Swal.close();
+                document.body.removeChild(downloadFrame);
+                
+                // إظهار رسالة نجاح
+                Swal.fire({
+                    title: 'تم بدء التحميل!',
+                    text: 'إذا لم يبدأ التحميل تلقائياً، تحقق من إعدادات المتصفح.',
+                    icon: 'success',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }, 3000);
         }
     });
 }
 
+// تحميل ملفات شات محدد - محسن
+function downloadChatFiles(chatId, chatTitle) {
+    Swal.fire({
+        title: 'تحميل ملفات الشات',
+        text: `سيتم تحميل جميع ملفات شات "${chatTitle}" كملف ZIP منظم.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'تحميل',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#10b981'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // إظهار مؤشر التحميل
+            const loadingModal = Swal.fire({
+                title: 'جاري تحضير ملفات الشات...',
+                html: 'يرجى الانتظار',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // إنشاء iframe مخفي للتحميل
+            const downloadFrame = document.createElement('iframe');
+            downloadFrame.style.display = 'none';
+            downloadFrame.src = `/admin/work-chat/${chatId}/backup-files`;
+            document.body.appendChild(downloadFrame);
+            
+            // إزالة المؤشر بعد 2 ثانية (وقت كافي لبدء التحميل)
+            setTimeout(() => {
+                Swal.close();
+                document.body.removeChild(downloadFrame);
+                
+                // إظهار رسالة نجاح
+                Swal.fire({
+                    title: 'تم بدء التحميل!',
+                    text: `بدأ تحميل ملفات شات "${chatTitle}".`,
+                    icon: 'success',
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+            }, 2000);
+        }
+    });
+}
+
+// طريقة بديلة أكثر تقدماً باستخدام fetch
+function downloadChatFilesAdvanced(chatId, chatTitle) {
+    Swal.fire({
+        title: 'تحميل ملفات الشات',
+        text: `سيتم تحميل جميع ملفات شات "${chatTitle}" كملف ZIP منظم.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'تحميل',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#10b981'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // إظهار مؤشر التحميل مع progress
+            let progressValue = 0;
+            const loadingModal = Swal.fire({
+                title: 'جاري تحضير ملفات الشات...',
+                html: `
+                    <div class="mb-3">يرجى الانتظار أثناء إنشاء الملف</div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div id="progressText" class="text-sm text-gray-600 mt-2">جاري البدء...</div>
+                `,
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+            
+            // محاكاة التقدم
+            const progressInterval = setInterval(() => {
+                progressValue += Math.random() * 15;
+                if (progressValue > 90) progressValue = 90;
+                
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                
+                if (progressBar) {
+                    progressBar.style.width = progressValue + '%';
+                }
+                if (progressText) {
+                    if (progressValue < 30) {
+                        progressText.textContent = 'جاري جمع الملفات...';
+                    } else if (progressValue < 60) {
+                        progressText.textContent = 'جاري ضغط الملفات...';
+                    } else if (progressValue < 90) {
+                        progressText.textContent = 'جاري تحضير التحميل...';
+                    }
+                }
+            }, 200);
+            
+            // بدء التحميل الفعلي
+            fetch(`/admin/work-chat/${chatId}/backup-files`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('فشل في التحميل');
+                return response.blob();
+            })
+            .then(blob => {
+                // إكمال شريط التقدم
+                clearInterval(progressInterval);
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressText) progressText.textContent = 'اكتمل! جاري بدء التحميل...';
+                
+                // تحميل الملف
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `chat_backup_${chatId}_${Date.now()}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // إغلاق المؤشر وإظهار رسالة نجاح
+                setTimeout(() => {
+                    Swal.close();
+                    Swal.fire({
+                        title: 'تم التحميل بنجاح!',
+                        text: `تم تحميل ملفات شات "${chatTitle}" بنجاح.`,
+                        icon: 'success',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                console.error('Error:', error);
+                Swal.close();
+                Swal.fire({
+                    title: 'خطأ في التحميل',
+                    text: 'حدث خطأ أثناء تحضير الملفات. يرجى المحاولة مرة أخرى.',
+                    icon: 'error'
+                });
+            });
+        }
+    });
+}
+
+// مسح ملفات شات محدد
+function clearChatFiles(chatId, chatTitle) {
+    Swal.fire({
+        title: 'مسح ملفات الشات',
+        text: `هل تريد حذف جميع الملفات في شات "${chatTitle}"؟ هذا الإجراء لا يمكن التراجع عنه!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'نعم، امسح',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // إظهار مؤشر التحميل
+            Swal.fire({
+                title: 'جاري مسح الملفات...',
+                html: 'يرجى الانتظار',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            fetch(`/admin/work-chat/${chatId}/clear-files`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // إغلاق مؤشر التحميل
+                if (data.success) {
+                    Swal.fire('تم!', `تم حذف ${data.deleted_count} ملف وتوفير ${data.freed_space}`, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                Swal.close(); // إغلاق مؤشر التحميل
+                Swal.fire('خطأ!', 'حدث خطأ أثناء مسح الملفات', 'error');
+            });
+        }
+    });
+}
+
+// حذف الملفات القديمة
 function clearOldFiles() {
     Swal.fire({
         title: 'حذف الملفات القديمة',
         text: 'سيتم حذف جميع الملفات الأقدم من 3 شهور. هذا الإجراء لا يمكن التراجع عنه!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc143c',
+        confirmButtonColor: '#dc2626',
         confirmButtonText: 'نعم، احذف',
         cancelButtonText: 'إلغاء'
     }).then((result) => {
         if (result.isConfirmed) {
+            // إظهار مؤشر التحميل
+            Swal.fire({
+                title: 'جاري حذف الملفات القديمة...',
+                html: 'يرجى الانتظار',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
             fetch('/admin/work-chat/clear-old-files', {
                 method: 'POST',
                 headers: {
@@ -196,15 +583,23 @@ function clearOldFiles() {
             })
             .then(response => response.json())
             .then(data => {
+                Swal.close(); // إغلاق مؤشر التحميل
                 if (data.success) {
                     Swal.fire('تم!', `تم حذف ${data.deleted_count} ملف وتوفير ${data.freed_space}`, 'success');
-                    location.reload();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
                 }
+            })
+            .catch(error => {
+                Swal.close(); // إغلاق مؤشر التحميل
+                Swal.fire('خطأ!', 'حدث خطأ أثناء حذف الملفات', 'error');
             });
         }
     });
 }
 
+// الإعدادات المتقدمة
 function showAdvancedSettings() {
     Swal.fire({
         title: 'الإعدادات المتقدمة',

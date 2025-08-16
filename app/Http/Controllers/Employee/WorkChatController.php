@@ -16,6 +16,15 @@ class WorkChatController extends Controller
         $employee = auth('employee')->user();
         $type = $request->get('type');
 
+        // التحقق من الصلاحية
+        if ($type === 'design' && !$employee->hasPermission('design_follow_up')) {
+            abort(403, 'ليس لديك صلاحية للوصول لشاتات التصميم');
+        }
+        
+        if ($type === 'montage' && !$employee->hasPermission('montage_follow_up')) {
+            abort(403, 'ليس لديك صلاحية للوصول لشاتات المونتاج');
+        }
+
         $query = WorkChat::where('employee_id', $employee->id);
         
         if ($type) {
@@ -44,6 +53,15 @@ class WorkChatController extends Controller
             abort(403);
         }
 
+        // التحقق من الصلاحية حسب نوع الشات
+        if ($workChat->type === 'design' && !$employee->hasPermission('design_follow_up')) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
+        }
+        
+        if ($workChat->type === 'montage' && !$employee->hasPermission('montage_follow_up')) {
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
+        }
+
         // تحديد الرسائل كمقروءة للموظف
         $workChat->messages()
             ->where('sender_type', 'admin')
@@ -64,6 +82,15 @@ class WorkChatController extends Controller
         
         if ($workChat->employee_id !== $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
+        }
+
+        // التحقق من الصلاحية
+        if ($workChat->type === 'design' && !$employee->hasPermission('design_follow_up')) {
+            return response()->json(['error' => 'ليس لديك صلاحية'], 403);
+        }
+        
+        if ($workChat->type === 'montage' && !$employee->hasPermission('montage_follow_up')) {
+            return response()->json(['error' => 'ليس لديك صلاحية'], 403);
         }
 
         $request->validate([
@@ -109,10 +136,22 @@ class WorkChatController extends Controller
                 $fileName = time() . '_' . Str::random(10) . '.webm';
                 Storage::disk('public')->put('work-chat/voice/' . $fileName, $audio);
                 
-                // تحويل المدة من milliseconds إلى seconds إذا لزم الأمر
+                // تحسين معالجة المدة الزمنية
                 $duration = $request->duration;
+                
+                // التأكد من أن المدة رقم صحيح
+                $duration = is_numeric($duration) ? (int) $duration : 0;
+                
+                // إذا كانت المدة كبيرة جداً، فهي على الأرجح بالميلي ثانية
                 if ($duration > 1000) {
-                    $duration = round($duration / 1000); // تحويل من milliseconds
+                    $duration = round($duration / 1000);
+                }
+                
+                // تأكد من أن المدة منطقية (بين 1 ثانية و 10 دقائق)
+                if ($duration < 1) {
+                    $duration = 1; // أقل مدة ثانية واحدة
+                } elseif ($duration > 600) {
+                    $duration = 600; // أقصى مدة 10 دقائق
                 }
                 
                 $message = WorkChatMessage::createVoiceMessage(
@@ -131,19 +170,31 @@ class WorkChatController extends Controller
 
         if ($message) {
             $message->load('sender');
+            
+            // إرجاع البيانات مع المدة المصححة
+            $responseData = [
+                'id' => $message->id,
+                'content' => $message->content,
+                'message_type' => $message->message_type,
+                'file_url' => $message->file_url,
+                'file_name' => $message->file_name,
+                'file_size_formatted' => $message->file_size_formatted,
+                'sender_name' => $message->sender_name,
+                'sender_type' => $message->sender_type,
+                'created_at' => $message->created_at->format('H:i'),
+                'is_read' => $message->is_read
+            ];
+            
+            // إضافة معلومات المدة للرسائل الصوتية
+            if ($message->message_type === 'voice') {
+                $voiceDuration = $message->voice_duration;
+                $responseData['duration'] = $voiceDuration['total_seconds'];
+                $responseData['duration_formatted'] = $voiceDuration['formatted'];
+            }
+            
             return response()->json([
                 'success' => true,
-                'message' => [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'message_type' => $message->message_type,
-                    'file_url' => $message->file_url,
-                    'file_name' => $message->file_name,
-                    'file_size_formatted' => $message->file_size_formatted,
-                    'sender_name' => $message->sender_name,
-                    'sender_type' => $message->sender_type,
-                    'created_at' => $message->created_at->format('H:i')
-                ]
+                'message' => $responseData
             ]);
         }
 
@@ -156,6 +207,15 @@ class WorkChatController extends Controller
         
         if ($workChat->employee_id !== $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
+        }
+
+        // التحقق من الصلاحية
+        if ($workChat->type === 'design' && !$employee->hasPermission('design_follow_up')) {
+            return response()->json(['error' => 'ليس لديك صلاحية'], 403);
+        }
+        
+        if ($workChat->type === 'montage' && !$employee->hasPermission('montage_follow_up')) {
+            return response()->json(['error' => 'ليس لديك صلاحية'], 403);
         }
 
         $messages = $workChat->messages()
@@ -174,7 +234,7 @@ class WorkChatController extends Controller
 
         return response()->json([
             'messages' => $messages->map(function($message) {
-                return [
+                $messageData = [
                     'id' => $message->id,
                     'content' => $message->content,
                     'message_type' => $message->message_type,
@@ -186,6 +246,15 @@ class WorkChatController extends Controller
                     'created_at' => $message->created_at->format('H:i'),
                     'is_read' => $message->is_read
                 ];
+                
+                // إضافة معلومات المدة للرسائل الصوتية
+                if ($message->message_type === 'voice') {
+                    $voiceDuration = $message->voice_duration;
+                    $messageData['duration'] = $voiceDuration['total_seconds'];
+                    $messageData['duration_formatted'] = $voiceDuration['formatted'];
+                }
+                
+                return $messageData;
             })
         ]);
     }

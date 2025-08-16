@@ -5,109 +5,327 @@
 @section('page-subtitle', 'شات مع ' . ($workChat->admin->name ?? 'الإدارة'))
 
 @section('content')
-<div class="bg-white shadow rounded-lg h-96">
-    <!-- Chat Header -->
-    <div class="flex items-center justify-between p-4 border-b">
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="h-10 w-10 rounded-full bg-{{ $workChat->type === 'design' ? 'blue' : 'purple' }}-500 flex items-center justify-center">
-                <i class="fas {{ $workChat->type === 'design' ? 'fa-pencil-ruler' : 'fa-video' }} text-white"></i>
-            </div>
-            <div>
-                <h3 class="font-medium">{{ $workChat->admin->name ?? 'الإدارة' }}</h3>
-                <p class="text-sm text-gray-500">{{ $workChat->type === 'design' ? 'مشروع تصميم' : 'مشروع مونتاج' }}</p>
-            </div>
-        </div>
-        
-        <div class="flex space-x-2 space-x-reverse">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                {{ $workChat->status === 'active' ? 'bg-green-100 text-green-800' : 
-                   ($workChat->status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
-                {{ $workChat->status === 'active' ? 'نشط' : ($workChat->status === 'completed' ? 'مكتمل' : 'مؤرشف') }}
-            </span>
-            <a href="{{ route('employee.' . ($workChat->type === 'design' ? 'design-follow-up' : 'montage-follow-up')) }}" 
-               class="text-gray-600 hover:text-gray-800 p-2">
-                <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-    </div>
+<style>
+/* Voice Message Animations */
+.waveform-bar {
+    animation: wave 1.5s ease-in-out infinite alternate;
+}
 
-    <!-- Messages Container -->
-    <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 h-80" style="max-height: 320px;">
-        <div id="messagesList">
-            @foreach($messages as $message)
-                <div class="message mb-3 {{ $message->sender_type === 'employee' ? 'text-left' : 'text-right' }}">
-                    <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg {{ $message->sender_type === 'employee' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800' }}">
-                        @if($message->message_type === 'text')
-                            <p>{{ $message->content }}</p>
-                        @elseif($message->message_type === 'file')
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    <i class="fas fa-file"></i>
-                                    <div class="flex-1">
-                                        <a href="{{ $message->file_url }}" target="_blank" class="underline hover:text-blue-200">
-                                            {{ $message->file_name }}
-                                        </a>
-                                        <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
+@keyframes wave {
+    0% { transform: scaleY(0.3); opacity: 0.4; }
+    100% { transform: scaleY(1); opacity: 0.8; }
+}
+
+.waveform-bar.playing {
+    animation: wave 0.8s ease-in-out infinite alternate;
+    opacity: 1;
+}
+
+/* Recording Animation */
+.recording-pulse {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Message appear animation */
+.message-appear {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* New message indicator */
+.new-message-indicator {
+    animation: newMessagePulse 2s ease-in-out 3;
+}
+
+@keyframes newMessagePulse {
+    0%, 100% { background-color: rgba(34, 197, 94, 0.1); }
+    50% { background-color: rgba(34, 197, 94, 0.3); }
+}
+
+/* Custom Audio Player */
+.audio-play-btn:hover {
+    transform: scale(1.05);
+}
+
+.audio-play-btn:active {
+    transform: scale(0.95);
+}
+</style>
+
+<div class="flex h-[calc(100vh-200px)] bg-white shadow rounded-lg overflow-hidden">
+    
+    <!-- Chat Messages Area -->
+    <div class="flex-1 flex flex-col">
+        
+        <!-- Chat Header -->
+        <div class="flex items-center justify-between p-4 border-b bg-gradient-to-r from-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-600 to-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-700 text-white">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="h-10 w-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                    <i class="fas {{ $workChat->type === 'design' ? 'fa-pencil-ruler' : 'fa-video' }} text-white"></i>
+                </div>
+                <div>
+                    <h3 class="font-medium">{{ $workChat->admin->name ?? 'الإدارة' }}</h3>
+                    <p class="text-sm text-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-100 flex items-center">
+                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                        {{ $workChat->type === 'design' ? 'مشروع تصميم' : 'مشروع مونتاج' }} • متصل
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <div id="connectionStatus" class="flex items-center text-sm text-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-100">
+                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                    متصل
+                </div>
+                
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white">
+                    {{ $workChat->status === 'active' ? 'نشط' : ($workChat->status === 'completed' ? 'مكتمل' : 'مؤرشف') }}
+                </span>
+                
+                <a href="{{ route('employee.' . ($workChat->type === 'design' ? 'design-follow-up' : 'montage-follow-up')) }}" 
+                   class="text-white hover:text-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-200 p-2">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div id="messagesList" class="space-y-4">
+                @foreach($messages as $message)
+                    <div class="flex {{ $message->sender_type === 'employee' ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
+                        <div class="max-w-xs lg:max-w-md">
+                            
+                            <!-- Message Bubble -->
+                            <div class="rounded-2xl px-4 py-3 {{ $message->sender_type === 'employee' ? 'bg-' . ($workChat->type === 'design' ? 'purple' : 'indigo') . '-500 text-white' : 'bg-white text-gray-800 shadow-sm border' }}">
+                                
+                                @if($message->message_type === 'text')
+                                    <p class="break-words">{{ $message->content }}</p>
+                                    
+                                @elseif($message->message_type === 'file')
+                                    <div class="space-y-3">
+                                        <!-- File Info -->
+                                        <div class="flex items-center space-x-3 space-x-reverse">
+                                            <div class="flex-shrink-0">
+                                                @php
+                                                    $extension = pathinfo($message->file_name, PATHINFO_EXTENSION);
+                                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                    $isPdf = strtolower($extension) === 'pdf';
+                                                    $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
+                                                @endphp
+                                                
+                                                @if($isImage)
+                                                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-image text-white"></i>
+                                                    </div>
+                                                @elseif($isPdf)
+                                                    <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file-pdf text-white"></i>
+                                                    </div>
+                                                @elseif($isDoc)
+                                                    <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file-word text-white"></i>
+                                                    </div>
+                                                @else
+                                                    <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file text-white"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            
+                                            <div class="flex-1 min-w-0">
+                                                <p class="font-medium truncate">{{ $message->file_name }}</p>
+                                                <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- File Actions -->
+                                        <div class="flex space-x-2 space-x-reverse text-xs">
+                                            <button onclick="previewFile('{{ $message->file_url }}', '{{ $message->file_name }}', '{{ $extension }}')" 
+                                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                <i class="fas fa-eye ml-1"></i> معاينة
+                                            </button>
+                                            <button onclick="copyToClipboard('{{ $message->file_url }}')" 
+                                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                                            </button>
+                                            <a href="{{ $message->file_url }}" target="_blank" 
+                                               class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                <i class="fas fa-download ml-1"></i> تحميل
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="flex space-x-2 space-x-reverse text-xs">
-                                    <button onclick="copyToClipboard('{{ $message->file_url }}')" 
-                                            class="bg-black bg-opacity-20 px-2 py-1 rounded hover:bg-opacity-30">
-                                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
-                                    </button>
-                                    <a href="{{ $message->file_url }}" target="_blank" 
-                                       class="bg-black bg-opacity-20 px-2 py-1 rounded hover:bg-opacity-30">
-                                        <i class="fas fa-external-link-alt ml-1"></i> فتح
-                                    </a>
+                                    
+                                @elseif($message->message_type === 'voice')
+                                    <div class="space-y-3">
+                                        <!-- Voice Message Header -->
+                                        <div class="flex items-center space-x-2 space-x-reverse">
+                                            <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20' : 'bg-' . ($workChat->type === 'design' ? 'purple' : 'indigo') . '-500' }} flex items-center justify-center">
+                                                <i class="fas fa-microphone text-white text-sm"></i>
+                                            </div>
+                                            <span class="text-sm opacity-90">رسالة صوتية</span>
+                                            @if($message->duration)
+                                                <span class="text-xs opacity-75">
+                                                    {{ gmdate('i:s', $message->duration) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Custom Audio Player -->
+                                        <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                                            <div class="flex items-center space-x-3 space-x-reverse">
+                                                <!-- Play/Pause Button -->
+                                                <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
+                                                        class="w-10 h-10 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-' . ($workChat->type === 'design' ? 'purple' : 'indigo') . '-500 hover:bg-' . ($workChat->type === 'design' ? 'purple' : 'indigo') . '-600' }} flex items-center justify-center transition-colors audio-play-btn">
+                                                    <i class="fas fa-play text-white text-sm"></i>
+                                                </button>
+                                                
+                                                <!-- Waveform/Progress -->
+                                                <div class="flex-1">
+                                                    <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                                        <!-- Fake waveform bars -->
+                                                        @for($i = 0; $i < 20; $i++)
+                                                            <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                                                 style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Duration -->
+                                                <span class="text-xs opacity-75 font-mono duration-display">
+                                                    @if($message->duration)
+                                                        {{ gmdate('i:s', $message->duration) }}
+                                                    @else
+                                                        0:00
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Hidden Audio Element -->
+                                            <audio class="hidden voice-audio" preload="metadata">
+                                                <source src="{{ $message->file_url }}" type="audio/webm">
+                                            </audio>
+                                        </div>
+                                        
+                                        <!-- Voice Actions -->
+                                        <div class="flex space-x-2 space-x-reverse text-xs">
+                                            <button onclick="downloadAudio('{{ $message->file_url }}', 'voice_{{ $message->id }}.webm')" 
+                                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                <i class="fas fa-download ml-1"></i> تحميل
+                                            </button>
+                                            <button onclick="copyToClipboard('{{ $message->file_url }}')" 
+                                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                <i class="fas fa-share ml-1"></i> مشاركة
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- Message Time -->
+                                <div class="flex justify-between items-center mt-2 text-xs opacity-75">
+                                    <span>{{ $message->created_at->format('H:i') }}</span>
+                                    @if($message->sender_type === 'employee')
+                                        <i class="fas {{ $message->is_read ? 'fa-check-double text-white' : 'fa-check text-white' }}"></i>
+                                    @endif
                                 </div>
                             </div>
-                        @elseif($message->message_type === 'voice')
-                            <audio controls class="max-w-full">
-                                <source src="{{ $message->file_url }}" type="audio/webm">
-                                متصفحك لا يدعم تشغيل الصوت
-                            </audio>
-                        @endif
-                        <p class="text-xs opacity-75 mt-1">{{ $message->created_at->format('H:i') }}</p>
+                            
+                            <!-- Sender Name -->
+                            <p class="text-xs text-gray-500 mt-1 {{ $message->sender_type === 'employee' ? 'text-right' : 'text-left' }}">
+                                {{ $message->sender_name }}
+                            </p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t bg-white p-4">
+            <form id="messageForm" class="flex items-end space-x-3 space-x-reverse">
+                <input type="hidden" id="messageType" value="text">
+                
+                <!-- File Input -->
+                <input type="file" id="fileInput" class="hidden" accept="*/*">
+                
+                <!-- Attachment Button -->
+                <button type="button" onclick="toggleFileInput()" 
+                        class="flex-shrink-0 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-paperclip text-gray-600"></i>
+                </button>
+                
+                <!-- Voice Button -->
+                <button type="button" id="voiceBtn" onclick="toggleVoiceRecording()" 
+                        class="flex-shrink-0 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-200 voice-record-btn">
+                    <i class="fas fa-microphone text-gray-600"></i>
+                </button>
+                
+                <!-- Text Input -->
+                <div class="flex-1 relative">
+                    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." 
+                           class="w-full px-4 py-3 rounded-full border-gray-300 focus:border-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-500 focus:ring-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-500 pr-12">
+                    
+                    <!-- Send Button -->
+                    <button type="submit" 
+                            class="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-500 hover:bg-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-600 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-paper-plane text-white text-sm"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Recording Status -->
+            <div id="recordingStatus" class="hidden mt-3 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-white rounded-full mr-3 recording-pulse"></div>
+                        <div>
+                            <p class="font-medium">جاري التسجيل...</p>
+                            <p class="text-sm text-red-100">اضغط الزر مرة أخرى للإنهاء</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="recordingTime" class="text-lg font-mono">0:00</div>
+                        <div class="text-xs text-red-100">مدة التسجيل</div>
                     </div>
                 </div>
-            @endforeach
+            </div>
         </div>
     </div>
 
-    <!-- Message Input -->
-    <div class="border-t p-4">
-        <form id="messageForm" class="flex space-x-2 space-x-reverse">
-            <input type="hidden" id="messageType" value="text">
-            
-            <!-- Text Input -->
-            <input type="text" id="messageInput" placeholder="اكتب رسالتك..." 
-                   class="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-            
-            <!-- File Input -->
-            <input type="file" id="fileInput" class="hidden" accept="*/*">
-            
-            <!-- Voice Recording -->
-            <audio id="voicePlayback" class="hidden" controls></audio>
-            
-            <!-- Buttons -->
-            <button type="button" onclick="toggleFileInput()" class="p-2 text-gray-600 hover:text-gray-800" title="إرفاق ملف">
-                <i class="fas fa-paperclip"></i>
-            </button>
-            
-            <button type="button" id="voiceBtn" onclick="toggleVoiceRecording()" 
-                    class="p-2 text-gray-600 hover:text-gray-800" title="تسجيل صوتي">
-                <i class="fas fa-microphone"></i>
-            </button>
-            
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
+    <!-- File Preview Panel -->
+    <div id="previewPanel" class="hidden w-80 border-l bg-white flex flex-col">
+        <div class="p-4 border-b bg-gray-50">
+            <div class="flex items-center justify-between">
+                <h3 class="font-medium text-gray-900">معاينة الملف</h3>
+                <button onclick="closePreview()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
         
-        <!-- Recording Status -->
-        <div id="recordingStatus" class="hidden mt-2 p-2 bg-red-100 text-red-700 rounded text-sm">
-            <i class="fas fa-circle animate-pulse mr-1"></i>
-            جاري التسجيل... اضغط الزر مرة أخرى للإنهاء
+        <div id="previewContent" class="flex-1 overflow-auto p-4">
+            <!-- Preview content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Upload Progress Modal -->
+<div id="uploadModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-sm w-full">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-{{ $workChat->type === 'design' ? 'purple' : 'indigo' }}-500 mx-auto mb-4"></div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">جاري رفع الملف...</h3>
+            <p class="text-sm text-gray-500">يرجى الانتظار</p>
         </div>
     </div>
 </div>
@@ -119,9 +337,240 @@ let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 let chatId = {{ $workChat->id }};
+let recordingTimer = null;
+let lastMessageId = 0;
+let refreshInterval = null;
+let isPageVisible = true;
 
-// تحديث الرسائل كل 5 ثواني
-setInterval(loadMessages, 5000);
+// تتبع رؤية الصفحة
+document.addEventListener('visibilitychange', function() {
+    isPageVisible = !document.hidden;
+    if (isPageVisible) {
+        loadNewMessages();
+    }
+});
+
+// بدء تحديث الرسائل كل 5 ثواني
+function startAutoRefresh() {
+    refreshInterval = setInterval(loadNewMessages, 5000);
+}
+
+// إيقاف التحديث التلقائي
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+// تحميل الرسائل الجديدة
+function loadNewMessages() {
+    if (!isPageVisible) return;
+    
+    updateConnectionStatus('loading');
+    
+    fetch(`/employee/work-chat/${chatId}/messages`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network error');
+            return response.json();
+        })
+        .then(data => {
+            updateConnectionStatus('connected');
+            
+            if (data.messages && data.messages.length > 0) {
+                const newMessages = data.messages.filter(msg => msg.id > lastMessageId);
+                
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
+                        addNewMessageToChat(message);
+                        lastMessageId = Math.max(lastMessageId, message.id);
+                    });
+                    
+                    scrollToBottom();
+                    
+                    if (!isPageVisible) {
+                        showNewMessageNotification();
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            updateConnectionStatus('error');
+        });
+}
+
+// تحديث حالة الاتصال
+function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connectionStatus');
+    const indicator = statusElement.querySelector('.w-2');
+    
+    switch (status) {
+        case 'connected':
+            indicator.className = 'w-2 h-2 bg-green-400 rounded-full mr-2';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+            break;
+        case 'loading':
+            indicator.className = 'w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>جاري التحديث...';
+            break;
+        case 'error':
+            indicator.className = 'w-2 h-2 bg-red-400 rounded-full mr-2';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>خطأ في الاتصال';
+            break;
+    }
+}
+
+// إضافة رسالة جديدة للشات
+function addNewMessageToChat(message) {
+    const messagesList = document.getElementById('messagesList');
+    
+    if (document.querySelector(`[data-message-id="${message.id}"]`)) {
+        return;
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex ${message.sender_type === 'employee' ? 'justify-end' : 'justify-start'} message-appear`;
+    messageDiv.setAttribute('data-message-id', message.id);
+    
+    if (message.sender_type !== 'employee') {
+        messageDiv.classList.add('new-message-indicator');
+    }
+    
+    messageDiv.innerHTML = generateMessageHTML(message);
+    messagesList.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.classList.remove('new-message-indicator');
+    }, 3000);
+}
+
+// إنشاء HTML للرسالة
+function generateMessageHTML(message) {
+    const chatType = '{{ $workChat->type }}';
+    const colorClass = chatType === 'design' ? 'purple' : 'indigo';
+    
+    let contentHTML = '';
+    
+    if (message.message_type === 'text') {
+        contentHTML = `<p class="break-words">${message.content}</p>`;
+    } else if (message.message_type === 'file') {
+        const extension = message.file_name.split('.').pop().toLowerCase();
+        let iconHTML = '';
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center"><i class="fas fa-image text-white"></i></div>';
+        } else if (extension === 'pdf') {
+            iconHTML = '<div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center"><i class="fas fa-file-pdf text-white"></i></div>';
+        } else if (['doc', 'docx'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center"><i class="fas fa-file-word text-white"></i></div>';
+        } else {
+            iconHTML = '<div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center"><i class="fas fa-file text-white"></i></div>';
+        }
+        
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">${iconHTML}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">${message.file_name}</p>
+                        <p class="text-xs opacity-75">${message.file_size_formatted}</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 space-x-reverse text-xs">
+                    <button onclick="previewFile('${message.file_url}', '${message.file_name}', '${extension}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-eye ml-1"></i> معاينة
+                    </button>
+                    <button onclick="copyToClipboard('${message.file_url}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                    </button>
+                    <a href="${message.file_url}" target="_blank" 
+                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-download ml-1"></i> تحميل
+                    </a>
+                </div>
+            </div>
+        `;
+    } else if (message.message_type === 'voice') {
+        const duration = message.duration ? new Date(message.duration * 1000).toISOString().substr(14, 5) : '0:00';
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-8 h-8 rounded-full ${message.sender_type === 'employee' ? 'bg-white bg-opacity-20' : 'bg-' + colorClass + '-500'} flex items-center justify-center">
+                        <i class="fas fa-microphone text-white text-sm"></i>
+                    </div>
+                    <span class="text-sm opacity-90">رسالة صوتية</span>
+                    <span class="text-xs opacity-75">${duration}</span>
+                </div>
+                <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <button onclick="toggleAudioPlay(this, '${message.file_url}')" 
+                                class="w-10 h-10 rounded-full ${message.sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-' + colorClass + '-500 hover:bg-' + colorClass + '-600'} flex items-center justify-center transition-colors audio-play-btn">
+                            <i class="fas fa-play text-white text-sm"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                ${Array.from({length: 20}, (_, i) => 
+                                    `<div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                         style="height: ${Math.random() * 80 + 20}%; animation-delay: ${i * 0.1}s"></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        <span class="text-xs opacity-75 font-mono duration-display">${duration}</span>
+                    </div>
+                    <audio class="hidden voice-audio" preload="metadata">
+                        <source src="${message.file_url}" type="audio/webm">
+                    </audio>
+                </div>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="max-w-xs lg:max-w-md">
+            <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'employee' ? 'bg-' + colorClass + '-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
+                ${contentHTML}
+                <div class="flex justify-between items-center mt-2 text-xs opacity-75">
+                    <span>${message.created_at}</span>
+                    ${message.sender_type === 'employee' ? 
+                        `<i class="fas ${message.is_read ? 'fa-check-double text-white' : 'fa-check text-white'}"></i>` : ''
+                    }
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1 ${message.sender_type === 'employee' ? 'text-right' : 'text-left'}">
+                ${message.sender_name}
+            </p>
+        </div>
+    `;
+}
+
+// إظهار إشعار الرسالة الجديدة
+function showNewMessageNotification() {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("رسالة جديدة من الإدارة", {
+            body: "وصلت رسالة جديدة في شات العمل",
+            icon: "/favicon.ico"
+        });
+    }
+}
+
+// طلب إذن الإشعارات
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
+// تحديد آخر معرف رسالة عند تحميل الصفحة
+function initializeLastMessageId() {
+    const messages = document.querySelectorAll('[data-message-id]');
+    if (messages.length > 0) {
+        const ids = Array.from(messages).map(msg => parseInt(msg.getAttribute('data-message-id')));
+        lastMessageId = Math.max(...ids);
+    }
+}
 
 // إرسال الرسالة
 document.getElementById('messageForm').addEventListener('submit', function(e) {
@@ -156,7 +605,9 @@ function sendTextMessage() {
     .then(data => {
         if (data.success) {
             input.value = '';
-            addMessageToChat(data.message);
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
         }
     })
     .catch(error => {
@@ -172,12 +623,11 @@ function sendFileMessage() {
     
     if (!file) return;
     
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-        alert('حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت');
+    if (file.size > 10 * 1024 * 1024) {
+        Swal.fire('خطأ!', 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت', 'error');
         return;
     }
     
-    // إظهار مؤشر التحميل
     showUploadProgress();
     
     const formData = new FormData();
@@ -195,33 +645,25 @@ function sendFileMessage() {
         if (data.success) {
             fileInput.value = '';
             document.getElementById('messageType').value = 'text';
-            addMessageToChat(data.message);
-            
-            // إظهار رابط الملف للنسخ
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
             showFileLink(data.message.file_url, data.message.file_name);
         }
     })
     .catch(error => {
         hideUploadProgress();
         console.error('Error:', error);
-        alert('حدث خطأ في إرسال الملف');
+        Swal.fire('خطأ!', 'حدث خطأ في إرسال الملف', 'error');
     });
 }
 
 function showUploadProgress() {
-    Swal.fire({
-        title: 'جاري رفع الملف...',
-        html: '<div class="text-center"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><br><span class="text-sm text-gray-600">يرجى الانتظار</span></div>',
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
+    document.getElementById('uploadModal').classList.remove('hidden');
 }
 
 function hideUploadProgress() {
-    Swal.close();
+    document.getElementById('uploadModal').classList.add('hidden');
 }
 
 function showFileLink(fileUrl, fileName) {
@@ -254,7 +696,6 @@ function showFileLink(fileUrl, fileName) {
 function copyFileUrl() {
     const input = document.getElementById('fileUrlInput');
     input.select();
-    input.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(input.value).then(() => {
         Swal.fire({
             toast: true,
@@ -286,7 +727,7 @@ document.getElementById('fileInput').addEventListener('change', function() {
     const file = this.files[0];
     if (file) {
         if (file.size > 10 * 1024 * 1024) {
-            alert('حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت');
+            Swal.fire('خطأ!', 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت', 'error');
             this.value = '';
             document.getElementById('messageType').value = 'text';
             return;
@@ -323,12 +764,24 @@ function startRecording() {
             mediaRecorder.start();
             isRecording = true;
             
-            document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop text-red-500"></i>';
+            document.getElementById('voiceBtn').classList.remove('bg-gray-100', 'hover:bg-gray-200');
+            document.getElementById('voiceBtn').classList.add('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+            document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop text-white"></i>';
+            
             document.getElementById('recordingStatus').classList.remove('hidden');
+            
+            let startTime = Date.now();
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('recordingTime').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
         })
         .catch(error => {
             console.error('Error accessing microphone:', error);
-            alert('لا يمكن الوصول للميكروفون');
+            Swal.fire('خطأ!', 'لا يمكن الوصول للميكروفون', 'error');
         });
 }
 
@@ -336,18 +789,31 @@ function stopRecording() {
     if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
         isRecording = false;
-        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+        
+        const voiceBtn = document.getElementById('voiceBtn');
+        voiceBtn.classList.remove('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+        voiceBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
+        voiceBtn.innerHTML = '<i class="fas fa-microphone text-gray-600"></i>';
+        
         document.getElementById('recordingStatus').classList.add('hidden');
+        
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+        }
     }
 }
 
 function sendVoiceMessage(audioBlob) {
     const reader = new FileReader();
     reader.onload = function() {
+        // حساب المدة التقريبية بناءً على حجم الملف
+        const estimatedDuration = Math.round(audioBlob.size / 16000);
+        
         const formData = new FormData();
         formData.append('message_type', 'voice');
         formData.append('voice', reader.result);
-        formData.append('duration', Math.round(audioBlob.size / 1000)); // تقدير تقريبي
+        formData.append('duration', estimatedDuration);
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         
         fetch(`/employee/work-chat/${chatId}/send`, {
@@ -357,86 +823,158 @@ function sendVoiceMessage(audioBlob) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                addMessageToChat(data.message);
+                addNewMessageToChat(data.message);
+                lastMessageId = Math.max(lastMessageId, data.message.id);
+                scrollToBottom();
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('حدث خطأ في إرسال التسجيل الصوتي');
+            Swal.fire('خطأ!', 'حدث خطأ في إرسال التسجيل الصوتي', 'error');
         });
     };
     reader.readAsDataURL(audioBlob);
 }
 
-// إضافة رسالة للشات
-function addMessageToChat(message) {
-    const messagesList = document.getElementById('messagesList');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message mb-3 ${message.sender_type === 'employee' ? 'text-left' : 'text-right'}`;
+// معاينة الملف
+function previewFile(url, filename, extension) {
+    const previewPanel = document.getElementById('previewPanel');
+    const previewContent = document.getElementById('previewContent');
     
-    let content = '';
-    if (message.message_type === 'text') {
-        content = `<p>${message.content}</p>`;
-    } else if (message.message_type === 'file') {
-        content = `
-            <div class="flex items-center space-x-2 space-x-reverse">
-                <i class="fas fa-file"></i>
-                <div>
-                    <a href="${message.file_url}" target="_blank" class="underline">${message.file_name}</a>
-                    <p class="text-xs opacity-75">${message.file_size_formatted}</p>
+    previewPanel.classList.remove('hidden');
+    
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension.toLowerCase());
+    const isPdf = extension.toLowerCase() === 'pdf';
+    
+    if (isImage) {
+        previewContent.innerHTML = `
+            <div class="space-y-4">
+                <div class="text-center">
+                    <img src="${url}" alt="${filename}" class="max-w-full h-auto rounded-lg shadow-sm">
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium">${filename}</p>
+                    <div class="flex space-x-2 space-x-reverse mt-2">
+                        <button onclick="copyToClipboard('${url}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                            نسخ الرابط
+                        </button>
+                        <a href="${url}" target="_blank" class="text-xs bg-green-500 text-white px-2 py-1 rounded">
+                            فتح في تبويب جديد
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
-    } else if (message.message_type === 'voice') {
-        content = `
-            <audio controls class="max-w-full">
-                <source src="${message.file_url}" type="audio/webm">
-                متصفحك لا يدعم تشغيل الصوت
-            </audio>
+    } else if (isPdf) {
+        previewContent.innerHTML = `
+            <div class="space-y-4">
+                <iframe src="${url}" class="w-full h-96 border rounded-lg"></iframe>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium">${filename}</p>
+                    <div class="flex space-x-2 space-x-reverse mt-2">
+                        <button onclick="copyToClipboard('${url}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                            نسخ الرابط
+                        </button>
+                        <a href="${url}" target="_blank" class="text-xs bg-green-500 text-white px-2 py-1 rounded">
+                            فتح في تبويب جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        previewContent.innerHTML = `
+            <div class="text-center space-y-4">
+                <div class="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                    <i class="fas fa-file text-gray-400 text-2xl"></i>
+                </div>
+                <div>
+                    <p class="font-medium">${filename}</p>
+                    <p class="text-sm text-gray-500">لا يمكن معاينة هذا النوع من الملفات</p>
+                </div>
+                <div class="flex space-x-2 space-x-reverse justify-center">
+                    <button onclick="copyToClipboard('${url}')" class="bg-blue-500 text-white px-3 py-2 rounded text-sm">
+                        نسخ الرابط
+                    </button>
+                    <a href="${url}" target="_blank" class="bg-green-500 text-white px-3 py-2 rounded text-sm">
+                        تحميل الملف
+                    </a>
+                </div>
+            </div>
         `;
     }
+}
+
+// التحكم في تشغيل الصوت
+let currentPlayingAudio = null;
+
+function toggleAudioPlay(button, audioUrl) {
+    const audioElement = button.parentElement.parentElement.querySelector('.voice-audio');
+    const playIcon = button.querySelector('i');
+    const waveformBars = button.parentElement.querySelectorAll('.waveform-bar');
+    const durationDisplay = button.parentElement.querySelector('.duration-display');
     
-    messageDiv.innerHTML = `
-        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_type === 'employee' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800'}">
-            ${content}
-            <p class="text-xs opacity-75 mt-1">${message.created_at}</p>
-        </div>
-    `;
-    
-    messagesList.appendChild(messageDiv);
-    scrollToBottom();
-}
-
-// تحميل الرسائل
-function loadMessages() {
-    fetch(`/employee/work-chat/${chatId}/messages`)
-        .then(response => response.json())
-        .then(data => {
-            // تحديث عدد الرسائل إذا لزم الأمر
-            // يمكن إضافة منطق لتحديث الرسائل الجديدة فقط
-        })
-        .catch(error => {
-            console.error('Error loading messages:', error);
-        });
-}
-
-// التمرير لأسفل
-function scrollToBottom() {
-    const container = document.getElementById('messagesContainer');
-    container.scrollTop = container.scrollHeight;
-}
-
-// تحميل الرسائل عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    scrollToBottom();
-});
-
-// إيقاف التسجيل عند إغلاق الصفحة
-window.addEventListener('beforeunload', function() {
-    if (isRecording) {
-        stopRecording();
+    if (currentPlayingAudio && currentPlayingAudio !== audioElement) {
+        currentPlayingAudio.pause();
+        currentPlayingAudio.currentTime = 0;
+        resetAudioButton(currentPlayingAudio);
     }
-});
+    
+    if (audioElement.paused) {
+        audioElement.play();
+        currentPlayingAudio = audioElement;
+        
+        playIcon.classList.remove('fa-play');
+        playIcon.classList.add('fa-pause');
+        
+        waveformBars.forEach(bar => bar.classList.add('playing'));
+        
+        audioElement.addEventListener('timeupdate', function() {
+            if (!audioElement.paused) {
+                const currentTime = Math.floor(audioElement.currentTime);
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = currentTime % 60;
+                durationDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            resetAudioButton(audioElement);
+        });
+        
+    } else {
+        audioElement.pause();
+        resetAudioButton(audioElement);
+    }
+}
+
+function resetAudioButton(audioElement) {
+    const container = audioElement.parentElement.parentElement;
+    const button = container.querySelector('.audio-play-btn');
+    const playIcon = button.querySelector('i');
+    const waveformBars = container.querySelectorAll('.waveform-bar');
+    
+    playIcon.classList.remove('fa-pause');
+    playIcon.classList.add('fa-play');
+    
+    waveformBars.forEach(bar => bar.classList.remove('playing'));
+    
+    currentPlayingAudio = null;
+}
+
+// تحميل الصوت
+function downloadAudio(url, filename) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function closePreview() {
+    document.getElementById('previewPanel').classList.add('hidden');
+}
 
 // نسخ الرابط
 function copyToClipboard(text) {
@@ -468,5 +1006,40 @@ function copyToClipboard(text) {
         });
     });
 }
+
+// التمرير لأسفل
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTop = container.scrollHeight;
+}
+
+// تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    initializeLastMessageId();
+    requestNotificationPermission();
+    startAutoRefresh();
+    scrollToBottom();
+});
+
+// إيقاف التسجيل عند إغلاق الصفحة
+window.addEventListener('beforeunload', function() {
+    if (isRecording) {
+        stopRecording();
+    }
+    stopAutoRefresh();
+});
+
+// إيقاف التحديث التلقائي عند مغادرة الصفحة
+window.addEventListener('pagehide', function() {
+    stopAutoRefresh();
+});
+
+// استئناف التحديث عند العودة للصفحة
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        startAutoRefresh();
+        loadNewMessages();
+    }
+});
 </script>
 @endpush

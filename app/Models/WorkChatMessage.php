@@ -28,6 +28,7 @@ class WorkChatMessage extends Model
         'read_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'duration' => 'integer', // تأكد من أن المدة عدد صحيح
     ];
 
     // العلاقات
@@ -98,6 +99,46 @@ class WorkChatMessage extends Model
         return $sender ? $sender->first()->name ?? 'مستخدم محذوف' : 'مستخدم غير معروف';
     }
 
+    // إصلاح مشكلة عرض المدة الزمنية
+    public function getDurationFormattedAttribute()
+    {
+        if (!$this->duration || $this->duration <= 0) {
+            return '0:00';
+        }
+        
+        // تأكد من أن المدة بالثواني
+        $seconds = (int) $this->duration;
+        
+        // تحويل للدقائق والثواني
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+        
+        return sprintf('%d:%02d', $minutes, $remainingSeconds);
+    }
+
+    // إضافة accessor للمدة بصيغة مختلفة للعرض في HTML
+    public function getVoiceDurationAttribute()
+    {
+        if (!$this->duration || $this->duration <= 0) {
+            return [
+                'formatted' => '0:00',
+                'seconds' => 0,
+                'minutes' => 0
+            ];
+        }
+        
+        $seconds = (int) $this->duration;
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+        
+        return [
+            'formatted' => sprintf('%d:%02d', $minutes, $remainingSeconds),
+            'seconds' => $remainingSeconds,
+            'minutes' => $minutes,
+            'total_seconds' => $seconds
+        ];
+    }
+
     public function getIsFileAttribute()
     {
         return $this->message_type === 'file';
@@ -163,6 +204,19 @@ class WorkChatMessage extends Model
 
     public static function createVoiceMessage($chatId, $senderType, $senderId, $voiceData)
     {
+        // تأكد من أن المدة بالثواني
+        $duration = isset($voiceData['duration']) ? (int) $voiceData['duration'] : 0;
+        
+        // إذا كانت المدة كبيرة جداً (أكبر من 1000)، فهي على الأرجح بالميلي ثانية
+        if ($duration > 1000) {
+            $duration = round($duration / 1000);
+        }
+        
+        // تأكد من أن المدة منطقية (أقل من ساعة)
+        if ($duration > 3600) {
+            $duration = 0; // إعادة تعيين للصفر إذا كانت غير منطقية
+        }
+
         return self::create([
             'chat_id' => $chatId,
             'sender_type' => $senderType,
@@ -172,7 +226,7 @@ class WorkChatMessage extends Model
             'file_name' => $voiceData['name'],
             'file_size' => $voiceData['size'],
             'file_type' => 'audio/webm',
-            'duration' => $voiceData['duration'] ?? null
+            'duration' => $duration
         ]);
     }
 

@@ -50,6 +50,16 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* New message indicator */
+.new-message-indicator {
+    animation: newMessagePulse 2s ease-in-out 3;
+}
+
+@keyframes newMessagePulse {
+    0%, 100% { background-color: rgba(59, 130, 246, 0.1); }
+    50% { background-color: rgba(59, 130, 246, 0.3); }
+}
 </style>
 
 <div class="flex h-[calc(100vh-200px)] bg-white shadow rounded-lg overflow-hidden">
@@ -65,11 +75,18 @@
                 </div>
                 <div>
                     <h3 class="font-medium">{{ $workChat->employee->name ?? 'موظف محذوف' }}</h3>
-                    <p class="text-sm text-blue-100">{{ $workChat->type === 'design' ? 'مصمم' : 'مونتير' }} • متصل</p>
+                    <p class="text-sm text-blue-100 flex items-center">
+                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                        {{ $workChat->type === 'design' ? 'مصمم' : 'مونتير' }} • متصل
+                    </p>
                 </div>
             </div>
             
-            <div class="flex space-x-2 space-x-reverse">
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <div id="connectionStatus" class="flex items-center text-sm text-blue-100">
+                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                    متصل
+                </div>
                 <button onclick="clearChatFiles()" class="text-white hover:text-blue-200 p-2" title="مسح الملفات">
                     <i class="fas fa-broom"></i>
                 </button>
@@ -87,7 +104,7 @@
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50">
             <div id="messagesList" class="space-y-4">
                 @foreach($messages as $message)
-                    <div class="flex {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}">
+                    <div class="flex {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
                         <div class="max-w-xs lg:max-w-md">
                             
                             <!-- Message Bubble -->
@@ -160,11 +177,7 @@
                                             <span class="text-sm opacity-90">رسالة صوتية</span>
                                             @if($message->duration)
                                                 <span class="text-xs opacity-75">
-                                                    @php
-                                                        $minutes = floor($message->duration / 60);
-                                                        $seconds = $message->duration % 60;
-                                                    @endphp
-                                                    {{ $minutes }}:{{ str_pad($seconds, 2, '0', STR_PAD_LEFT) }}
+                                                    {{ gmdate('i:s', $message->duration) }}
                                                 </span>
                                             @endif
                                         </div>
@@ -192,11 +205,7 @@
                                                 <!-- Duration -->
                                                 <span class="text-xs opacity-75 font-mono duration-display">
                                                     @if($message->duration)
-                                                        @php
-                                                            $minutes = floor($message->duration / 60);
-                                                            $seconds = $message->duration % 60;
-                                                        @endphp
-                                                        {{ $minutes }}:{{ str_pad($seconds, 2, '0', STR_PAD_LEFT) }}
+                                                        {{ gmdate('i:s', $message->duration) }}
                                                     @else
                                                         0:00
                                                     @endif
@@ -330,9 +339,242 @@ let audioChunks = [];
 let isRecording = false;
 let chatId = {{ $workChat->id }};
 let recordingTimer = null;
+let lastMessageId = 0;
+let refreshInterval = null;
+let isPageVisible = true;
 
-// تحديث الرسائل كل 5 ثواني
-setInterval(loadMessages, 5000);
+// تتبع رؤية الصفحة
+document.addEventListener('visibilitychange', function() {
+    isPageVisible = !document.hidden;
+    if (isPageVisible) {
+        // عند العودة للصفحة، قم بتحديث الرسائل فوراً
+        loadNewMessages();
+    }
+});
+
+// بدء تحديث الرسائل كل 5 ثواني
+function startAutoRefresh() {
+    refreshInterval = setInterval(loadNewMessages, 5000);
+}
+
+// إيقاف التحديث التلقائي
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+// تحميل الرسائل الجديدة
+function loadNewMessages() {
+    if (!isPageVisible) return; // لا تحدث إذا كانت الصفحة غير مرئية
+    
+    updateConnectionStatus('loading');
+    
+    fetch(`/admin/work-chat/${chatId}/messages`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network error');
+            return response.json();
+        })
+        .then(data => {
+            updateConnectionStatus('connected');
+            
+            if (data.messages && data.messages.length > 0) {
+                const newMessages = data.messages.filter(msg => msg.id > lastMessageId);
+                
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
+                        addNewMessageToChat(message);
+                        lastMessageId = Math.max(lastMessageId, message.id);
+                    });
+                    
+                    // التمرير لأسفل عند وصول رسائل جديدة
+                    scrollToBottom();
+                    
+                    // إظهار إشعار صوتي (اختياري)
+                    if (!isPageVisible) {
+                        showNewMessageNotification();
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            updateConnectionStatus('error');
+        });
+}
+
+// تحديث حالة الاتصال
+function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connectionStatus');
+    const indicator = statusElement.querySelector('.w-2');
+    
+    switch (status) {
+        case 'connected':
+            indicator.className = 'w-2 h-2 bg-green-400 rounded-full mr-2';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+            break;
+        case 'loading':
+            indicator.className = 'w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>جاري التحديث...';
+            break;
+        case 'error':
+            indicator.className = 'w-2 h-2 bg-red-400 rounded-full mr-2';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>خطأ في الاتصال';
+            break;
+    }
+}
+
+// إضافة رسالة جديدة للشات
+function addNewMessageToChat(message) {
+    const messagesList = document.getElementById('messagesList');
+    
+    // تحقق من عدم وجود الرسالة مسبقاً
+    if (document.querySelector(`[data-message-id="${message.id}"]`)) {
+        return;
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex ${message.sender_type === 'admin' ? 'justify-end' : 'justify-start'} message-appear`;
+    messageDiv.setAttribute('data-message-id', message.id);
+    
+    // إضافة تأثير الرسالة الجديدة
+    if (message.sender_type !== 'admin') {
+        messageDiv.classList.add('new-message-indicator');
+    }
+    
+    messageDiv.innerHTML = generateMessageHTML(message);
+    messagesList.appendChild(messageDiv);
+    
+    // إزالة تأثير الرسالة الجديدة بعد 3 ثواني
+    setTimeout(() => {
+        messageDiv.classList.remove('new-message-indicator');
+    }, 3000);
+}
+
+// إنشاء HTML للرسالة
+function generateMessageHTML(message) {
+    let contentHTML = '';
+    
+    if (message.message_type === 'text') {
+        contentHTML = `<p class="break-words">${message.content}</p>`;
+    } else if (message.message_type === 'file') {
+        const extension = message.file_name.split('.').pop().toLowerCase();
+        let iconHTML = '';
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center"><i class="fas fa-image text-white"></i></div>';
+        } else if (extension === 'pdf') {
+            iconHTML = '<div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center"><i class="fas fa-file-pdf text-white"></i></div>';
+        } else if (['doc', 'docx'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center"><i class="fas fa-file-word text-white"></i></div>';
+        } else {
+            iconHTML = '<div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center"><i class="fas fa-file text-white"></i></div>';
+        }
+        
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">${iconHTML}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">${message.file_name}</p>
+                        <p class="text-xs opacity-75">${message.file_size_formatted}</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 space-x-reverse text-xs">
+                    <button onclick="previewFile('${message.file_url}', '${message.file_name}', '${extension}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-eye ml-1"></i> معاينة
+                    </button>
+                    <button onclick="copyToClipboard('${message.file_url}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                    </button>
+                    <a href="${message.file_url}" target="_blank" 
+                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-download ml-1"></i> تحميل
+                    </a>
+                </div>
+            </div>
+        `;
+    } else if (message.message_type === 'voice') {
+        const duration = message.duration ? new Date(message.duration * 1000).toISOString().substr(14, 5) : '0:00';
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-8 h-8 rounded-full ${message.sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-blue-500'} flex items-center justify-center">
+                        <i class="fas fa-microphone text-white text-sm"></i>
+                    </div>
+                    <span class="text-sm opacity-90">رسالة صوتية</span>
+                    <span class="text-xs opacity-75">${duration}</span>
+                </div>
+                <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <button onclick="toggleAudioPlay(this, '${message.file_url}')" 
+                                class="w-10 h-10 rounded-full ${message.sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-500 hover:bg-blue-600'} flex items-center justify-center transition-colors audio-play-btn">
+                            <i class="fas fa-play text-white text-sm"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                ${Array.from({length: 20}, (_, i) => 
+                                    `<div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                         style="height: ${Math.random() * 80 + 20}%; animation-delay: ${i * 0.1}s"></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        <span class="text-xs opacity-75 font-mono duration-display">${duration}</span>
+                    </div>
+                    <audio class="hidden voice-audio" preload="metadata">
+                        <source src="${message.file_url}" type="audio/webm">
+                    </audio>
+                </div>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="max-w-xs lg:max-w-md">
+            <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'admin' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
+                ${contentHTML}
+                <div class="flex justify-between items-center mt-2 text-xs opacity-75">
+                    <span>${message.created_at}</span>
+                    ${message.sender_type === 'admin' ? 
+                        `<i class="fas ${message.is_read ? 'fa-check-double text-blue-200' : 'fa-check'}"></i>` : ''
+                    }
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1 ${message.sender_type === 'admin' ? 'text-right' : 'text-left'}">
+                ${message.sender_name}
+            </p>
+        </div>
+    `;
+}
+
+// إظهار إشعار الرسالة الجديدة
+function showNewMessageNotification() {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("رسالة جديدة في الشات", {
+            body: "وصلت رسالة جديدة في شات العمل",
+            icon: "/favicon.ico"
+        });
+    }
+}
+
+// طلب إذن الإشعارات
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
+// تحديد آخر معرف رسالة عند تحميل الصفحة
+function initializeLastMessageId() {
+    const messages = document.querySelectorAll('[data-message-id]');
+    if (messages.length > 0) {
+        const ids = Array.from(messages).map(msg => parseInt(msg.getAttribute('data-message-id')));
+        lastMessageId = Math.max(...ids);
+    }
+}
 
 // إرسال الرسالة
 document.getElementById('messageForm').addEventListener('submit', function(e) {
@@ -367,7 +609,9 @@ function sendTextMessage() {
     .then(data => {
         if (data.success) {
             input.value = '';
-            addMessageToChat(data.message);
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
         }
     });
 }
@@ -379,7 +623,11 @@ function sendFileMessage() {
     
     if (!file) return;
     
-    // إظهار مؤشر التحميل
+    if (file.size > 10 * 1024 * 1024) {
+        Swal.fire('خطأ!', 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت', 'error');
+        return;
+    }
+    
     showUploadProgress();
     
     const formData = new FormData();
@@ -397,9 +645,9 @@ function sendFileMessage() {
         if (data.success) {
             fileInput.value = '';
             document.getElementById('messageType').value = 'text';
-            addMessageToChat(data.message);
-            
-            // إظهار رابط الملف للنسخ
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
             showFileLink(data.message.file_url, data.message.file_name);
         }
     })
@@ -496,16 +744,13 @@ function stopRecording() {
         mediaRecorder.stop();
         isRecording = false;
         
-        // إعادة تعيين شكل الزر
         const voiceBtn = document.getElementById('voiceBtn');
         voiceBtn.classList.remove('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
         voiceBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
         voiceBtn.innerHTML = '<i class="fas fa-microphone text-gray-600"></i>';
         
-        // إخفاء حالة التسجيل
         document.getElementById('recordingStatus').classList.add('hidden');
         
-        // إيقاف عداد الوقت
         if (recordingTimer) {
             clearInterval(recordingTimer);
             recordingTimer = null;
@@ -516,10 +761,13 @@ function stopRecording() {
 function sendVoiceMessage(audioBlob) {
     const reader = new FileReader();
     reader.onload = function() {
+        // حساب المدة التقريبية بناءً على حجم الملف
+        const estimatedDuration = Math.round(audioBlob.size / 16000); // تقدير تقريبي
+        
         const formData = new FormData();
         formData.append('message_type', 'voice');
         formData.append('voice', reader.result);
-        formData.append('duration', Math.round(audioBlob.size / 1000));
+        formData.append('duration', estimatedDuration);
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         
         fetch(`/admin/work-chat/${chatId}/send`, {
@@ -529,7 +777,9 @@ function sendVoiceMessage(audioBlob) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                addMessageToChat(data.message);
+                addNewMessageToChat(data.message);
+                lastMessageId = Math.max(lastMessageId, data.message.id);
+                scrollToBottom();
             }
         })
         .catch(error => {
@@ -618,7 +868,6 @@ function toggleAudioPlay(button, audioUrl) {
     const waveformBars = button.parentElement.querySelectorAll('.waveform-bar');
     const durationDisplay = button.parentElement.querySelector('.duration-display');
     
-    // إيقاف أي صوت آخر يعمل
     if (currentPlayingAudio && currentPlayingAudio !== audioElement) {
         currentPlayingAudio.pause();
         currentPlayingAudio.currentTime = 0;
@@ -626,18 +875,14 @@ function toggleAudioPlay(button, audioUrl) {
     }
     
     if (audioElement.paused) {
-        // تشغيل الصوت
         audioElement.play();
         currentPlayingAudio = audioElement;
         
-        // تغيير الأيقونة
         playIcon.classList.remove('fa-play');
         playIcon.classList.add('fa-pause');
         
-        // تحريك الموجات
         waveformBars.forEach(bar => bar.classList.add('playing'));
         
-        // تحديث الوقت
         audioElement.addEventListener('timeupdate', function() {
             if (!audioElement.paused) {
                 const currentTime = Math.floor(audioElement.currentTime);
@@ -647,13 +892,11 @@ function toggleAudioPlay(button, audioUrl) {
             }
         });
         
-        // عند انتهاء التشغيل
         audioElement.addEventListener('ended', function() {
             resetAudioButton(audioElement);
         });
         
     } else {
-        // إيقاف الصوت
         audioElement.pause();
         resetAudioButton(audioElement);
     }
@@ -665,11 +908,9 @@ function resetAudioButton(audioElement) {
     const playIcon = button.querySelector('i');
     const waveformBars = container.querySelectorAll('.waveform-bar');
     
-    // إعادة تعيين الأيقونة
     playIcon.classList.remove('fa-pause');
     playIcon.classList.add('fa-play');
     
-    // إيقاف حركة الموجات
     waveformBars.forEach(bar => bar.classList.remove('playing'));
     
     currentPlayingAudio = null;
@@ -687,24 +928,6 @@ function downloadAudio(url, filename) {
 
 function closePreview() {
     document.getElementById('previewPanel').classList.add('hidden');
-}
-
-// إضافة رسالة للشات
-function addMessageToChat(message) {
-    // يمكن تحسين هذه الدالة لاحقاً لإضافة الرسائل ديناميكياً
-    location.reload(); // حل مؤقت
-}
-
-// تحميل الرسائل
-function loadMessages() {
-    fetch(`/admin/work-chat/${chatId}/messages`)
-        .then(response => response.json())
-        .then(data => {
-            // تحديث عدد الرسائل إذا لزم الأمر
-        })
-        .catch(error => {
-            console.error('Error loading messages:', error);
-        });
 }
 
 // مؤشرات التحميل
@@ -796,7 +1019,7 @@ function clearChatFiles() {
             .then(data => {
                 if (data.success) {
                     Swal.fire('تم!', `تم حذف ${data.deleted_count} ملف وتوفير ${data.freed_space}`, 'success');
-                    location.reload();
+                    loadNewMessages(); // إعادة تحميل الرسائل
                 }
             });
         }
@@ -828,6 +1051,9 @@ function scrollToBottom() {
 
 // تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
+    initializeLastMessageId();
+    requestNotificationPermission();
+    startAutoRefresh();
     scrollToBottom();
 });
 
@@ -835,6 +1061,20 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('beforeunload', function() {
     if (isRecording) {
         stopRecording();
+    }
+    stopAutoRefresh();
+});
+
+// إيقاف التحديث التلقائي عند مغادرة الصفحة
+window.addEventListener('pagehide', function() {
+    stopAutoRefresh();
+});
+
+// استئناف التحديث عند العودة للصفحة
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        startAutoRefresh();
+        loadNewMessages();
     }
 });
 </script>

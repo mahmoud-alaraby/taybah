@@ -9,6 +9,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use ZipArchive;
 
 class WorkChatController extends Controller
 {
@@ -134,10 +135,22 @@ class WorkChatController extends Controller
                 $fileName = time() . '_' . Str::random(10) . '.webm';
                 Storage::disk('public')->put('work-chat/voice/' . $fileName, $audio);
                 
-                // تحويل المدة من milliseconds إلى seconds إذا لزم الأمر
+                // تحسين معالجة المدة الزمنية
                 $duration = $request->duration;
+                
+                // التأكد من أن المدة رقم صحيح
+                $duration = is_numeric($duration) ? (int) $duration : 0;
+                
+                // إذا كانت المدة كبيرة جداً، فهي على الأرجح بالميلي ثانية
                 if ($duration > 1000) {
-                    $duration = round($duration / 1000); // تحويل من milliseconds
+                    $duration = round($duration / 1000);
+                }
+                
+                // تأكد من أن المدة منطقية (بين 1 ثانية و 10 دقائق)
+                if ($duration < 1) {
+                    $duration = 1; // أقل مدة ثانية واحدة
+                } elseif ($duration > 600) {
+                    $duration = 600; // أقصى مدة 10 دقائق
                 }
                 
                 $message = WorkChatMessage::createVoiceMessage(
@@ -156,19 +169,31 @@ class WorkChatController extends Controller
 
         if ($message) {
             $message->load('sender');
+            
+            // إرجاع البيانات مع المدة المصححة
+            $responseData = [
+                'id' => $message->id,
+                'content' => $message->content,
+                'message_type' => $message->message_type,
+                'file_url' => $message->file_url,
+                'file_name' => $message->file_name,
+                'file_size_formatted' => $message->file_size_formatted,
+                'sender_name' => $message->sender_name,
+                'sender_type' => $message->sender_type,
+                'created_at' => $message->created_at->format('H:i'),
+                'is_read' => $message->is_read
+            ];
+            
+            // إضافة معلومات المدة للرسائل الصوتية
+            if ($message->message_type === 'voice') {
+                $voiceDuration = $message->voice_duration;
+                $responseData['duration'] = $voiceDuration['total_seconds'];
+                $responseData['duration_formatted'] = $voiceDuration['formatted'];
+            }
+            
             return response()->json([
                 'success' => true,
-                'message' => [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'message_type' => $message->message_type,
-                    'file_url' => $message->file_url,
-                    'file_name' => $message->file_name,
-                    'file_size_formatted' => $message->file_size_formatted,
-                    'sender_name' => $message->sender_name,
-                    'sender_type' => $message->sender_type,
-                    'created_at' => $message->created_at->format('H:i')
-                ]
+                'message' => $responseData
             ]);
         }
 
@@ -197,7 +222,7 @@ class WorkChatController extends Controller
 
         return response()->json([
             'messages' => $messages->map(function($message) {
-                return [
+                $messageData = [
                     'id' => $message->id,
                     'content' => $message->content,
                     'message_type' => $message->message_type,
@@ -209,6 +234,15 @@ class WorkChatController extends Controller
                     'created_at' => $message->created_at->format('H:i'),
                     'is_read' => $message->is_read
                 ];
+                
+                // إضافة معلومات المدة للرسائل الصوتية
+                if ($message->message_type === 'voice') {
+                    $voiceDuration = $message->voice_duration;
+                    $messageData['duration'] = $voiceDuration['total_seconds'];
+                    $messageData['duration_formatted'] = $voiceDuration['formatted'];
+                }
+                
+                return $messageData;
             })
         ]);
     }
@@ -270,6 +304,8 @@ class WorkChatController extends Controller
 
     public function storageManagement()
     {
+        $adminId = auth('admin')->id();
+        
         $totalSize = WorkChatMessage::whereNotNull('file_size')->sum('file_size');
         $fileCount = WorkChatMessage::whereIn('message_type', ['file', 'voice'])->count();
         
@@ -288,7 +324,16 @@ class WorkChatController extends Controller
             ->selectRaw('COUNT(*) as count, SUM(file_size) as size')
             ->first();
 
-        return view('admin.work-chat.storage', compact('totalSize', 'fileCount', 'fileStats', 'oldFiles'));
+        // قائمة الشاتات للمدير الحالي
+        $userChats = WorkChat::where('admin_id', $adminId)
+            ->with(['employee'])
+            ->withCount(['messages as file_count' => function($q) {
+                $q->whereIn('message_type', ['file', 'voice']);
+            }])
+            ->having('file_count', '>', 0)
+            ->get();
+
+        return view('admin.work-chat.storage', compact('totalSize', 'fileCount', 'fileStats', 'oldFiles', 'userChats'));
     }
 
     public function clearOldFiles()
@@ -314,10 +359,40 @@ class WorkChatController extends Controller
         ]);
     }
 
+    // تحميل جميع الملفات
     public function backupFiles()
     {
-        $zip = new \ZipArchive();
-        $backupName = 'work_chat_backup_' . date('Y_m_d_H_i_s') . '.zip';
+        return $this->createBackup();
+    }
+
+    // تحميل ملفات شات محدد
+    public function backupChatFiles($chatId)
+    {
+        $chat = WorkChat::where('id', $chatId)
+            ->where('admin_id', auth('admin')->id())
+            ->with('employee')
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['error' => 'الشات غير موجود'], 404);
+        }
+
+        return $this->createBackup($chatId);
+    }
+
+    // دالة إنشاء النسخة الاحتياطية المحسنة
+    private function createBackup($specificChatId = null)
+    {
+        $zip = new ZipArchive();
+        
+        // تحديد اسم الملف
+        if ($specificChatId) {
+            $chat = WorkChat::find($specificChatId);
+            $backupName = 'chat_backup_' . $chat->id . '_' . Str::slug($chat->title) . '_' . date('Y_m_d_H_i_s') . '.zip';
+        } else {
+            $backupName = 'all_chats_backup_' . date('Y_m_d_H_i_s') . '.zip';
+        }
+        
         $backupPath = storage_path('app/backups/' . $backupName);
         
         // إنشاء مجلد البكاب إذا لم يكن موجود
@@ -325,17 +400,78 @@ class WorkChatController extends Controller
             mkdir(storage_path('app/backups'), 0755, true);
         }
 
-        if ($zip->open($backupPath, \ZipArchive::CREATE) === TRUE) {
-            $messages = WorkChatMessage::whereIn('message_type', ['file', 'voice'])
+        if ($zip->open($backupPath, ZipArchive::CREATE) === TRUE) {
+            
+            // استعلام الرسائل
+            $query = WorkChatMessage::whereIn('message_type', ['file', 'voice'])
                 ->whereNotNull('file_path')
-                ->get();
+                ->with(['chat.employee', 'chat.admin']);
+
+            // إضافة فلتر للشات المحدد إذا لزم الأمر
+            if ($specificChatId) {
+                $query->where('chat_id', $specificChatId);
+            } else {
+                // فقط الشاتات التي يملكها المدير الحالي
+                $query->whereHas('chat', function($q) {
+                    $q->where('admin_id', auth('admin')->id());
+                });
+            }
+
+            $messages = $query->get();
+
+            // إنشاء ملف معلومات الشاتات
+            $chatInfo = [];
+            $processedChats = [];
 
             foreach ($messages as $message) {
+                $chat = $message->chat;
                 $filePath = storage_path('app/public/work-chat/' . $message->file_path);
+                
                 if (file_exists($filePath)) {
-                    $zip->addFile($filePath, 'chat_files/' . $message->file_path);
+                    // تنظيم الملفات حسب الشات
+                    $chatFolder = "Chat_{$chat->id}_{$chat->type}_" . Str::slug($chat->title);
+                    
+                    // تحديد نوع المجلد (files أو voices)
+                    $typeFolder = $message->message_type === 'voice' ? 'voices' : 'files';
+                    
+                    // مسار الملف في الـ ZIP
+                    $zipFilePath = $chatFolder . '/' . $typeFolder . '/' . $message->file_name;
+                    
+                    // إضافة الملف للـ ZIP
+                    $zip->addFile($filePath, $zipFilePath);
+                    
+                    // جمع معلومات الشات
+                    if (!isset($processedChats[$chat->id])) {
+                        $chatInfo[] = [
+                            'chat_id' => $chat->id,
+                            'title' => $chat->title,
+                            'type' => $chat->type,
+                            'admin' => $chat->admin->name ?? 'غير محدد',
+                            'employee' => $chat->employee->name ?? 'غير محدد',
+                            'created_at' => $chat->created_at->format('Y-m-d H:i:s'),
+                            'messages_count' => $chat->messages()->count(),
+                            'files_count' => $chat->messages()->whereIn('message_type', ['file', 'voice'])->count()
+                        ];
+                        $processedChats[$chat->id] = true;
+                    }
                 }
             }
+
+            // إنشاء ملف README مع معلومات الشاتات
+            $readmeContent = $this->generateReadmeContent($chatInfo, $specificChatId);
+            $zip->addFromString('README.txt', $readmeContent);
+
+            // إنشاء ملف JSON مع التفاصيل الكاملة
+            $detailsContent = json_encode([
+                'backup_date' => date('Y-m-d H:i:s'),
+                'backup_type' => $specificChatId ? 'single_chat' : 'all_chats',
+                'admin_id' => auth('admin')->id(),
+                'admin_name' => auth('admin')->user()->name,
+                'chats' => $chatInfo,
+                'total_files' => $messages->count()
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            
+            $zip->addFromString('backup_details.json', $detailsContent);
 
             $zip->close();
 
@@ -343,6 +479,41 @@ class WorkChatController extends Controller
         }
 
         return response()->json(['error' => 'فشل في إنشاء النسخة الاحتياطية'], 500);
+    }
+
+    // إنشاء محتوى ملف README
+    private function generateReadmeContent($chatInfo, $specificChatId = null)
+    {
+        $content = "=== نسخة احتياطية من ملفات شاتات العمل ===\n\n";
+        $content .= "تاريخ النسخة الاحتياطية: " . date('Y-m-d H:i:s') . "\n";
+        $content .= "نوع النسخة: " . ($specificChatId ? 'شات واحد' : 'جميع الشاتات') . "\n";
+        $content .= "المدير: " . auth('admin')->user()->name . "\n\n";
+
+        $content .= "=== هيكل المجلدات ===\n";
+        $content .= "Chat_{ID}_{TYPE}_{TITLE}/\n";
+        $content .= "  ├── files/          (الملفات المرفقة)\n";
+        $content .= "  └── voices/         (التسجيلات الصوتية)\n\n";
+
+        $content .= "=== معلومات الشاتات ===\n\n";
+
+        foreach ($chatInfo as $chat) {
+            $content .= "شات رقم: {$chat['chat_id']}\n";
+            $content .= "العنوان: {$chat['title']}\n";
+            $content .= "النوع: " . ($chat['type'] === 'design' ? 'تصميم' : 'مونتاج') . "\n";
+            $content .= "المدير: {$chat['admin']}\n";
+            $content .= "الموظف: {$chat['employee']}\n";
+            $content .= "تاريخ الإنشاء: {$chat['created_at']}\n";
+            $content .= "عدد الرسائل: {$chat['messages_count']}\n";
+            $content .= "عدد الملفات: {$chat['files_count']}\n";
+            $content .= str_repeat('-', 50) . "\n\n";
+        }
+
+        $content .= "=== ملاحظات ===\n";
+        $content .= "- جميع الملفات محفوظة بأسمائها الأصلية\n";
+        $content .= "- التسجيلات الصوتية بصيغة WebM\n";
+        $content .= "- تفاصيل إضافية متوفرة في ملف backup_details.json\n";
+
+        return $content;
     }
 
     private function formatBytes($bytes)

@@ -287,17 +287,16 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/print', [AdminWorkReportsController::class, 'print'])->name('print');
     });
 
-
     Route::prefix('work-chat')->name('admin.work-chat.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\WorkChatController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\Admin\WorkChatController::class, 'create'])->name('create');
-        
+
         // Storage Management Routes - يجب أن تكون قبل {workChat}
         Route::get('/storage-info', [App\Http\Controllers\Admin\WorkChatController::class, 'getStorageInfo'])->name('storage-info');
         Route::get('/storage-management', [App\Http\Controllers\Admin\WorkChatController::class, 'storageManagement'])->name('storage-management');
         Route::post('/clear-old-files', [App\Http\Controllers\Admin\WorkChatController::class, 'clearOldFiles'])->name('clear-old-files');
         Route::get('/backup-files', [App\Http\Controllers\Admin\WorkChatController::class, 'backupFiles'])->name('backup-files');
-        
+
         // Routes with parameters - يجب أن تكون في النهاية
         Route::post('/', [App\Http\Controllers\Admin\WorkChatController::class, 'store'])->name('store');
         Route::get('/{workChat}', [App\Http\Controllers\Admin\WorkChatController::class, 'show'])->name('show');
@@ -307,5 +306,9 @@ Route::middleware('admin.auth')->group(function () {
         Route::post('/{workChat}/send', [App\Http\Controllers\Admin\WorkChatController::class, 'sendMessage'])->name('send-message');
         Route::get('/{workChat}/messages', [App\Http\Controllers\Admin\WorkChatController::class, 'getMessages'])->name('get-messages');
         Route::post('/{workChat}/clear-files', [App\Http\Controllers\Admin\WorkChatController::class, 'clearFiles'])->name('clear-files');
+
+        // تحميل ملفات شات محدد - Route جديد
+        Route::get('/{workChat}/backup-files', [App\Http\Controllers\Admin\WorkChatController::class, 'backupChatFiles'])->name('backup-chat-files');
     });
+    
 });
