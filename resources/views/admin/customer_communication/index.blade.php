@@ -1,126 +1,147 @@
-{{-- resources/views/admin/customer_communication/index.blade.php --}}
 @extends('admin.layouts.app')
 
+@section('title', 'متابعة العملاء المحتملين')
+
 @section('content')
-<div class="p-6">
-    <h1 class="text-3xl font-extrabold mb-6">التواصل مع العملاء</h1>
-<!-- resources/views/admin/customer_communication/index.blade.php -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        
-        <!-- إجمالي العملاء -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">العملاء الكليون</p>
-                    <p class="text-2xl font-bold">{{ $stats['total'] ?? 0 }}</p>
-                </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12z"/>
-                </svg>
-            </div>
+<div class="space-y-6">
+    <!-- Header Actions -->
+    <div class="flex justify-between items-center">
+        <div class="flex space-x-4 space-x-reverse">
+            <a href="{{ route('admin.customer-communication.index') }}" 
+               class="px-4 py-2 rounded-md bg-blue-600 text-white">
+                <i class="fas fa-user ml-2"></i>
+                كل العملاء
+            </a>
+            <!-- أي فلترة إضافية -->
         </div>
-
-        <!-- عملاء طلبوا مكالمات -->
-        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">عملاء طلبوا مكالمات</p>
-                    <p class="text-2xl font-bold">{{ $stats['calls_pending'] ?? 0 }}</p>
-                </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0"/>
-                </svg>
-            </div>
+        <div class="flex space-x-2 space-x-reverse">
+            <a href="{{ route('admin.customer-communication.storageManagement') }}"
+               class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                <i class="fas fa-hdd ml-1"></i>
+                إدارة المساحة
+            </a>
         </div>
-
-        <!-- عملاء طلبوا زيارات -->
-        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">عملاء طلبوا زيارات</p>
-                    <p class="text-2xl font-bold">{{ $stats['visits_pending'] ?? 0 }}</p>
-                </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
-                </svg>
-            </div>
-        </div>
-
     </div>
-</div>
 
+    <!-- إحصائيات أعلى الصفحة -->
+    <div class="flex space-x-4 mb-4 space-x-reverse">
+        <div class="px-3 py-2 bg-teal-100 text-teal-700 rounded">
+            <i class="fas fa-phone mr-1"></i>
+            عملاء ينتظرون مكالمة: <strong>{{ $callPendingCount }}</strong>
+        </div>
+        <div class="px-3 py-2 bg-pink-100 text-pink-700 rounded">
+            <i class="fas fa-building mr-1"></i>
+            عملاء ينتظرون زيارة: <strong>{{ $visitPendingCount }}</strong>
+        </div>
+    </div>
 
-    <form method="GET" class="mb-6 max-w-xs">
-        <select name="filter" onchange="this.form.submit()" class="w-full border rounded p-2">
-            <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>الكل</option>
-            <option value="calls_pending" {{ $filter == 'calls_pending' ? 'selected' : '' }}>عملاء انتظار المكالمات</option>
-            <option value="visits_pending" {{ $filter == 'visits_pending' ? 'selected' : '' }}>عملاء انتظار الزيارات</option>
-            <option value="read" {{ $filter == 'read' ? 'selected' : '' }}>مقرؤة</option>
-            <option value="unread" {{ $filter == 'unread' ? 'selected' : '' }}>غير مقرؤة</option>
-        </select>
-    </form>
-
-    <div class="overflow-x-auto rounded shadow bg-white">
-        <table class="w-full border-collapse text-sm">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="border p-3 text-right">العميل</th>
-                    <th class="border p-3 text-right">الهاتف</th>
-                    <th class="border p-3 text-right">الموظف</th>
-                    <th class="border p-3 text-right">عدد الرسائل</th>
-                    <th class="border p-3 text-right">آخر تواصل</th>
-                    <th class="border p-3 text-center">الحالة</th>
-                    <th class="border p-3 text-center">الإشعارات</th>
-                    <th class="border p-3 text-center">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($communications as $comm)
-                <tr class="{{ $comm->unread_messages > 0 ? 'bg-yellow-50 font-semibold' : '' }}">
-                    <td class="border p-3 text-right">{{ $comm->customer_name }}</td>
-                    <td class="border p-3 text-right">{{ $comm->phone }}</td>
-                    <td class="border p-3 text-right">{{ $comm->employee_name ?? '-' }}</td>
-                    <td class="border p-3 text-right">{{ $comm->total_messages }}</td>
-                    <td class="border p-3 text-right">{{ \Carbon\Carbon::parse($comm->last_message_time)->format('Y-m-d H:i') }}</td>
-                    <td class="border p-3 text-center">
-                        @if($comm->unread_messages > 0)
-                            <span class="text-red-600 font-bold">غير مقروءة</span>
-                        @else
-                            <span class="text-green-600 font-bold">مقرؤة</span>
-                        @endif
-                    </td>
-                    <td class="border p-3 text-center">
-                        @if($comm->unread_messages > 0)
-                            <div class="inline-flex items-center bg-red-600 text-white rounded-full w-8 h-8 justify-center animate-pulse cursor-pointer" title="{{ $comm->unread_messages }} رسائل جديدة">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M21 12c0 3.866-3.582 7-8 7-1.52 0-2.937-.438-4.095-1.16l-4.518 1.106 1.106-4.518c-.722-1.158-1.16-2.575-1.16-4.095 0-4.418 3.134-8 7-8 5.418 0 7 3.134 7 7z"/>
-                                </svg>
-                                <span class="sr-only">رسائل جديدة</span>
+    <!-- Chats List -->
+    <div class="bg-white shadow rounded-lg">
+        @if($chats->count() > 0)
+            <div class="divide-y divide-gray-200">
+                @foreach($chats as $chat)
+                    <div class="p-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 space-x-reverse">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-medium text-gray-900">
+                                            {{ $chat->potentialCustomer->customer_name }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500">
+                                            الموظف المسؤول: {{ $chat->employee->name ?? 'غير محدد' }}
+                                        </p>
+                                        @if($chat->messages->first())
+                                            <p class="text-sm text-gray-600 mt-1">
+                                                آخر رسالة: {{ $chat->messages->first()->content ?? 'مرفق' }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                        @else
-                            <span>-</span>
-                        @endif
-                    </td>
-                    <td class="border p-3 text-center">
-                        <a href="{{ route('admin.customer-communication.show', $comm->potential_customer_id) }}" class="inline-block bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">عرض</a>
-                        @if($comm->unread_messages > 0)
-                        <form action="{{ route('admin.customer-communication.markRead', $comm->potential_customer_id) }}" method="POST" class="inline-block ml-2">
-                            @csrf
-                            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">تعليم كمقروء</button>
-                        </form>
-                        @endif
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="8" class="text-center p-4 font-semibold text-gray-500">لا توجد اتصالات حتى الآن.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-6">
-        {{ $communications->appends(request()->query())->links() }}
+                            <div class="flex items-center space-x-4 space-x-reverse">
+                                @if($chat->unread_count > 0)
+                                    <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                                        {{ $chat->unread_count }}
+                                    </span>
+                                @endif
+                                <div class="text-sm text-gray-500">
+                                    {{ $chat->last_message_at ? $chat->last_message_at->diffForHumans() : 'لا توجد رسائل' }}
+                                </div>
+                                <div class="flex space-x-2 space-x-reverse">
+                                    <a href="{{ route('admin.customer-communication.show', $chat->id) }}" 
+                                       class="text-blue-600 hover:text-blue-800 p-2">
+                                        <i class="fas fa-comment"></i>
+                                    </a>
+                                    <button onclick="deleteChat({{ $chat->id }})"
+                                            class="text-red-600 hover:text-red-800 p-2">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-12">
+                <i class="fas fa-user text-6xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد شاتات</h3>
+                <p class="text-gray-600 mb-4">ابدأ بإنشاء شات جديد للمراسلة مع الموظف حول العميل</p>
+                <form action="{{ route('admin.customer-communication.createChat') }}" method="POST" class="inline-block">
+                    @csrf
+                    <input type="hidden" name="customer_id" value="">
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        <i class="fas fa-plus ml-2"></i>
+                        إنشاء شات جديد
+                    </button>
+                </form>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function deleteChat(chatId) {
+    Swal.fire({
+        title: 'حذف الشات',
+        text: 'هل أنت متأكد من حذف هذا الشات؟ سيتم حذف جميع الرسائل والملفات!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc143c',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/customer-communication/${chatId}`;
+            const csrfField = document.createElement('input');
+            csrfField.type = 'hidden';
+            csrfField.name = '_token';
+            csrfField.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfField);
+
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+@endpush

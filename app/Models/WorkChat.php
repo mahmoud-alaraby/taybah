@@ -133,4 +133,11 @@ class WorkChat extends Model
         // الموظف يستطيع حذف الشاتات التي هو مشارك فيها
         return $this->employee_id == $userId;
     }
+
+public function potentialCustomer()
+{
+    return $this->belongsTo(\App\Models\PotentialCustomer::class, 'potential_customer_id');
+}
+
+
 }

@@ -24,7 +24,7 @@
                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
             </div>
             <div>
-                <button type="submit" class="w-full bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700">
+                <button type="submit" class="w-full bg-red-600 text-white rounded-md py-2 hover:bg-red-700">
                     <i class="fas fa-search ml-1"></i>
                     عرض التقرير
                 </button>

@@ -4,27 +4,8 @@
 @section('title', 'إضافة حدث تجديد جديد')
 
 @section('content')
-<div class="container-fluid p-6">
-    <!-- Header Section -->
-    <div class="mb-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-plus-circle text-red-600 mr-2"></i>
-                    إضافة حدث تجديد جديد
-                </h1>
-                <p class="text-gray-600 mt-1">إضافة حدث تجديد جديد إلى النظام</p>
-            </div>
-            <!-- Actions -->
-            <div class="flex items-center gap-3">
-                <a href="{{ route('employee.renewal-dates.index') }}" 
-                   class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    العودة للقائمة
-                </a>
-            </div>
-        </div>
-    </div>
+<div class="mx-auto max-w-4xl p-6">
+  
 
     <!-- Success/Error Messages -->
     @if(session('success'))
@@ -43,12 +24,29 @@
 
     <!-- Main Form -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-edit text-red-600 mr-2"></i>
-                بيانات الحدث الجديد
-            </h3>
-            <p class="text-sm text-gray-600 mt-1">املأ جميع البيانات المطلوبة بدقة</p>
+         <div class="">
+           <!-- Header Section -->
+ 
+
+           <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5">
+            <div class = "flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+    <h2 class="text-lg font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              أضف حدث جديد إلى النظام
+            </h2>
+
+                  <a href="{{ route('employee.renewal-dates.index') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+            </div>
+        
+        </div>
         </div>
 
         <form action="{{ route('employee.renewal-dates.store') }}" method="POST" class="p-6">

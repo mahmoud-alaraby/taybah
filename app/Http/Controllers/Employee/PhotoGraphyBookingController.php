@@ -151,7 +151,7 @@ class PhotoGraphyBookingController extends Controller
             'created_by_employee' => $employee->id
         ]);
 
-        $this->createNotificationForAdmins($booking, 'created', $employee);
+        // $this->createNotificationForAdmins($booking, 'created', $employee);
 
         return redirect()->route('employee.photography-booking.index')
             ->with('success', 'تم إنشاء الحجز بنجاح');
@@ -231,7 +231,7 @@ class PhotoGraphyBookingController extends Controller
             'notes' => $request->notes
         ]);
 
-        $this->createNotificationForAdmins($photographyBooking, 'updated', $employee);
+        // $this->createNotificationForAdmins($photographyBooking, 'updated', $employee);
 
         return redirect()->route('employee.photography-booking.index')
             ->with('success', 'تم تحديث الحجز بنجاح');
@@ -246,7 +246,7 @@ class PhotoGraphyBookingController extends Controller
                 ->with('error', 'ليس لديك صلاحية لحذف هذا الحجز');
         }
 
-        $this->createNotificationForAdmins($photographyBooking, 'deleted', $employee);
+        // $this->createNotificationForAdmins($photographyBooking, 'deleted', $employee);
         $photographyBooking->delete();
 
         return redirect()->route('employee.photography-booking.index')

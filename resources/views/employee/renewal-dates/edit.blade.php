@@ -4,32 +4,9 @@
 @section('title', 'تعديل حدث التجديد')
 
 @section('content')
-<div class="container-fluid p-6">
+<div class=" mx-auto max-w-4xl p-6 ">
     <!-- Header Section -->
-    <div class="mb-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    <i class="fas fa-edit text-red-600 mr-2"></i>
-                    تعديل حدث التجديد
-                </h1>
-                <p class="text-gray-600 mt-1">تعديل بيانات الحدث الموجود</p>
-            </div>
-            <!-- Actions -->
-            <div class="flex items-center gap-3">
-                <a href="{{ route('employee.renewal-dates.show', $renewalDate) }}" 
-                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-eye mr-2"></i>
-                    عرض الحدث
-                </a>
-                <a href="{{ route('employee.renewal-dates.index') }}" 
-                   class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center">
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    العودة للقائمة
-                </a>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Status Alert -->
     <div class="mb-6">
@@ -92,13 +69,31 @@
 
     <!-- Main Form -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-edit text-red-600 mr-2"></i>
-                تعديل بيانات الحدث
-            </h3>
-            <p class="text-sm text-gray-600 mt-1">قم بتعديل البيانات المطلوبة</p>
+             <div class="">
+           <!-- Header Section -->
+ 
+
+           <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-5">
+            <div class = "flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+    <h2 class="text-lg font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+             تعديل الحدث
+            </h2>
+
+                  <a href="{{ route('employee.renewal-dates.index') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 border border-white/20">
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+            </div>
+        
         </div>
+        </div>
+   
 
         <form action="{{ route('employee.renewal-dates.update', $renewalDate) }}" method="POST" class="p-6">
             @csrf
@@ -209,17 +204,17 @@
             <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
                 <button type="submit" 
                         class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-save mr-2"></i>
+                    <i class="fas fa-save ml-2"></i>
                     حفظ التعديلات
                 </button>
                 <a href="{{ route('employee.renewal-dates.show', $renewalDate) }}" 
                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                    <i class="fas fa-eye mr-2"></i>
+                    <i class="fas fa-eye ml-2"></i>
                     عرض الحدث
                 </a>
                 <a href="{{ route('employee.renewal-dates.index') }}" 
                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                    <i class="fas fa-times mr-2"></i>
+                    <i class="fas fa-times ml-2"></i>
                     إلغاء
                 </a>
             </div>
@@ -231,7 +226,7 @@
         <!-- معلومات إضافية -->
         <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
             <h4 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
-                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                <i class="fas fa-info-circle text-blue-600 ml-2"></i>
                 معلومات إضافية
             </h4>
             <div class="space-y-3 text-sm">
@@ -265,25 +260,25 @@
         <!-- إجراءات سريعة -->
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <h4 class="text-lg font-semibold text-blue-800 flex items-center mb-4">
-                <i class="fas fa-bolt text-blue-600 mr-2"></i>
+                <i class="fas fa-bolt text-blue-600 ml-2"></i>
                 إجراءات سريعة
             </h4>
             <div class="space-y-3">
                 @if($renewalDate->status === 'active')
                 <button onclick="markCompleted({{ $renewalDate->id }})" 
                         class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-check mr-2"></i>
+                    <i class="fas fa-check ml-2"></i>
                     تحديد كمكتمل
                 </button>
                 <button onclick="renewEvent({{ $renewalDate->id }})" 
                         class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-refresh mr-2"></i>
+                    <i class="fas fa-refresh ml-2"></i>
                     إنشاء تجديد جديد
                 </button>
                 @endif
                 <a href="{{ route('employee.renewal-dates.show', $renewalDate) }}" 
                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-eye mr-2"></i>
+                    <i class="fas fa-eye ml-2"></i>
                     عرض تفاصيل كاملة
                 </a>
             </div>

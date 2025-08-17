@@ -20,20 +20,20 @@
                     @if($todayAttendance)
                         @if($todayAttendance->check_out_time)
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <i class="fas fa-check-circle mr-1"></i>
+                                <i class="fas fa-check-circle ml-1"></i>
                                 تم الانصراف
                             </span>
                         @else
                             <button @click="checkOut()" 
                                     class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700">
-                                <i class="fas fa-sign-out-alt mr-1"></i>
+                                <i class="fas fa-sign-out-alt ml-1"></i>
                                 انصراف
                             </button>
                         @endif
                     @else
                         <button @click="checkIn()" 
                                 class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700">
-                            <i class="fas fa-fingerprint mr-1"></i>
+                            <i class="fas fa-fingerprint ml-1"></i>
                             حضور
                         </button>
                     @endif
@@ -107,23 +107,23 @@
     <div class="bg-white p-4 rounded-lg shadow">
         <div class="flex flex-wrap gap-2">
             <button @click="showCreateProjectModal()" 
-                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
-                <i class="fas fa-plus mr-2"></i>
+                    class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700">
+                <i class="fas fa-plus ml-2"></i>
                 مشروع جديد
             </button>
             <button @click="showAddTaskModal()" 
                     class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">
-                <i class="fas fa-tasks mr-2"></i>
+                <i class="fas fa-tasks ml-2"></i>
                 مهمة جديدة
             </button>
             <a href="{{ route('employee.work-reports.index') }}" 
                class="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700">
-                <i class="fas fa-chart-line mr-2"></i>
+                <i class="fas fa-chart-line ml-2"></i>
                 التقارير
             </a>
             <button @click="refreshTodayEntries()" 
                     class="inline-flex items-center px-3 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">
-                <i class="fas fa-sync-alt mr-2"></i>
+                <i class="fas fa-sync-alt ml-2"></i>
                 تحديث
             </button>
         </div>
@@ -272,7 +272,7 @@
     <!-- مودال إنشاء مشروع -->
     <div x-show="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
          @click="showCreateModal = false">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white p-4 rounded rounded-md" @click.stop>
             <h3 class="text-lg font-medium text-gray-900 mb-4">مشروع جديد</h3>
             <div class="space-y-4">
                 <div>
@@ -308,7 +308,7 @@
                         إلغاء
                     </button>
                     <button @click="createProject()" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                         إنشاء المشروع
                     </button>
                 </div>
@@ -319,7 +319,7 @@
     <!-- مودال إضافة مهمة -->
     <div x-show="showTaskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
          @click="showTaskModal = false">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white rounded rounded-md p-4" @click.stop>
             <h3 class="text-lg font-medium text-gray-900 mb-4">مهمة جديدة</h3>
             <div class="space-y-4">
                 <div>
@@ -353,7 +353,7 @@
                         إلغاء
                     </button>
                     <button @click="addTask()" 
-                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                         إضافة المهمة
                     </button>
                 </div>

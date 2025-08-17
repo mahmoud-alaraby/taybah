@@ -240,13 +240,25 @@ Route::middleware('admin.auth')->group(function () {
         Route::post('/destroy-all', [DesignerTaskAccountAdminController::class, 'destroyAllTasksForDay'])->name('destroyAllTasksForDay');
     });
 
-
-    Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
+Route::prefix('customer-communication')
+    ->name('admin.customer-communication.')
+    ->group(function () {
         Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
-        Route::get('/{id}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
-        Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
-        Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
+        Route::get('/{chat}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+        Route::post('/{chat}/send-message', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('sendMessage');
+        Route::get('/{chat}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('messages');
+        Route::delete('/{chat}', [AdminCustomerCommunicationController::class, 'destroy'])->name('destroy');
+        Route::post('/{chat}/clear-files', [AdminCustomerCommunicationController::class, 'clearFiles'])->name('clearFiles');
+        Route::get('/storage-info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storageInfo');
+        Route::get('/storage-management', [AdminCustomerCommunicationController::class, 'storageManagement'])->name('storageManagement');
+        Route::post('/clear-old-files', [AdminCustomerCommunicationController::class, 'clearOldFiles'])->name('clearOldFiles');
+        Route::get('/backup-files', [AdminCustomerCommunicationController::class, 'backupFiles'])->name('backupFiles');
+        Route::get('/backup-chat-files/{chat}', [AdminCustomerCommunicationController::class, 'backupChatFiles'])->name('backupChatFiles');
+
+        Route::post('/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('createChat');
+
     });
+
 
 
 

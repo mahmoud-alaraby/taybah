@@ -37,21 +37,21 @@
                 </select>
             </div>
             <div class="flex items-end space-x-2 space-x-reverse">
-                <button type="submit" class="flex-1 bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700">
+                <button type="submit" class="flex-1 bg-red-600 text-white rounded-md py-2 hover:bg-red-700">
                     <i class="fas fa-search ml-1"></i>
                     عرض
                 </button>
-                <a href="{{ route('admin.time-tracking.reports') }}" 
+                <!-- <a href="{{ route('admin.time-tracking.reports') }}" 
                    class="bg-green-600 text-white rounded-md py-2 px-4 hover:bg-green-700">
                     <i class="fas fa-chart-line"></i>
-                </a>
+                </a> -->
             </div>
             <div>
-                <a href="{{ route('admin.time-tracking.daily-summary', ['date' => $date]) }}" 
+                <!-- <a href="{{ route('admin.time-tracking.daily-summary', ['date' => $date]) }}" 
                    class="w-full bg-purple-600 text-white rounded-md py-2 hover:bg-purple-700 flex items-center justify-center">
                     <i class="fas fa-calendar-day ml-1"></i>
                     ملخص اليوم
-                </a>
+                </a> -->
             </div>
         </form>
     </div>

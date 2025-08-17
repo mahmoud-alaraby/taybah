@@ -57,13 +57,13 @@
                 <i class="fas fa-plus ml-2"></i>
                 إضافة عميل محتمل جديد
             </h3>
-            <button onclick="toggleForm('customerForm')" class="bg-white text-blue-600 px-3 py-1 rounded text-sm font-bold hover:bg-gray-50">
+            <button onclick="toggleForm('customerForm')" class="bg-white text-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-gray-50">
                 <i class="fas fa-plus ml-1"></i>
                 إضافة
             </button>
         </div>
 
-        <div id="customerForm" class="hidden bg-red-50 border-b border-red-200 p-4">
+        <div id="customerForm" class="hidden bg-stone-50 border-b border-stone-200 p-6">
             <form action="{{ route('employee.potential-customers.store') }}" method="POST">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -74,28 +74,28 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">اسم العميل المحتمل</label>
                             <input type="text" name="customer_name" required
-                                   class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                   class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
                                    placeholder="اسم العميل">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">رقم الجوال</label>
                             <input type="text" name="phone" required
-                                   class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                   class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
                                    placeholder="+966501234567">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">وصف العمل المطلوب</label>
                             <textarea name="work_description" rows="3" required
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"
                                    placeholder="وصف تفصيلي للعمل المطلوب"></textarea>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية</label>
                             <textarea name="notes" rows="2"
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"
                                    placeholder="أي ملاحظات إضافية"></textarea>
                         </div>
                     </div>
@@ -121,7 +121,7 @@
                 </div>
                 
                 <div class="flex space-x-2 space-x-reverse mt-4">
-                    <button type="submit" class="flex-1 h-9 bg-red-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
+                    <button type="submit" class="flex-1 h-9 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
                         حفظ العميل
                     </button>
                     <button type="button" onclick="toggleForm('customerForm')" class="h-9 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
