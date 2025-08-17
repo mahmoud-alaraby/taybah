@@ -202,23 +202,12 @@ Route::middleware('employee.auth')->group(function () {
         });
     });
 
-Route::middleware(['employee.auth', 'employee.permission:customer_communication'])
-    ->prefix('customer-communication')
-    ->name('employee.customer-communication.')
-    ->group(function () {
+    Route::middleware(['employee.auth', 'employee.permission:customer_communication'])->prefix('customer-communication')->name('employee.customer-communication.')->group(function () {
         Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
-        Route::get('/{chat}', [CustomerCommunicationController::class, 'show'])->name('show');
-        Route::post('/{chat}/send-message', [CustomerCommunicationController::class, 'sendMessage'])->name('sendMessage');
-        Route::get('/{chat}/messages', [CustomerCommunicationController::class, 'getMessages'])->name('messages');
-        Route::delete('/{chat}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
-        Route::post('/{chat}/clear-files', [CustomerCommunicationController::class, 'clearFiles'])->name('clearFiles');
-        Route::get('/storage-info', [CustomerCommunicationController::class, 'getStorageInfo'])->name('storageInfo');
-        Route::get('/storage-management', [CustomerCommunicationController::class, 'storageManagement'])->name('storageManagement');
-        Route::post('/clear-old-files', [CustomerCommunicationController::class, 'clearOldFiles'])->name('clearOldFiles');
-        Route::get('/backup-files', [CustomerCommunicationController::class, 'backupFiles'])->name('backupFiles');
-        Route::get('/backup-chat-files/{chat}', [CustomerCommunicationController::class, 'backupChatFiles'])->name('backupChatFiles');
+        Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
+        Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
+        Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
     });
-
 
 
 
