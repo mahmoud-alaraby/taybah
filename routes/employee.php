@@ -14,6 +14,8 @@ use App\Http\Controllers\Employee\EmployeeDesignerTaskAccountEmployeeController;
 use App\Http\Controllers\employee\CustomerCommunicationController;
 use App\Http\Controllers\Employee\CustomerResponseCategoryInlineController as EmployeeCategoryInlineController;
 // Employee Guest Routes (غير مسجل دخول)
+
+
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
     Route::post('/login', [AuthController::class, 'login'])->name('employee.login.post');

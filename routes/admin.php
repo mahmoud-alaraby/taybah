@@ -20,7 +20,12 @@ use App\Http\Controllers\Admin\CustomerCommunicationController  as AdminCustomer
 use App\Http\Controllers\Admin\CustomerResponseCategoryInlineController as  AdminCategoryInlineController;
 use App\Http\Controllers\Admin\AdminWorkReportsController;
 
+
+
+
+
 Route::middleware('admin.guest')->group(function () {
+
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
 });

@@ -95,241 +95,226 @@
           </div>
         </div>
         
-        <!-- Navigation -->
-        <nav class="space-y-1">
+    <nav class="space-y-1 py-4">
 
-          <!-- الرئيسية -->
-          <a href="{{ route('employee.dashboard') }}"
-             class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-            <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
-            الرئيسية
-          </a>
+    <!-- الرئيسية -->
+    <a href="{{ route('employee.dashboard') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
+        الرئيسية
+    </a>
 
-          {{-- إدارة العملاء --}}
-          @php
-            $showCustomerMenu = auth('employee')->user()->hasPermission('customer_communication')
-              || auth('employee')->user()->hasPermission('customer_movement')
-              || auth('employee')->user()->hasPermission('potential_customers');
-          @endphp
-          @if($showCustomerMenu)
-          <div x-data="{ open: false }" class="relative w-full">
-            <button type="button" @click="open = !open"
-              class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300"
-              aria-haspopup="true" aria-expanded="open">
-              <i class="fas fa-address-book ml-3 text-sm"></i>
-              إدارة العملاء
-              <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
-                  x-transition:leave="transition ease-in duration-150"
-                  class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
-
-                       @if(auth('employee')->user()->hasPermission('customer_response'))
-              <a href="{{ route('employee.customer-response.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-response.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+    {{-- إدارة العملاء --}}
+    @php
+        $showCustomerMenu = auth('employee')->user()->hasPermission('customer_communication')
+            || auth('employee')->user()->hasPermission('customer_movement')
+            || auth('employee')->user()->hasPermission('potential_customers');
+    @endphp
+    @if($showCustomerMenu)
+    <div x-data="{ open: false }" class="space-y-1">
+        <button @click="open = !open"
+            class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300"
+            aria-haspopup="true" aria-expanded="open" type="button">
+            <i class="fas fa-address-book ml-3 text-sm"></i>
+            إدارة العملاء
+            <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-400">
+            @if(auth('employee')->user()->hasPermission('customer_response'))
+            <a href="{{ route('employee.customer-response.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-response.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-comments ml-3 text-sm"></i>
                 قاموس الردود على العملاء
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('customer_communication'))
-              <a href="{{ route('employee.customer-communication.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-communication*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('customer_communication'))
+            <a href="{{ route('employee.customer-communication.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-communication*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-phone-alt ml-3 text-sm"></i>
                 التواصل مع العملاء
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('customer_movement'))
-              <a href="{{ route('employee.customer-movement') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-movement') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('customer_movement'))
+            <a href="{{ route('employee.customer-movement') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.customer-movement') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-users ml-3 text-sm"></i>
                 متابعة حركة العملاء
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('potential_customers'))
-              <a href="{{ route('employee.potential-customers') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.potential-customers') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('potential_customers'))
+            <a href="{{ route('employee.potential-customers') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.potential-customers') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-user-plus ml-3 text-sm"></i>
                 العملاء المحتملين
-              </a>
-              @endif
-            </div>
-          </div>
-          @endif
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
 
-          {{-- الأعمال/العمليات --}}
-          @php
-            $showOpsMenu = auth('employee')->user()->hasPermission('general_operations')
-              || auth('employee')->user()->hasPermission('photography_booking')
-              || auth('employee')->user()->hasPermission('designers_account')
-              || auth('employee')->user()->hasPermission('customer_response')
-              || auth('employee')->user()->hasPermission('renewal_dates')
-              || auth('employee')->user()->hasPermission('receipts_payments');
-          @endphp
-          @if($showOpsMenu)
-          <div x-data="{ open: false }" class="relative w-full">
-            <button type="button" @click="open = !open"
-              class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
-              <i class="fas fa-cogs ml-3 text-sm"></i>
-              الأعمال/العمليات
-              <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
-                  x-transition:leave="transition ease-in duration-150"
-                  class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
-              @if(auth('employee')->user()->hasPermission('general_operations'))
-              <a href="{{ route('employee.general-operations') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.general-operations') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+    {{-- الأعمال/العمليات --}}
+    @php
+        $showOpsMenu = auth('employee')->user()->hasPermission('general_operations')
+            || auth('employee')->user()->hasPermission('photography_booking')
+            || auth('employee')->user()->hasPermission('designers_account')
+            || auth('employee')->user()->hasPermission('customer_response')
+            || auth('employee')->user()->hasPermission('renewal_dates')
+            || auth('employee')->user()->hasPermission('receipts_payments');
+    @endphp
+    @if($showOpsMenu)
+    <div x-data="{ open: false }" class="space-y-1">
+        <button @click="open = !open"
+            class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
+            <i class="fas fa-cogs ml-3 text-sm"></i>
+            الأعمال/العمليات
+            <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-400">
+            @if(auth('employee')->user()->hasPermission('general_operations'))
+            <a href="{{ route('employee.general-operations') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.general-operations') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-cogs ml-3 text-sm"></i>
                 التشغيل العام
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('photography_booking'))
-              <a href="{{ route('employee.photography-booking.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('photography_booking'))
+            <a href="{{ route('employee.photography-booking.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.photography-booking.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-camera ml-3 text-sm"></i>
                 حجوزات التصوير والمونتاج
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('designers_account'))
-              <a href="{{ route('employee.designer-task-accounts.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.designer-task-accounts.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('designers_account'))
+            <a href="{{ route('employee.designer-task-accounts.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.designer-task-accounts.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-palette ml-3 text-sm"></i>
                 حساب المصممين
-              </a>
-              @endif
-         
-              @if(auth('employee')->user()->hasPermission('renewal_dates'))
-              <a href="{{ route('employee.renewal-dates.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.renewal-dates*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('renewal_dates'))
+            <a href="{{ route('employee.renewal-dates.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.renewal-dates*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-calendar-alt ml-3 text-sm"></i>
                 مواعيد التجديد
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('receipts_payments'))
-              <a href="{{ route('employee.receipts-payments') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.receipts-payments*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('receipts_payments'))
+            <a href="{{ route('employee.receipts-payments') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.receipts-payments*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-money-bill-wave ml-3 text-sm"></i>
                 المقبوضات والمدفوعات
-              </a>
-              @endif
-            </div>
-          </div>
-          @endif
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
 
-          {{-- المتابعة: المشاريع-الحضور-التقارير --}}
-          @php
-            $hasTrackingMenu = auth('employee')->user()->hasPermission('project_tracking')
-              || auth('employee')->user()->hasPermission('attendance_tracking')
-              || auth('employee')->user()->hasPermission('work_reports');
-          @endphp
-          @if($hasTrackingMenu)
-          <div x-data="{ open: false }" class="relative w-full">
-            <button type="button" @click="open = !open"
-              class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
-              <i class="fas fa-clipboard-list ml-3 text-sm"></i>
-              المتابعة والتقارير
-              <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
-                  x-transition:leave="transition ease-in duration-150"
-                  class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
-              @if(auth('employee')->user()->hasPermission('project_tracking'))
-              <a href="{{ route('employee.project-tracking.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.project-tracking.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+    {{-- المتابعة: المشاريع-الحضور-التقارير --}}
+    @php
+        $hasTrackingMenu = auth('employee')->user()->hasPermission('project_tracking')
+            || auth('employee')->user()->hasPermission('attendance_tracking')
+            || auth('employee')->user()->hasPermission('work_reports');
+    @endphp
+    @if($hasTrackingMenu)
+    <div x-data="{ open: false }" class="space-y-1">
+        <button @click="open = !open"
+            class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
+            <i class="fas fa-clipboard-list ml-3 text-sm"></i>
+            المتابعة والتقارير
+            <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-400">
+            @if(auth('employee')->user()->hasPermission('project_tracking'))
+            <a href="{{ route('employee.project-tracking.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.project-tracking.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-tasks ml-3 text-sm"></i>
                 متابعة المشاريع
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('attendance_tracking'))
-              <a href="{{ route('employee.attendance.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.attendance.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('attendance_tracking'))
+            <a href="{{ route('employee.attendance.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.attendance.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-fingerprint ml-3 text-sm"></i>
                 الحضور والانصراف
-              </a>
-              @endif
-              @if(auth('employee')->user()->hasPermission('work_reports'))
-              <a href="{{ route('employee.work-reports.index') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.work-reports.*') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('work_reports'))
+            <a href="{{ route('employee.work-reports.index') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.work-reports.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-chart-line ml-3 text-sm"></i>
                 تقارير العمل
-              </a>
-              @endif
-            </div>
-          </div>
-          @endif
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
 
-      {{-- للموظف  --}}
-          @php
-            $hasWorkChatMenu = auth('employee')->user()->hasPermission('design_follow_up')
-              || auth('employee')->user()->hasPermission('montage_follow_up');
-          @endphp
-          @if($hasWorkChatMenu)
-          <div x-data="{ open: false }" class="relative w-full">
-            <button type="button" @click="open = !open"
-              class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
-              <i class="fas fa-comments ml-3 text-sm"></i>
-              شاتات العمل
-              <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
-                  x-transition:leave="transition ease-in duration-150"
-                  class="absolute left-0 top-full mt-1 w-full bg-gray-800 rounded-md shadow-lg z-20 origin-top-left">
-              
-              @if(auth('employee')->user()->hasPermission('design_follow_up'))
-              <a href="{{ route('employee.design-follow-up') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.design-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+    {{-- للموظف --}}
+    @php
+        $hasWorkChatMenu = auth('employee')->user()->hasPermission('design_follow_up')
+            || auth('employee')->user()->hasPermission('montage_follow_up');
+    @endphp
+    @if($hasWorkChatMenu)
+    <div x-data="{ open: false }" class="space-y-1">
+        <button @click="open = !open"
+            class="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition-colors text-gray-300">
+            <i class="fas fa-comments ml-3 text-sm"></i>
+            شاتات العمل
+            <svg :class="{'rotate-180': open}" class="w-4 h-4 ml-auto text-gray-300 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div x-show="open" x-transition class="pl-6 space-y-1 text-gray-400">
+            @if(auth('employee')->user()->hasPermission('design_follow_up'))
+            <a href="{{ route('employee.design-follow-up') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.design-follow-up') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-pencil-ruler ml-3 text-sm"></i>
                 شاتات التصميم
-              </a>
-              @endif
-              
-              @if(auth('employee')->user()->hasPermission('montage_follow_up'))
-              <a href="{{ route('employee.montage-follow-up') }}"
-                 class="flex items-center w-full px-3 py-2 my-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.montage-follow-up') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+            </a>
+            @endif
+            @if(auth('employee')->user()->hasPermission('montage_follow_up'))
+            <a href="{{ route('employee.montage-follow-up') }}"
+               class="block px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.montage-follow-up') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-video ml-3 text-sm"></i>
                 شاتات المونتاج
-              </a>
-              @endif
-            </div>
-          </div>
-          @endif
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
 
-       
-           <a href="{{ route('employee.tasks.index') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-tasks ml-3 text-sm"></i>
-                        قائمة المهام
-                    </a>
-         
+    <a href="{{ route('employee.tasks.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.tasks.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-tasks ml-3 text-sm"></i>
+        قائمة المهام
+    </a>
 
-          @if(auth('employee')->user()->hasPermission('photography_costs'))
-          <a href="{{ route('employee.photography-costs.index') }}"
-             class="flex items-center w-full px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.photography-costs') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
-            <i class="fas fa-dollar-sign ml-3 text-sm"></i>
-            تكاليف التصوير
-          </a>
-          @endif
+    @if(auth('employee')->user()->hasPermission('photography_costs'))
+    <a href="{{ route('employee.photography-costs.index') }}"
+       class="flex items-center w-full px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.photography-costs') ? 'bg-red-600 text-white' : 'text-gray-300' }}">
+        <i class="fas fa-dollar-sign ml-3 text-sm"></i>
+        تكاليف التصوير
+    </a>
+    @endif
 
-
-          <!-- زر تسجيل الخروج -->
-          <div class="mt-6 pt-6 border-t border-gray-700">
-            <form method="POST" action="{{ route('employee.logout') }}">
-              @csrf
-              <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">
+    <!-- زر تسجيل الخروج -->
+    <div class="mt-6 pt-6 border-t border-gray-700">
+        <form method="POST" action="{{ route('employee.logout') }}">
+            @csrf
+            <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">
                 <i class="fas fa-sign-out-alt ml-3 text-sm"></i>
                 تسجيل خروج
-              </button>
-            </form>
-          </div>
-        </nav>
+            </button>
+        </form>
+    </div>
+</nav>
+
       </div>
     </div>
   </div>
