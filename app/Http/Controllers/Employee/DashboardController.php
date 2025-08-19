@@ -1,7 +1,8 @@
 <?php
 namespace App\Http\Controllers\Employee;
-use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use DB;
 
@@ -10,10 +11,19 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $employee = auth('employee')->user();
-        // الفلاتر
+
+        // صلاحيات الموظف
+        $permission_ids = DB::table('employee_roles')
+            ->where('employee_id', $employee->id)
+            ->pluck('role_id');
+
+        $permissions = DB::table('role_permissions')
+            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+            ->whereIn('role_permissions.role_id', $permission_ids)
+            ->select('permissions.*')->get();
+
         $month = intval($request->input('month', date('m')));
         $year = intval($request->input('year', date('Y')));
-        $project_id = intval($request->input('project_id'));
 
         $months = [
             ['num' => 1, 'name' => 'يناير'],
@@ -31,95 +41,130 @@ class DashboardController extends Controller
         ];
         $years = range(date('Y')-2, date('Y')+2);
 
-        // صلاحيات الموظف
-        $permission_ids = DB::table('employee_roles')
-            ->where('employee_id', $employee->id)
-            ->pluck('role_id');
+        // إجمالي المشاريع الفعالة للموظف
+        $project_ids = DB::table('project_employees')->where('employee_id', $employee->id)->pluck('project_id');
+        $active_projects_count = DB::table('projects')->whereIn('id', $project_ids)->where('status', 'active')->count();
 
-        $permissions = DB::table('role_permissions')
-            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
-            ->whereIn('role_permissions.role_id', $permission_ids)
-            ->select('permissions.*')->get();
+        // إجمالي المهام المنفذة هذا الشهر
+        $tasks_count_month = DB::table('project_tasks')
+            ->where('assigned_to', $employee->id)
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->count();
 
-        // المشاريع التي يعمل فيها الموظف
-        $project_ids = DB::table('project_employees')
-            ->where('employee_id', $employee->id)->pluck('project_id');
-
-        // احصائيات الحالات للمشاريع Pie
-        $projects_stats = DB::table('projects')
-            ->whereIn('id', $project_ids)
-            ->select('status', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('status')->pluck('cnt', 'status');
-
-        $status_labels = [
-            'active' => 'جارية',
-            'completed' => 'مكتملة',
-            'on_hold' => 'متوقفة',
-            'cancelled' => 'ملغاة',
-        ];
-        $pie_stats = [];
-        foreach ($status_labels as $key => $label) {
-            $pie_stats[$label] = $projects_stats[$key] ?? 0;
-        }
-
-        // حضوره في الموعد وتأخيره لكل يوم في الشهر
-        $attendance_curve_dates = [];
-        $attendance_curve_ontime = [];
-        $attendance_curve_late = [];
-
-        $attendances = DB::table('employee_attendances')
+        // إجمالي مقبوضات الموظف هذا الشهر
+        $receipts_month = DB::table('receipts')
             ->where('employee_id', $employee->id)
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
-            ->get();
+            ->sum('amount');
 
-        // generate days for selected month
-        $days_in_month = Carbon::create($year, $month, 1)->daysInMonth;
-        for ($i = 1; $i <= $days_in_month; $i++) {
-            $date = Carbon::create($year, $month, $i)->toDateString();
-            $attendance_curve_dates[] = $date;
-            $ontime = $attendances->where('date', $date)->where('is_late', 0)->count();
-            $late = $attendances->where('date', $date)->where('is_late', 1)->count();
-            $attendance_curve_ontime[] = $ontime;
-            $attendance_curve_late[] = $late;
-        }
+        // إجمالي مدفوعات الموظف هذا الشهر
+        $payments_month = DB::table('payments')
+            ->where('employee_id', $employee->id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->sum('amount');
 
-        // مشاريع الموظف لفلتر المهام completion curve
-        $employee_projects = DB::table('projects')
-            ->whereIn('id', $project_ids)
-            ->select('id', 'name')->get();
+        // إجمالي العملاء المحتملين للموظف هذا الشهر
+        $potentials_month = DB::table('potential_customers')
+            ->where('employee_id', $employee->id)
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->count();
 
-        $selected_project = $project_id ?: ($employee_projects[0]->id ?? null);
-
-        $tasks = DB::table('project_tasks')
-            ->where('assigned_to', $employee->id)
-            ->where('project_id', $selected_project)
+        // عدد طلبات المكالمة وزيارة المكتب
+        $potentials_data = DB::table('potential_customers')
+            ->where('employee_id', $employee->id)
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->get();
 
-        $completed_ontime = $tasks->where('completed_on_time', 1)->count();
-        $completed_late = $tasks->where('completed_on_time', 0)->count();
+        $requested_call_count = $potentials_data->filter(function($c){
+            $cl = json_decode($c->customer_classifications, true);
+            return is_array($cl) && in_array('requested_call', $cl);
+        })->count();
+
+        $requested_visit_count = $potentials_data->filter(function($c){
+            $cl = json_decode($c->customer_classifications, true);
+            return is_array($cl) && in_array('requested_visit', $cl);
+        })->count();
+
+        // المتوسط الشهري لساعات عمل الموظف لهذا الشهر
+        $avg_work_hours = DB::table('daily_work_summaries')
+            ->where('employee_id', $employee->id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->avg('total_work_hours');
+
+        // كيرف المقبوضات والمدفوعات آخر 6 أشهر للموظف
+        $curve_months = [];
+        $curve_receipts = [];
+        $curve_payments = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $curveDate = Carbon::create($year, $month, 1)->subMonths($i);
+            $cYear = $curveDate->year;
+            $cMonth = $curveDate->month;
+            $curve_months[] = $months[$cMonth - 1]['name'];
+            $curve_receipts[] = DB::table('receipts')->where('employee_id', $employee->id)->whereYear('date', $cYear)->whereMonth('date', $cMonth)->sum('amount');
+            $curve_payments[] = DB::table('payments')->where('employee_id', $employee->id)->whereYear('date', $cYear)->whereMonth('date', $cMonth)->sum('amount');
+        }
+
+        // Pie projects status للموظف لهذا الشهر
+        $employee_projects = DB::table('projects')->whereIn('id', $project_ids)
+            ->whereYear('created_at', $year)->whereMonth('created_at', $month)->get();
+        $pie_active = $employee_projects->where('status', 'active')->count();
+        $pie_completed = $employee_projects->where('status', 'completed')->count();
+        $pie_hold = $employee_projects->where('status', 'on_hold')->count();
+        $pie_cancelled = $employee_projects->where('status', 'cancelled')->count();
+
+        $pieData = [
+            'جارية' => $pie_active,
+            'مكتملة' => $pie_completed,
+            'متوقفة' => $pie_hold,
+            'ملغاة' => $pie_cancelled,
+        ];
+
+        // عدد حالات الحضور والانصراف (أنهى حضور في الوقت/متأخر)
+        $attendance_ontime = DB::table('employee_attendances')
+            ->where('employee_id', $employee->id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where('is_late', 0)
+            ->count();
+        $attendance_late = DB::table('employee_attendances')
+            ->where('employee_id', $employee->id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where('is_late', 1)
+            ->count();
+
+        // Data for charts
+        $curveData = [
+            'months' => $curve_months,
+            'receipts' => $curve_receipts,
+            'payments' => $curve_payments,
+        ];
 
         return view('employee.dashboard', [
             'employee' => $employee,
-            'permissions' => $permissions,
+            'permissions'=>  $permissions ,
             'months' => $months,
             'years' => $years,
             'month' => $month,
             'year' => $year,
-            'pie_stats' => $pie_stats,
-            'attendance_curve' => [
-                'dates' => $attendance_curve_dates,
-                'ontime' => $attendance_curve_ontime,
-                'late' => $attendance_curve_late,
-            ],
-            'employee_projects' => $employee_projects,
-            'selected_project' => $selected_project,
-            'tasks_curve' => [
-                'completed_ontime' => $completed_ontime,
-                'completed_late' => $completed_late,
-            ]
+            'active_projects_count' => $active_projects_count,
+            'tasks_count_month' => $tasks_count_month,
+            'receipts_month' => $receipts_month,
+            'payments_month' => $payments_month,
+            'potentials_month' => $potentials_month,
+            'requested_call_count' => $requested_call_count,
+            'requested_visit_count' => $requested_visit_count,
+            'avg_work_hours' => $avg_work_hours,
+            'curveData' => $curveData,
+            'pieData' => $pieData,
+            'attendance_ontime' => $attendance_ontime,
+            'attendance_late' => $attendance_late,
         ]);
     }
 }

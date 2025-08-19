@@ -16,8 +16,8 @@ $payments = \App\Models\PhotographyCost::where('type', 'payment')
         <div class="px-4 py-5 sm:p-6">
             <div class="flex items-center space-x-5 space-x-reverse">
                 <div class="flex-shrink-0">
-                    <div class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
-                        <i class="fas fa-camera text-red-500 text-3xl"></i>
+                    <div class="h-20 w-20 rounded-full bg-red-600 flex items-center justify-center">
+                        <i class="fas fa-camera text-gray-200 text-3xl"></i>
                     </div>
                 </div>
                 <div class="flex-1 min-w-0">

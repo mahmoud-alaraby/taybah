@@ -56,7 +56,7 @@
             @forelse($categories as $cat)
                 <div class="flex items-center justify-between border rounded p-3 bg-gray-50 hover:shadow">
                     <div class="flex items-center gap-5">
-                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-indigo-600 text-xl">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 text-xl">
                             <i class="{{ $cat->icon ?? 'fas fa-tag' }}"></i>
                         </span>
                         <span class="font-semibold text-lg">{{ $cat->name }}</span>
@@ -79,41 +79,71 @@
         </div>
     </div>
 
-    {{-- قائمة الردود --}}
-    <div>
-        <h2 class="text-xl font-bold mb-3">نصوص جاهزة للرد على العملاء حسب التصنيف</h2>
-        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            @forelse($responses as $resp)
-                <div class="border rounded-lg p-5 shadow-md bg-white transition-all hover:shadow-xl relative space-y-3">
-                    <div class="flex items-center gap-3 mb-2">
-                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-indigo-600 text-2xl">
-                            <i class="{{ $resp->category->icon ?? 'fas fa-tag' }}"></i>
-                        </span>
-                        <span class="font-bold text-lg">{{ $resp->category->name ?? 'بدون تصنيف' }}</span>
-                    </div>
-                    <div class="font-bold text-red-600">{{ $resp->title }}</div>
-                    <div class="text-sm text-gray-700 whitespace-pre-line" id="text_{{ $resp->id }}">{{ $resp->body }}</div>
-                    <div class="flex items-center gap-2 pt-1">
-                        <button title="نسخ النص" class="text-gray-600 hover:text-indigo-600" onclick="copyText({{ $resp->id }})">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                        <a href="{{ route('employee.customer-response.edit', $resp->id) }}" class="text-yellow-600 hover:text-yellow-800" title="تعديل">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form action="{{ route('employee.customer-response.destroy', $resp->id) }}" method="POST" onsubmit="return confirm('حذف الرد؟');" class="inline">
-                            @csrf @method('DELETE')
-                            <button class="text-red-600 hover:text-red-800" title="حذف">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="text-xs text-gray-400">المنشئ: {{ $resp->creator_name }} ({{ $resp->created_by_type }})</div>
+{{-- قائمة الردود --}}
+<div>
+    <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">📋 نصوص جاهزة للرد على العملاء حسب التصنيف</h2>
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+        @forelse($responses as $resp)
+            <div class="relative rounded-lg shadow-md p-5 bg-white border border-gray-200 overflow-hidden transition-all hover:shadow-xl">
+
+                {{-- البوردر المتدرج أعلى الكارت --}}
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+
+                {{-- أيقونة + التصنيف --}}
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-600 text-2xl shadow-sm">
+                        <i class="{{ $resp->category->icon ?? 'fas fa-tag' }}"></i>
+                    </span>
+                    <span class="font-semibold text-gray-700 text-lg">
+                        {{ $resp->category->name ?? 'بدون تصنيف' }}
+                    </span>
                 </div>
-            @empty
-                <p class="text-gray-500">لا توجد ردود.</p>
-            @endforelse
-        </div>
+
+                {{-- العنوان --}}
+                <div class="font-bold text-red-600 text-lg mb-1">{{ $resp->title }}</div>
+
+                {{-- النص --}}
+                <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-line mb-3" id="text_{{ $resp->id }}">
+                    {{ $resp->body }}
+                </div>
+
+                {{-- الإجراءات (نسخ / تعديل / حذف) --}}
+                <div class="flex items-center gap-3 border-t pt-2 text-sm">
+                    <button title="نسخ النص"
+                        class="flex items-center gap-1 text-gray-600 hover:text-red-600 transition"
+                        onclick="copyText({{ $resp->id }})">
+                        <i class="fas fa-copy"></i>
+                        <span>نسخ</span>
+                    </button>
+
+                    <a href="{{ route('employee.customer-response.edit', $resp->id) }}"
+                        class="flex items-center gap-1 text-yellow-600 hover:text-yellow-800 transition" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                        <span>تعديل</span>
+                    </a>
+
+                    <form action="{{ route('employee.customer-response.destroy', $resp->id) }}" method="POST"
+                        onsubmit="return confirm('هل تريد بالتأكيد حذف الرد؟');" class="inline">
+                        @csrf @method('DELETE')
+                        <button class="flex items-center gap-1 text-red-600 hover:text-red-800 transition" title="حذف">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>حذف</span>
+                        </button>
+                    </form>
+                </div>
+
+                {{-- معلومات إضافية --}}
+                <div class="mt-2 text-xs text-gray-500">
+                    ✍️ {{ $resp->creator_name }} ({{ $resp->created_by_type }})
+                </div>
+            </div>
+        @empty
+            <p class="text-gray-500 text-center">🙁 لا توجد ردود.</p>
+        @endforelse
     </div>
+</div>
+
 </div>
 
 {{-- Toast للنسخ --}}

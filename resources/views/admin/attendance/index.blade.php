@@ -50,65 +50,54 @@
             </div>
         </form>
     </div>
-
-    <!-- إحصائيات الشهر -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-calendar-alt text-white text-sm"></i>
-                    </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- أيام العمل -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">أيام العمل</p>
+                    <p class="text-2xl font-bold">{{ $monthlyStats['total_days'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">أيام العمل</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $monthlyStats['total_days'] }}</p>
-                </div>
+                <i class="fas fa-calendar-alt text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-check text-white text-sm"></i>
-                    </div>
+        <!-- نسبة الالتزام بالمواعيد -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">نسبة الالتزام بالمواعيد</p>
+                    <p class="text-2xl font-bold">{{ $monthlyStats['on_time_percentage'] }}%</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">نسبة الالتزام بالمواعيد</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $monthlyStats['on_time_percentage'] }}%</p>
-                </div>
+                <i class="fas fa-check text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clock text-white text-sm"></i>
-                    </div>
+        <!-- متوسط ساعات العمل -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">متوسط ساعات العمل</p>
+                    <p class="text-2xl font-bold">{{ $monthlyStats['average_hours'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">متوسط ساعات العمل</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $monthlyStats['average_hours'] }}</p>
-                </div>
+                <i class="fas fa-clock text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-business-time text-white text-sm"></i>
-                    </div>
+        <!-- إجمالي الساعات الإضافية -->
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي الساعات الإضافية</p>
+                    <p class="text-2xl font-bold">{{ $monthlyStats['total_overtime'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">إجمالي الساعات الإضافية</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $monthlyStats['total_overtime'] }}</p>
-                </div>
+                <i class="fas fa-business-time text-2xl opacity-80"></i>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- جدول الحضور -->
     <div class="bg-white shadow rounded-lg overflow-hidden">

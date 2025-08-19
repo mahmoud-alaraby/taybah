@@ -12,7 +12,7 @@
         <div class="px-4 py-5 sm:p-6">
             <div class="flex items-center space-x-5 space-x-reverse">
                 <div class="flex-shrink-0">
-                    <div class="h-20 w-20 rounded-full bg-blue-500 flex items-center justify-center">
+                    <div class="h-20 w-20 rounded-full bg-red-500 flex items-center justify-center">
                         <i class="fas fa-user-tag text-white text-3xl"></i>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
                 </div>
                 <div class="flex space-x-3 space-x-reverse">
                     <a href="{{ route('admin.roles.edit', $role) }}" 
-                       class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                       class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
                         <i class="fas fa-edit ml-2"></i>
                         تعديل
                     </a>
@@ -77,7 +77,7 @@
                     @foreach($groupedPermissions as $category => $permissions)
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-                                <i class="fas fa-folder ml-2 text-blue-500"></i>
+                                <i class="fas fa-folder ml-2 text-red-500"></i>
                                 {{ $categoryNames[$category] ?? $category }}
                                 <span class="mr-2 text-sm text-gray-500">({{ $permissions->count() }} صلاحيات)</span>
                             </h4>
@@ -137,7 +137,7 @@
                                 </div>
                                 <div class="flex-shrink-0">
                                     <a href="{{ route('admin.employees.show', $employee) }}" 
-                                       class="text-blue-600 hover:text-blue-900">
+                                       class="text-red-600 hover:text-red-900">
                                         <i class="fas fa-external-link-alt text-sm"></i>
                                     </a>
                                 </div>

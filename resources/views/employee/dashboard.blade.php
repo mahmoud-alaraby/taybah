@@ -98,47 +98,50 @@
 </div>
 
 
- <!-- Available Systems -->
+@php
+    // تأكد أن $permissions هي Collection ثم خذ فقط الصلاحيات الفريدة حسب 'name'
+    $uniquePermissions = collect($permissions)->unique('name')->values();
+    
+    // أيقونات كل سيستم
+    $icons = [
+        'receipts_payments' => 'fa-money-bill-wave',
+        'customer_movement' => 'fa-users',
+        'potential_customers' => 'fa-user-plus',
+        'stopwatch_system' => 'fa-stopwatch',
+        'general_operations' => 'fa-cogs',
+        'photography_booking' => 'fa-camera',
+        'designers_account' => 'fa-palette',
+        'customer_response' => 'fa-comments',
+        'task_list' => 'fa-tasks',
+        'renewal_dates' => 'fa-calendar-alt',
+        'photography_costs' => 'fa-dollar-sign',
+        'customer_communication' => 'fa-phone',
+        'design_follow_up' => 'fa-pencil-ruler',
+        'montage_follow_up' => 'fa-video',
+    ];
+
+    // ألوان التدرجات للبوردر والأيقونة
+    $cardGradients = [
+        ['#ec4899', '#ef4444'], // وردي -> أحمر
+        ['#3b82f6', '#6366f1'], // أزرق -> بنفسجي
+        ['#22c55e', '#14b8a6'], // أخضر -> فيروزي
+        ['#f59e42', '#fbbf24'], // برتقالي -> أصفر
+        ['#a21caf', '#f472b6'], // بنفسجي غامق -> وردي فاتح
+        ['#0ea5e9', '#06b6d4'], // أزرق فاتح -> أزرق سماوي
+        ['#7c3aed', '#c026d3'], // بنفسجي -> أرجواني
+        ['#b91c1c', '#f87171'], // أحمر غامق -> وردي فاتح
+        ['#64748b', '#334155'], // رمادي -> رمادي غامق
+    ];
+@endphp
+
 <div class="bg-white shadow rounded-lg">
     <div class="px-4 py-5 sm:p-6">
         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">الأنظمة المتاحة لك</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-
-            @php
-                $icons = [
-                    'receipts_payments' => 'fa-money-bill-wave',
-                    'customer_movement' => 'fa-users',
-                    'potential_customers' => 'fa-user-plus',
-                    'stopwatch_system' => 'fa-stopwatch',
-                    'general_operations' => 'fa-cogs',
-                    'photography_booking' => 'fa-camera',
-                    'designers_account' => 'fa-palette',
-                    'customer_response' => 'fa-comments',
-                    'task_list' => 'fa-tasks',
-                    'renewal_dates' => 'fa-calendar-alt',
-                    'photography_costs' => 'fa-dollar-sign',
-                    'customer_communication' => 'fa-phone',
-                    'design_follow_up' => 'fa-pencil-ruler',
-                    'montage_follow_up' => 'fa-video',
-                ];
-
-                // ألوان التدرجات للبوردر والأيقونة
-                $cardGradients = [
-                    ['#ec4899', '#ef4444'], // وردي -> أحمر
-                    ['#3b82f6', '#6366f1'], // أزرق -> بنفسجي
-                    ['#22c55e', '#14b8a6'], // أخضر -> فيروزي
-                    ['#f59e42', '#fbbf24'], // برتقالي -> أصفر
-                    ['#a21caf', '#f472b6'], // بنفسجي غامق -> وردي فاتح
-                    ['#0ea5e9', '#06b6d4'], // أزرق فاتح -> أزرق سماوي
-                    ['#7c3aed', '#c026d3'], // بنفسجي -> أرجواني
-                    ['#b91c1c', '#f87171'], // أحمر غامق -> وردي فاتح
-                    ['#64748b', '#334155'], // رمادي -> رمادي غامق
-                ];
-            @endphp
-
-            @forelse($permissions as $index => $permission)
+            @forelse($uniquePermissions as $index => $permission)
                 @php
                     $icon = $icons[$permission->name] ?? 'fa-cog';
+
                     // احصل على التدرج حسب رقم الكارد
                     $gradient = $cardGradients[$index % count($cardGradients)];
                     $borderGradient = "linear-gradient(90deg, {$gradient[0]}, {$gradient[1]})";
@@ -149,7 +152,7 @@
                      style="border-top: 5px solid transparent; border-image: {{ $borderGradient }} 1;">
                     <div class="text-center">
                         <i class="fas {{ $icon }} text-3xl mb-2"
-                            style="{{ $iconGradient }}"></i>
+                           style="{{ $iconGradient }}"></i>
                         <span class="block text-sm font-medium text-gray-900">{{ $permission->display_name }}</span>
                         <span class="block text-xs text-gray-500 mt-1">{{ $permission->description }}</span>
                     </div>
@@ -161,17 +164,17 @@
                     <p class="text-sm text-gray-500">لم يتم تعيين أي صلاحيات لحسابك حتى الآن</p>
                 </div>
             @endforelse
-
         </div>
     </div>
 </div>
+
 
 
   <!-- Current Roles -->
 <div class="bg-white shadow-md rounded-xl overflow-hidden">
     <div class="px-6 py-6">
         <h3 class="text-xl font-semibold text-gray-900 mb-5 flex items-center">
-            <i class="fas fa-user-shield mr-2 text-gradient"></i>
+            <i class="fas fa-user-shield ml-2 text-gradient"></i>
             الأدوار المعينة لك
         </h3>
         <div class="space-y-4">
@@ -202,6 +205,8 @@
         </div>
     </div>
 </div>
+
+
 
 </div>
 

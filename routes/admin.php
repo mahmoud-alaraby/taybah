@@ -246,12 +246,18 @@ Route::middleware('admin.auth')->group(function () {
     });
 
 
-    Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
-        Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
-        Route::get('/{id}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
-        Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
-        Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
-    });
+Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
+    Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
+    Route::get('/{id}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+    Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
+    Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
+    
+    Route::delete('note/{note_id}', [AdminCustomerCommunicationController::class, 'destroyNote'])
+        ->name('note.destroy');
+    Route::delete('all-notes/{potential_customer_id}', [AdminCustomerCommunicationController::class, 'destroyAllNotes'])
+        ->name('all-notes.destroy');
+});
+
 
 
 

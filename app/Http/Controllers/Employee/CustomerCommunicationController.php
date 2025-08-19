@@ -100,4 +100,31 @@ class CustomerCommunicationController extends Controller
 
         return back()->with('success', 'تم تعليم العميل كمتم التواصل معه');
     }
+
+    // حذف ملاحظة واحدة بأيديها (ملاحظة واحدة من customer_communications)
+public function destroyNote($note_id)
+{
+    $note = DB::table('customer_communications')->where('id', $note_id)->first();
+
+    if (!$note) {
+        return back()->with('error', 'الملاحظة غير موجودة');
+    }
+
+    // تأكد أن الملاحظة تعود لهذا الموظف فقط (employee_id يطابق المستخدم الحالي)
+    if ($note->employee_id !== auth()->id()) {
+        return back()->with('error', 'ليس لديك صلاحية حذف هذه الملاحظة');
+    }
+
+    DB::table('customer_communications')->where('id', $note_id)->delete();
+
+    return back()->with('success', 'تم حذف الملاحظة بنجاح');
+}
+
+
+public function destroyAllNotes($potential_customer_id)
+{
+    return back()->with('error', 'ليس لديك صلاحية حذف جميع الملاحظات');
+}
+
+
 }

@@ -6,64 +6,54 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- إحصائيات عامة -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-project-diagram text-white text-sm"></i>
-                    </div>
+ <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- إجمالي المشاريع -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي المشاريع</p>
+                    <p class="text-2xl font-bold">{{ $stats['total'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">إجمالي المشاريع</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['total'] }}</p>
-                </div>
+                <i class="fas fa-project-diagram text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-play text-white text-sm"></i>
-                    </div>
+        <!-- المشاريع النشطة -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">المشاريع النشطة</p>
+                    <p class="text-2xl font-bold">{{ $stats['active'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">المشاريع النشطة</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['active'] }}</p>
-                </div>
+                <i class="fas fa-play text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-check text-white text-sm"></i>
-                    </div>
+        <!-- المشاريع المكتملة -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">المشاريع المكتملة</p>
+                    <p class="text-2xl font-bold">{{ $stats['completed'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">المشاريع المكتملة</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['completed'] }}</p>
-                </div>
+                <i class="fas fa-check text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clock text-white text-sm"></i>
-                    </div>
+        <!-- إجمالي الساعات -->
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي الساعات</p>
+                    <p class="text-2xl font-bold">{{ number_format($stats['total_hours'], 0) }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">إجمالي الساعات</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['total_hours'], 0) }}</p>
-                </div>
+                <i class="fas fa-clock text-2xl opacity-80"></i>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- أزرار الإجراءات -->
     <div class="flex justify-between items-center">
@@ -81,35 +71,39 @@
         </div>
     </div>
 
-    <!-- فلاتر البحث -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <form method="GET" action="{{ route('admin.projects.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       placeholder="البحث بالاسم أو العميل..."
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
-                <select name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                    <option value="">جميع الحالات</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                    <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>معلق</option>
-                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                </select>
-            </div>
-            <div class="flex justify-end items-end space-x-2 space-x-reverse">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    <i class="fas fa-search ml-1"></i> بحث
-                </button>
-                <a href="{{ route('admin.projects.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
-                    <i class="fas fa-times ml-1"></i> إلغاء
-                </a>
-            </div>
-        </form>
-    </div>
+ <!-- فلاتر البحث -->
+<div class="bg-white shadow rounded-lg p-6">
+    <form method="GET" action="{{ route('admin.projects.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
+            <input type="text" name="search" value="{{ request('search') }}" 
+                   placeholder="البحث بالاسم أو العميل..."
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm 
+                          focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:outline-none transition" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+            <select name="status" 
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm 
+                           focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:outline-none transition">
+                <option value="">جميع الحالات</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>معلق</option>
+                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
+            </select>
+        </div>
+        <div class="flex justify-end items-end space-x-2 space-x-reverse">
+            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                <i class="fas fa-search ml-1"></i> بحث
+            </button>
+            <a href="{{ route('admin.projects.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">
+                <i class="fas fa-times ml-1"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
 
     <!-- قائمة المشاريع -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">

@@ -8,26 +8,30 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Header --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 rounded-t-xl">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+            <div class="bg-white px-6 py-4 rounded-t-xl">
+                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
                     <div class="flex items-center">
-                        <svg class="w-8 h-8 text-white ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div class="w-16 h-16 ml-3  rounded-full bg-gradient-to-r from-red-500 to-red-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                     <svg class="w-8 h-8 text-white " fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
+                </div>
+                     
                         <div>
-                            <h1 class="text-xl sm:text-2xl font-bold text-white">تفاصيل الحجز</h1>
-                            <p class="text-red-100 text-sm">{{ $photographyBooking->client_name }} - {{ $photographyBooking->booking_date ? $photographyBooking->booking_date->format('d F Y') : '' }}</p>
+                            <h1 class="text-xl sm:text-2xl font-bold text-gray-700">تفاصيل الحجز</h1>
+                            <p class="text-gray-500 text-sm">{{ $photographyBooking->client_name }} - {{ $photographyBooking->booking_date ? $photographyBooking->booking_date->format('d F Y') : '' }}</p>
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
-                        <a href="{{ route('admin.photography-booking.edit', $photographyBooking) }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.photography-booking.edit', $photographyBooking) }}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700
+                         transition-colors">
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             تعديل الحجز
                         </a>
-                        <a href="{{ route('admin.photography-booking.index') }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.photography-booking.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
@@ -39,18 +43,18 @@
         </div>
 
         {{-- Client Info Card --}}
-        <div class="bg-gradient-to-r from-red-50 to-red-50 rounded-xl p-6 border border-red-200 mb-6">
+        <!-- <div class="bg-gradient-to-r from-red-50 to-red-50 rounded-xl p-6 border border-red-200 mb-6">
             <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-r from-red-400 to-red-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                     {{ substr($photographyBooking->client_name, 0, 1) }}
                 </div>
                 <div class="sm:mr-6 flex-1 text-center sm:text-right">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ $photographyBooking->client_name }}</h2>
-                    <p class="text-red-600 font-semibold text-lg mb-1">{{ $photographyBooking->client_phone ?? 'غير محدد' }}</p>
+                   
                     <p class="text-gray-600 text-sm">رقم الحجز: #{{ $photographyBooking->id }}</p>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         {{-- Booking Details Grid --}}
         <div class="g mb-6">

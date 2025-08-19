@@ -58,77 +58,122 @@
             </form>
         </div>
 
-        <!-- Summary Stats -->
-        <div class="p-4 bg-gray-50">
-            <div class="grid grid-cols-4 gap-4">
-                <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-center">
-                    <div class="text-lg font-bold text-green-600">{{ number_format($totalReceipts, 2) }}</div>
-                    <div class="text-xs text-green-700">إجمالي المقبوضات</div>
+       <!-- Summary Stats styled like the modern statistics cards you provided -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gray-50">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- إجمالي المقبوضات -->
+        <div class="bg-gradient-to-r from-green-400 to-green-600 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي المقبوضات</p>
+                    <p class="text-2xl font-bold">{{ number_format($totalReceipts, 2) }}</p>
                 </div>
-                
-                <div class="bg-red-50 p-3 rounded-lg border border-red-200 text-center">
-                    <div class="text-lg font-bold text-red-600">{{ number_format($totalPayments, 2) }}</div>
-                    <div class="text-xs text-red-700">إجمالي المدفوعات</div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path>
+                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <!-- إجمالي المدفوعات -->
+        <div class="bg-gradient-to-r from-red-400 to-red-600 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي المدفوعات</p>
+                    <p class="text-2xl font-bold">{{ number_format($totalPayments, 2) }}</p>
                 </div>
-                
-                <div class="bg-{{ $netAmount >= 0 ? 'blue' : 'orange' }}-50 p-3 rounded-lg border border-{{ $netAmount >= 0 ? 'blue' : 'orange' }}-200 text-center">
-                    <div class="text-lg font-bold text-{{ $netAmount >= 0 ? 'blue' : 'orange' }}-600">{{ number_format($netAmount, 2) }}</div>
-                    <div class="text-xs text-{{ $netAmount >= 0 ? 'blue' : 'orange' }}-700">{{ $netAmount >= 0 ? 'سيولة متاحة' : 'عجز' }}</div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414 1.414A9 9 0 1 0 12 21v0"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- صافي السيولة أو العجز -->
+        <div class="rounded-xl p-4 text-white shadow-lg
+            {{ $netAmount >= 0 
+                ? 'bg-gradient-to-r from-blue-500 to-blue-700' 
+                : 'bg-gradient-to-r from-orange-400 to-orange-600' }}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">{{ $netAmount >= 0 ? 'سيولة متاحة' : 'عجز' }}</p>
+                    <p class="text-2xl font-bold">{{ number_format($netAmount, 2) }}</p>
                 </div>
-                
-                <div class="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                    <div class="text-lg font-bold text-purple-600">{{ number_format($targetAmount, 2) }}</div>
-                    <div class="text-xs text-purple-700">التارجت المحدد</div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    @if($netAmount >= 0)
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0 0l-4-4m4 4l4-4"></path>
+                        <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                    @else
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17v-8m0 0l-4 4m4-4l4 4"></path>
+                        <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                    @endif
+                </svg>
+            </div>
+        </div>
+
+        <!-- التارجت المحدد -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl p-4 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">التارجت المحدد</p>
+                    <p class="text-2xl font-bold">{{ number_format($targetAmount, 2) }}</p>
                 </div>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 12 13"></path>
+                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                </svg>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Filters & Actions -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <form method="GET" class="grid grid-cols-6 gap-3 items-end">
-            <div class="col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">البحث في البيان</label>
-                <input type="text" name="search" value="{{ $search }}" 
-                       placeholder="مثال: بروفايل الأستاذ علي"
-                       class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-                <select name="year" class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                    @for($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
-                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
-                    @endfor
-                </select>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
-                <select name="month" class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                    @foreach($months as $num => $name)
-                        <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div>
-                <button type="submit" class="w-full h-9 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm">
-                    <i class="fas fa-search ml-1"></i>
-                    بحث
-                </button>
-            </div>
-            
-            <div>
-                <a href="{{ route('employee.receipts-payments.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search]) }}" 
-                   target="_blank"
-                   class="w-full h-9 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center">
-                    <i class="fas fa-print ml-1"></i>
-                    طباعة
-                </a>
-            </div>
-        </form>
     </div>
+
+<!-- Filters & Actions with borders and border-radius adjustments -->
+<div class="bg-white shadow rounded-lg p-4 border border-gray-300">
+    <form method="GET" class="grid grid-cols-6 gap-3 items-end">
+        <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">البحث في البيان</label>
+            <input type="text" name="search" value="{{ $search }}" 
+                   placeholder="مثال: بروفايل الأستاذ علي"
+                   class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+            <select name="year" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                @for($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                    <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
+            <select name="month" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                @foreach($months as $num => $name)
+                    <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>{{ $name }}</option>
+                @endforeach
+            </select>
+        </div>
+        
+        <div>
+            <button type="submit" class="w-full h-9 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm border border-blue-600 focus:ring-2 focus:ring-blue-400">
+                <i class="fas fa-search ml-1"></i>
+                بحث
+            </button>
+        </div>
+        
+        <div>
+            <a href="{{ route('employee.receipts-payments.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search]) }}" 
+               target="_blank"
+               class="w-full h-9 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center border border-green-600 focus:ring-2 focus:ring-green-400">
+                <i class="fas fa-print ml-1"></i>
+                طباعة
+            </a>
+        </div>
+    </form>
+</div>
+
 
     <!-- Main Content: Tables -->
     <div class="grid grid-cols-2 gap-6">

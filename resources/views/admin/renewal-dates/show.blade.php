@@ -8,21 +8,27 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Header --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-            <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 rounded-t-xl">
+            <div class="bg-white px-6 py-4 rounded-t-xl">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
                     <div class="flex items-center">
-                        <i class="fas fa-eye text-white ml-3 text-2xl"></i>
+                            <div class="w-16 h-16 sm:w-16 sm:h-16 ml-2 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                    
+                         <i class="fas fa-eye text-gray-200  text-2xl"></i>
+                      
+                    </div>
                         <div>
-                            <h1 class="text-xl sm:text-2xl font-bold text-white">عرض حدث التجديد</h1>
-                            <p class="text-red-100 text-sm">تفاصيل الحدث كاملة ومعلومات التجديد</p>
+                            <!-- <h1 class="text-xl sm:text-2xl font-bold text-gray-600">    {{ $renewalDate->department }} - {{ $renewalDate->position }}</h1> -->
+                            <p class="text-gray-600 text-md font-bold">تفاصيل الحدث كاملة ومعلومات التجديد</p>
                         </div>
                     </div>
+
+                  
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
-                        <a href="{{ route('admin.renewal-dates.edit', $renewalDate) }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.renewal-dates.edit', $renewalDate) }}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
                             <i class="fas fa-edit ml-2"></i>
                             تعديل
                         </a>
-                        <a href="{{ route('admin.renewal-dates.index') }}" class="inline-flex items-center px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
+                        <a href="{{ route('admin.renewal-dates.index') }}" class="inline-flex items-center px-4 py-2 text-white bg-gray-600 font-medium rounded-lg hover:bg-gray-700 transition-colors">
                             <i class="fas fa-arrow-right ml-2"></i>
                             العودة للقائمة
                         </a>

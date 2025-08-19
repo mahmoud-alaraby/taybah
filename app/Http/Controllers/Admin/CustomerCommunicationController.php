@@ -101,4 +101,21 @@ class CustomerCommunicationController extends Controller
 
         return back()->with('success', 'تم تعليم العميل كمقروء');
     }
+
+        // حذف ملاحظة واحدة بأيديها (ملاحظة واحدة من customer_communications)
+public function destroyNote($note_id)
+{
+    DB::table('customer_communications')->where('id', $note_id)->delete();
+
+    return back()->with('success', 'تم حذف الملاحظة بنجاح');
+}
+
+public function destroyAllNotes($potential_customer_id)
+{
+    DB::table('customer_communications')
+        ->where('potential_customer_id', $potential_customer_id)
+        ->delete();
+
+    return back()->with('success', 'تم حذف جميع الملاحظات لهذا العميل بنجاح');
+}
 }

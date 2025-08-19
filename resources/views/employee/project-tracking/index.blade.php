@@ -420,33 +420,43 @@ function projectTracking() {
             this.currentTime = now.toLocaleTimeString('ar-SA');
         },
 
-        async checkActiveTimer() {
-            try {
-                const response = await fetch('{{ route("employee.project-tracking.active-timer") }}');
-                const data = await response.json();
-                
-                if (data.active) {
-                    this.isTimerActive = true;
-                    this.activeTimer = data.timer;
-                    this.timerSeconds = data.current_seconds;
-                    this.updateTimerDisplay();
-                }
-            } catch (error) {
-                console.error('Error checking active timer:', error);
+      async checkActiveTimer() {
+    try {
+        const response = await fetch('{{ route("employee.project-tracking.active-timer") }}');
+        const data = await response.json();
+        
+        if (data.active) {
+            this.isTimerActive = true;
+            this.activeTimer = data.timer;
+            
+            // فرض أن current_seconds يمكن أن تكون نص زمني أو رقم غير صحيح
+            if (typeof data.current_seconds === 'string' && data.current_seconds.includes(':')) {
+                const timeParts = data.current_seconds.split('.')[0].split(':');
+                this.timerSeconds = (+timeParts) * 3600 + (+timeParts[1]) * 60 + (+timeParts[2]);
+            } else {
+                this.timerSeconds = Math.floor(Number(data.current_seconds));
             }
-        },
+            
+            this.updateTimerDisplay();
+        }
+    } catch (error) {
+        console.error('Error checking active timer:', error);
+    }
+}
+,
 
-        updateTimerDisplay() {
-            if (this.isTimerActive) {
-                this.timerSeconds++;
-            }
-            
-            const hours = Math.floor(this.timerSeconds / 3600);
-            const minutes = Math.floor((this.timerSeconds % 3600) / 60);
-            const seconds = this.timerSeconds % 60;
-            
-            this.timerDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        },
+ updateTimerDisplay() {
+    if (this.isTimerActive) {
+        this.timerSeconds++;
+    }
+    
+    const hours = Math.floor(this.timerSeconds / 3600);
+    const minutes = Math.floor((this.timerSeconds % 3600) / 60);
+    const seconds = this.timerSeconds % 60;
+    
+    // اعرض فقط بالشكل "00:00:00" (ساعات:دقائق:ثواني) بدون كسور ولا أية إضافات
+    this.timerDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+},
 
         async loadTodayEntries() {
             try {

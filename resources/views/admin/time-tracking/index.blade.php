@@ -56,64 +56,54 @@
         </form>
     </div>
 
-    <!-- إحصائيات اليوم -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clock text-white text-sm"></i>
-                    </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- إجمالي الساعات -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">إجمالي الساعات</p>
+                    <p class="text-2xl font-bold">{{ number_format($dailyStats['total_hours'], 1) }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">إجمالي الساعات</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($dailyStats['total_hours'], 1) }}</p>
-                </div>
+                <i class="fas fa-clock text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-play text-white text-sm"></i>
-                    </div>
+        <!-- جلسات نشطة -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">جلسات نشطة</p>
+                    <p class="text-2xl font-bold">{{ $dailyStats['active_sessions'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">جلسات نشطة</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $dailyStats['active_sessions'] }}</p>
-                </div>
+                <i class="fas fa-play text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-users text-white text-sm"></i>
-                    </div>
+        <!-- موظفين يعملون -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">موظفين يعملون</p>
+                    <p class="text-2xl font-bold">{{ $dailyStats['employees_working'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">موظفين يعملون</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $dailyStats['employees_working'] }}</p>
-                </div>
+                <i class="fas fa-users text-2xl opacity-80"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-project-diagram text-white text-sm"></i>
-                    </div>
+        <!-- مشاريع نشطة -->
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90">مشاريع نشطة</p>
+                    <p class="text-2xl font-bold">{{ $dailyStats['projects_active'] }}</p>
                 </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">مشاريع نشطة</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $dailyStats['projects_active'] }}</p>
-                </div>
+                <i class="fas fa-project-diagram text-2xl opacity-80"></i>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- جدول أوقات العمل -->
     <div class="bg-white shadow rounded-lg overflow-hidden">

@@ -133,34 +133,34 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                        <th class="px-3 py-3 text-right text-base font-bold text-gray-800 uppercase">التاريخ</th>
-                        <th class="px-3 py-3 text-right text-base font-bold text-gray-800 uppercase">النوع</th>
-                        <th class="px-3 py-3 text-right text-base font-bold text-gray-800 uppercase">المبلغ</th>
-                        <th class="px-3 py-3 text-right text-base font-bold text-gray-800 uppercase">أنشئ بواسطة</th>
-                        <th class="px-3 py-3 text-right text-base font-bold text-gray-800 uppercase">الإجراءات</th>
+                        <th class="px-3 py-3 text-right text-sm font-bold text-gray-800 uppercase">التاريخ</th>
+                        <th class="px-3 py-3 text-right text-sm font-bold text-gray-800 uppercase">النوع</th>
+                        <th class="px-3 py-3 text-right text-sm font-bold text-gray-800 uppercase">المبلغ</th>
+                        <th class="px-3 py-3 text-right text-sm font-bold text-gray-800 uppercase">أنشئ بواسطة</th>
+                        <th class="px-3 py-3 text-right text-sm font-bold text-gray-800 uppercase">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($costs as $item)
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-3 py-3 whitespace-nowrap text-base font-bold">{{ $item->date->format('Y-m-d') }}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-base font-bold">
-                                <span class="inline-flex items-center px-2 py-1 rounded text-base font-bold
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold">{{ $item->date->format('Y-m-d') }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold">
+                                <span class="inline-flex items-center px-2 py-1 rounded text-sm font-bold
                                     {{ $item->type == 'receipt' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                     {{ $item->type == 'receipt' ? 'مقبوضات' : 'مدفوعات' }}
                                 </span>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-base font-bold">{{ number_format($item->amount,2) }}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-base font-bold text-red-700">{{ $item->creator_name }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold">{{ number_format($item->amount,2) }}</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold text-red-700">{{ $item->creator_name }}</td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex items-center gap-1">
                                     <a href="{{ route('admin.photography-costs.show', $item) }}"
                                        class="text-blue-600 hover:text-blue-900 transition-colors p-1 rounded" title="عرض">
-                                        <i class="fas fa-eye text-lg"></i>
+                                        <i class="fas fa-eye text-sm"></i>
                                     </a>
                                     <a href="{{ route('admin.photography-costs.edit', $item) }}"
                                        class="text-yellow-600 hover:text-yellow-900 transition-colors p-1 rounded" title="تعديل">
-                                        <i class="fas fa-edit text-lg"></i>
+                                        <i class="fas fa-edit text-sm"></i>
                                     </a>
                                     <form action="{{ route('admin.photography-costs.destroy', $item) }}"
                                           method="POST" class="inline">
@@ -169,7 +169,7 @@
                                         <button type="submit"
                                             class="text-red-600 hover:text-red-900 transition-colors p-1 rounded"
                                             onclick="return confirm('هل أنت متأكد من الحذف؟')" title="حذف">
-                                            <i class="fas fa-trash text-lg"></i>
+                                            <i class="fas fa-trash text-sm"></i>
                                         </button>
                                     </form>
                                 </div>

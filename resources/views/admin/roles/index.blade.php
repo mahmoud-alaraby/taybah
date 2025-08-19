@@ -83,13 +83,13 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-10 w-10">
-                                                <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                                <div class="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
                                                     <i class="fas fa-user-tag text-white text-sm"></i>
                                                 </div>
                                             </div>
                                             <div class="mr-4">
                                                 <div class="text-sm font-medium text-gray-900">{{ $role->name }}</div>
-                                                <div class="text-sm text-gray-500">{{ $role->description }}</div>
+                                                <div class="text-sm text-gray-500"> {{ Str::limit($role->description, 40) }}</div>
                                             </div>
                                         </div>
                                     </td>

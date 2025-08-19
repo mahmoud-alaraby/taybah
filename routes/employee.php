@@ -203,13 +203,22 @@ Route::middleware('employee.auth')->group(function () {
             Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
         });
     });
-
-    Route::middleware(['employee.auth', 'employee.permission:customer_communication'])->prefix('customer-communication')->name('employee.customer-communication.')->group(function () {
+Route::middleware(['employee.auth', 'employee.permission:customer_communication'])
+    ->prefix('customer-communication')
+    ->name('employee.customer-communication.')
+    ->group(function () {
         Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
         Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
         Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
         Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
+
+   
+        Route::delete('note/{note_id}', [Employee\CustomerCommunicationController::class, 'destroyNote'])
+            ->name('note.destroy'); 
+        Route::delete('all-notes/{potential_customer_id}', [CustomerCommunicationController::class, 'destroyAllNotes'])
+            ->name('all-notes.destroy');
     });
+
 
 
 
