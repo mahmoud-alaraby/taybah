@@ -97,103 +97,139 @@
     </div>
 </div>
 
+@php
+    // تحويل القيمة العشرية للساعات إلى صيغة hh:mm (ساعات:دقائق) بأصفار بادئة
+    function formatHoursMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
 
-    <!-- جدول سجل الحضور -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                سجل الحضور - {{ $months[$month] }} {{ $year }}
-            </h3>
-            
-            @if($attendances->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">يوم</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($attendances as $attendance)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $attendance->date->format('Y-m-d') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $attendance->date->translatedFormat('l') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <div class="flex items-center">
-                                            <span class="text-gray-900">{{ $attendance->check_in_time->format('H:i') }}</span>
-                                            @if($attendance->is_late)
-                                                <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                    متأخر {{ $attendance->late_minutes }}د
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $attendance->check_out_time ? $attendance->check_out_time->format('H:i') : 'لم ينصرف' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($attendance->total_hours, 1) }} ساعة
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        @if($attendance->overtime_hours > 0)
-                                            <span class="text-purple-600 font-medium">{{ number_format($attendance->overtime_hours, 1) }} ساعة</span>
-                                        @else
-                                            <span class="text-gray-400">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+    // تحويل دقائق التأخير إلى hh:mm مع أصفار بادئة والتعامل مع القيم السالبة
+    function formatLateTime($minutes) {
+        $minutes = abs($minutes);
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        return sprintf('%02d:%02d', $hours, $mins);
+    }
+
+    // تحويل الوقت إلى صيغة 12 ساعة مع إضافة AM أو PM مع فراغ بسيط بعد الوقت
+    function formatTimeTo12HourWithAmPm($time) {
+        if (!$time) return '';
+        $hour = (int)$time->format('H');
+        $minute = $time->format('i');
+        $hour12 = $hour % 12;
+        if ($hour12 == 0) $hour12 = 12;
+        $ampm = $hour < 12 ? 'AM' : 'PM'; // AM أو PM بالإنجليزية
+        return sprintf('%02d:%s %s', $hour12, $minute, $ampm);
+    }
+@endphp
+
+<!-- جدول سجل الحضور -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+            سجل الحضور - {{ $months[$month] }} {{ $year }}
+        </h3>
+        
+        @if($attendances->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">يوم</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($attendances as $attendance)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $attendance->date->format('Y-m-d') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $attendance->date->translatedFormat('l') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center">
+                                        <span class="text-gray-900" style="direction: ltr; display: inline-block;">
+                                            {!! formatTimeTo12HourWithAmPm($attendance->check_in_time) !!}
+                                        </span>
                                         @if($attendance->is_late)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                <i class="fas fa-exclamation-triangle ml-1"></i>
-                                                متأخر
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                <i class="fas fa-check ml-1"></i>
-                                                في الموعد
+                                            <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                متأخر {{ formatLateTime($attendance->late_minutes) }}
                                             </span>
                                         @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="bg-gray-50">
-                            <tr>
-                                <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-900">
-                                    الإجماليات
+                                    </div>
                                 </td>
-                                <td class="px-6 py-3 text-sm font-medium text-gray-900">
-                                    {{ number_format($monthlyStats['total_work_hours'], 1) }} ساعة
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    @if($attendance->check_out_time)
+                                        <span style="direction: ltr; display: inline-block;">
+                                            {!! formatTimeTo12HourWithAmPm($attendance->check_out_time) !!}
+                                        </span>
+                                    @else
+                                        لم ينصرف
+                                    @endif
                                 </td>
-                                <td class="px-6 py-3 text-sm font-medium text-purple-600">
-                                    {{ number_format($monthlyStats['total_overtime_hours'], 1) }} ساعة
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatHoursMinutes($attendance->total_hours) }}
                                 </td>
-                                <td class="px-6 py-3 text-sm font-medium text-gray-900">
-                                    متوسط: {{ number_format($monthlyStats['average_daily_hours'], 1) }}ساعة/يوم
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($attendance->overtime_hours > 0)
+                                        <span class="text-purple-600 font-medium">{{ formatHoursMinutes($attendance->overtime_hours) }}</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($attendance->is_late)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-exclamation-triangle ml-1"></i>
+                                            متأخر
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check ml-1"></i>
+                                            في الموعد
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            @else
-                <div class="text-center py-12">
-                    <i class="fas fa-calendar-times text-6xl text-gray-400 mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد سجل حضور</h3>
-                    <p class="text-sm text-gray-500">لم يتم تسجيل أي حضور في هذا الشهر</p>
-                </div>
-            @endif
-        </div>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                                الإجماليات لساعات عمل الموظف
+                            </td>
+                            <td class="px-6 py-3 text-sm font-medium text-gray-900">
+                                {{ formatHoursMinutes($monthlyStats['total_work_hours']) }}
+                            </td>
+                            <td class="px-6 py-3 text-sm font-medium text-purple-600">
+                                {{ formatHoursMinutes($monthlyStats['total_overtime_hours'] ?? 0) }}
+                            </td>
+                            <td class="px-6 py-3 text-sm font-medium text-gray-900">
+                                متوسط: {{ formatHoursMinutes($monthlyStats['average_daily_hours']) }}/يوم
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-12">
+                <i class="fas fa-calendar-times text-6xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد سجل حضور</h3>
+                <p class="text-sm text-gray-500">لم يتم تسجيل أي حضور في هذا الشهر</p>
+            </div>
+        @endif
     </div>
+
 
     <!-- ملخص الأداء -->
     <div class="bg-white shadow rounded-lg p-6">
@@ -217,14 +253,27 @@
                 </div>
             </div>
 
-            <!-- متوسط ساعات العمل -->
-            <div class="text-center">
-                <div class="text-3xl font-bold text-purple-600 mb-2">{{ number_format($monthlyStats['average_daily_hours'], 1) }}</div>
-                <div class="text-sm text-gray-600">متوسط ساعات العمل اليومية</div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-purple-600 h-2 rounded-full" style="width: {{ min(100, ($monthlyStats['average_daily_hours'] / 8) * 100) }}%"></div>
-                </div>
-            </div>
+        @php
+    // تحويل القيمة العشرية للساعات إلى صيغة hh:mm
+    function formatDecimalHoursToHoursMinutes($decimalHours) {
+        $totalMinutes = round($decimalHours * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+@endphp
+
+<!-- متوسط ساعات العمل -->
+<div class="text-center">
+    <div class="text-3xl font-bold text-purple-600 mb-2">
+        {{ formatDecimalHoursToHoursMinutes($monthlyStats['average_daily_hours']) }}
+    </div>
+    <div class="text-sm text-gray-600">متوسط ساعات العمل اليومية</div>
+    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+        <div class="bg-purple-600 h-2 rounded-full" style="width: {{ min(100, ($monthlyStats['average_daily_hours'] / 8) * 100) }}%"></div>
+    </div>
+</div>
+
         </div>
     </div>
 </div>

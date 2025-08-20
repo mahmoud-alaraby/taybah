@@ -6,155 +6,270 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- معلومات المشروع -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex justify-between items-start mb-6">
-            <div class="flex-1">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $project->name }}</h2>
-                @if($project->client_name)
-                    <p class="text-lg text-gray-600 mb-2">العميل: {{ $project->client_name }}</p>
-                @endif
-                @if($project->description)
-                    <p class="text-gray-700">{{ $project->description }}</p>
-                @endif
-            </div>
-            <div class="flex space-x-2 space-x-reverse">
-                <a href="{{ route('admin.projects.edit', $project) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                    <i class="fas fa-edit ml-2"></i>
-                    تعديل المشروع
-                </a>
-                <a href="{{ route('admin.projects.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                    <i class="fas fa-arrow-right ml-2"></i>
-                    العودة
-                </a>
-            </div>
-        </div>
+  <!-- كارد المشروع -->
+<div class="relative bg-white shadow-lg rounded-lg overflow-hidden">
+  
+  <!-- بوردر توب جريدينت -->
+  <div class="h-1 w-full bg-gradient-to-r from-pink-500 via-purple-500 via-blue-500 via-green-500 to-yellow-500"></div>
+  
+  <!-- محتوى الكارد -->
+  <div class="p-6">
+    
+    <!-- الهيدر -->
+    <div class="flex justify-between items-start mb-6">
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <!-- أيقونة SVG للمشروع -->
+          <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 6V4m0 16v-2m8-6h2M4 12H2m15.364 6.364l1.414-1.414M6.343 6.343L4.93 4.929m12.728 0l1.414 1.414M6.343 17.657l-1.414 1.414" />
+          </svg>
+          {{ $project->name }}
+        </h2>
 
-        <!-- معلومات إضافية -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-                <span class="text-gray-500">تاريخ البداية:</span>
-                <div class="font-medium">{{ $project->start_date->format('Y-m-d') }}</div>
-            </div>
-            <div>
-                <span class="text-gray-500">تاريخ النهاية:</span>
-                <div class="font-medium">{{ $project->end_date ? $project->end_date->format('Y-m-d') : 'غير محدد' }}</div>
-            </div>
-            <div>
-                <span class="text-gray-500">الحالة:</span>
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
-                    {{ $project->status === 'active' ? 'bg-green-100 text-green-800' : 
-                       ($project->status === 'completed' ? 'bg-blue-100 text-blue-800' : 
-                       ($project->status === 'on_hold' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
-                    {{ $project->status === 'active' ? 'نشط' : 
-                       ($project->status === 'completed' ? 'مكتمل' : 
-                       ($project->status === 'on_hold' ? 'معلق' : 'ملغي')) }}
-                </span>
-            </div>
-            <div>
-                <span class="text-gray-500">تم الإنشاء:</span>
-                <div class="font-medium">{{ $project->created_at->format('Y-m-d') }}</div>
-            </div>
-        </div>
+        @if($project->client_name)
+          <p class="text-lg text-gray-600 mb-2 flex items-center gap-2">
+            <!-- أيقونة عميل -->
+            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-6 8a6 6 0 1112 0H4z" />
+            </svg>
+            العميل: {{ $project->client_name }}
+          </p>
+        @endif
+        
+        @if($project->description)
+          <p class="text-gray-700 leading-relaxed flex items-start gap-2">
+            <!-- أيقونة وصف -->
+            <svg class="w-5 h-5 text-gray-500 mt-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 12h6m-6 4h6M5 8h14M5 16h14M5 20h14" />
+            </svg>
+            {{ $project->description }}
+          </p>
+        @endif
+      </div>
+
+      <!-- الأكشن -->
+      <div class="flex space-x-2 space-x-reverse">
+        <a href="{{ route('admin.projects.edit', $project) }}" 
+           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700 hover:shadow transition">
+          <!-- أيقونة تعديل -->
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M15.232 5.232l3.536 3.536M4 20h4l10-10-4-4L4 16v4z"/>
+          </svg>
+          تعديل المشروع
+        </a>
+        <a href="{{ route('admin.projects.index') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md shadow-sm hover:bg-gray-700 hover:shadow transition">
+          <!-- أيقونة رجوع -->
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M15 19l-7-7 7-7"/>
+          </svg>
+          العودة
+        </a>
+      </div>
     </div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- المعلومات الإضافية -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+      <div class="flex flex-col gap-1">
+        <span class="flex items-center gap-1 text-gray-500">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          تاريخ البداية:
+        </span>
+        <div class="font-medium">{{ $project->start_date->format('Y-m-d') }}</div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <span class="flex items-center gap-1 text-gray-500">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          تاريخ النهاية:
+        </span>
+        <div class="font-medium">{{ $project->end_date ? $project->end_date->format('Y-m-d') : 'غير محدد' }}</div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <span class="flex items-center gap-1 text-gray-500">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 17v-6h13v6H9zM3 9V7h18v2H3zm0 8v-2h6v2H3z"/>
+          </svg>
+          الحالة:
+        </span>
+        <span class="inline-flex max-w-[70px] justify-center items-center px-2 py-1 rounded-full text-xs font-medium 
+          {{ $project->status === 'active' ? 'bg-green-100 text-green-800' : 
+             ($project->status === 'completed' ? 'bg-blue-100 text-blue-800' : 
+             ($project->status === 'on_hold' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')) }}">
+          {{ $project->status === 'active' ? 'نشط' : 
+             ($project->status === 'completed' ? 'مكتمل' : 
+             ($project->status === 'on_hold' ? 'معلق' : 'ملغي')) }}
+        </span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <span class="flex items-center gap-1 text-gray-500">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 8v4l3 3m6-7a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          تم الإنشاء:
+        </span>
+        <div class="font-medium">{{ $project->created_at->format('Y-m-d') }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+@php
+    // دالة لتحويل القيمة العشرية إلى صيغة ساعات:دقائق
+    function formatHoursToMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+@endphp
+
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+
         <!-- إجمالي المهام -->
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">إجمالي المهام</p>
-                    <p class="text-2xl font-bold">{{ $projectStats['total_tasks'] }}</p>
+                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5"/>
+                    </svg>
+                    <span class="text-lg font-semibold">إجمالي المهام</span>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                </svg>
+                <div class="text-xl font-bold">{{ $projectStats['total_tasks'] }}</div>
             </div>
         </div>
 
         <!-- مهام مكتملة -->
         <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">مهام مكتملة</p>
-                    <p class="text-2xl font-bold">{{ $projectStats['completed_tasks'] }}</p>
+                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0"/>
+                    </svg>
+                    <span class="text-lg font-semibold">مهام مكتملة</span>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <div class="text-xl font-bold">{{ $projectStats['completed_tasks'] }}</div>
             </div>
         </div>
 
         <!-- قيد التنفيذ -->
         <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">قيد التنفيذ</p>
-                    <p class="text-2xl font-bold">{{ $projectStats['in_progress_tasks'] }}</p>
+                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0"/>
+                    </svg>
+                    <span class="text-lg font-semibold">قيد التنفيذ</span>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <div class="text-xl font-bold">{{ $projectStats['in_progress_tasks'] }}</div>
             </div>
         </div>
 
         <!-- ساعات فعلية -->
         <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">ساعات فعلية</p>
-                    <p class="text-2xl font-bold">{{ number_format($projectStats['total_hours'], 1) }}</p>
+                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10m-6 9h6a2 2 0 002-2V7H5v11a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-lg font-semibold">ساعات فعلية</span>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
+                <div class="text-xl font-bold">{{ formatHoursToMinutes($projectStats['total_hours']) }}</div>
             </div>
         </div>
 
         <!-- ساعات مقدرة -->
         <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">ساعات مقدرة</p>
-                    <p class="text-2xl font-bold">{{ number_format($projectStats['estimated_hours'], 1) }}</p>
+                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <!-- Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10m-6 9h6a2 2 0 002-2V7H5v11a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-lg font-semibold">ساعات مقدرة</span>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
+                <div class="text-xl font-bold">{{ formatHoursToMinutes($projectStats['estimated_hours']) }}</div>
             </div>
         </div>
     </div>
 </div>
 
 
-    <!-- شريط التقدم -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">نسبة الإنجاز</h3>
-        <div class="flex items-center">
-            <div class="flex-1">
-                <div class="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>التقدم الحالي</span>
-                    <span>{{ $project->completion_percentage }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-4">
-                    <div class="bg-green-600 h-4 rounded-full transition-all duration-300" 
-                         style="width: {{ $project->completion_percentage }}%"></div>
-                </div>
+
+ <!-- شريط التقدم -->
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex items-center gap-2 mb-4">
+        <!-- أيقونة الإنجاز -->
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12l2 2l4-4" stroke="currentColor" fill="none"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900">نسبة الإنجاز</h3>
+    </div>
+    
+    <div class="flex items-center">
+        <div class="flex-1">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span class="flex items-center gap-1">
+                    <!-- أيقونة تقدم -->
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    التقدم الحالي
+                </span>
+                <span>{{ $project->completion_percentage }}%</span>
             </div>
-            <div class="mr-4 text-right">
-                <div class="text-2xl font-bold text-green-600">{{ $project->completion_percentage }}%</div>
-                <div class="text-sm text-gray-500">مكتمل</div>
+            <div class="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div 
+                    class="absolute top-0 left-0 bg-gradient-to-r from-green-400 via-green-500 to-teal-500 h-4 rounded-full transition-all duration-300"
+                    style="width: {{ $project->completion_percentage }}%">
+                </div>
             </div>
         </div>
+        <div class="ml-6 flex flex-col items-center justify-center min-w-[70px]">
+            <!-- أيقونة دائرة progress -->
+            <svg class="w-9 h-9 mb-1 text-green-500" viewBox="0 0 36 36">
+                <path class="text-gray-200" stroke="currentColor" stroke-width="3"
+                      fill="none" d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="stroke-green-500" stroke-width="3"
+                      fill="none"
+                      stroke-dasharray="{{ $project->completion_percentage }}, 100"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <text x="18" y="21" text-anchor="middle" font-size="12" fill="currentColor" class="font-bold text-green-600">
+                    {{ $project->completion_percentage }}%
+                </text>
+            </svg>
+            <div class="text-xs text-gray-500">مكتمل</div>
+        </div>
     </div>
+</div>
+
 
     <!-- إضافة مهمة جديدة -->
     <div class="bg-white shadow rounded-lg p-6">
@@ -207,7 +322,7 @@
                 إلغاء
             </button>
             <button type="submit"
-                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-green-700 transition">
                 إضافة المهمة
             </button>
         </div>
@@ -215,130 +330,140 @@
 </div>
 
     </div>
+@php
+    // دالة تحويل القيمة العشرية للساعات إلى صيغة hh:mm (ساعات:دقائق)
+    function formatHoursMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+@endphp
 
- <div class="space-y-6">
-  @foreach($project->tasks as $task)
-    <div class="relative bg-white p-6 rounded-xl shadow-lg overflow-hidden group">
-      <!-- Gradient Border from right -->
-      <div class="absolute top-0 right-0 h-full w-2 rounded-l-xl bg-gradient-to-b from-red-400 via-pink-500 to-purple-600"></div>
+<div class="space-y-6">
+    @foreach($project->tasks as $task)
+        <div class="relative bg-white p-6 rounded-xl shadow-lg overflow-hidden group">
+            <!-- Gradient Border from right -->
+            <div class="absolute top-0 right-0 h-full w-2 rounded-l-xl bg-gradient-to-b from-red-400 via-red-500 to-red-700"></div>
 
-      <div class="flex justify-between items-start space-x-4 space-x-reverse">
-        <div class="flex-1">
-          <h4 class="text-lg font-semibold text-gray-900 mb-1 flex items-center space-x-2 space-x-reverse">
-            <!-- SVG Icon for Task -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
-            </svg>
-            <span>{{ $task->name }}</span>
-          </h4>
-          @if($task->description)
-            <p class="text-sm text-gray-600">{{ $task->description }}</p>
-          @endif
-        </div>
+            <div class="flex justify-between items-start space-x-4 space-x-reverse">
+                <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-1 flex items-center space-x-2 space-x-reverse">
+                        <!-- SVG Icon for Task -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+                        </svg>
+                        <span>{{ $task->name }}</span>
+                    </h4>
+                    @if($task->description)
+                        <p class="text-sm text-gray-600">{{ $task->description }}</p>
+                    @endif
+                </div>
 
-        <div class="flex items-center space-x-3 space-x-reverse">
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-            {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : 
-               ($task->status === 'in_progress' ? 'bg-indigo-100 text-indigo-800' : 
-               ($task->status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800')) }}">
-            {{ $task->status === 'completed' ? 'مكتملة' : 
-               ($task->status === 'in_progress' ? 'قيد التنفيذ' : 
-               ($task->status === 'paused' ? 'متوقفة' : 'معلقة')) }}
-          </span>
-          <button onclick="editTask({{ $task->id }})" aria-label="تعديل المهمة"
-            class="text-indigo-600 hover:text-indigo-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
-              viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15.232 5.232l3.536 3.536M9 11l6 6L4 21l2-7 7-7z"/>
-            </svg>
-          </button>
-          <button onclick="deleteTask({{ $task->id }})" aria-label="حذف المهمة"
-            class="text-red-600 hover:text-red-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
-              viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 7L5 21M5 7l14 14"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                        {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                            ($task->status === 'in_progress' ? 'bg-indigo-100 text-indigo-800' : 
+                            ($task->status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800')) }}">
+                        {{ $task->status === 'completed' ? 'مكتملة' : 
+                            ($task->status === 'in_progress' ? 'قيد التنفيذ' : 
+                            ($task->status === 'paused' ? 'متوقفة' : 'معلقة')) }}
+                    </span>
+                    <button onclick="editTask({{ $task->id }})" aria-label="تعديل المهمة"
+                        class="text-indigo-600 hover:text-indigo-800 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15.232 5.232l3.536 3.536M9 11l6 6L4 21l2-7 7-7z"/>
+                        </svg>
+                    </button>
+                    <button onclick="deleteTask({{ $task->id }})" aria-label="حذف المهمة"
+                        class="text-red-600 hover:text-red-800 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 7L5 21M5 7l14 14"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm text-gray-700">
-        <div>
-          <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.12 17.804z"/>
-              <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span>الموظف المسؤول:</span>
-          </div>
-          <div class="font-medium">{{ $task->assignedEmployee ? $task->assignedEmployee->name : 'غير محدد' }}</div>
-        </div>
-        <div>
-          <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>الساعات المقدرة:</span>
-          </div>
-          <div class="font-medium">{{ $task->estimated_hours }} ساعة</div>
-        </div>
-        <div>
-          <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 8c-1.657 0-3 1.567-3 3.5S10.343 15 12 15s3-1.567 3-3.5S13.657 8 12 8z"/>
-              <path d="M12 22c4.418 0 8-1.79 8-4v-4c0-2.21-3.582-4-8-4s-8 1.79-8 4v4c0 2.21 3.582 4 8 4z"/>
-            </svg>
-            <span>الساعات الفعلية:</span>
-          </div>
-          <div class="font-medium {{ $task->is_over_estimate ? 'text-red-600' : 'text-green-600' }}">
-            {{ number_format($task->total_tracked_hours, 1) }} ساعة
-            @if($task->is_over_estimate)
-              <svg xmlns="http://www.w3.org/2000/svg" class="inline w-4 h-4 text-red-500 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"/>
-              </svg>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm text-gray-700">
+                <div>
+                    <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.12 17.804z"/>
+                            <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span>الموظف المسؤول:</span>
+                    </div>
+                    <div class="font-medium">{{ $task->assignedEmployee ? $task->assignedEmployee->name : 'غير محدد' }}</div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>الساعات المقدرة:</span>
+                    </div>
+                    <div class="font-medium">{{ formatHoursMinutes($task->estimated_hours) }}</div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 8c-1.657 0-3 1.567-3 3.5S10.343 15 12 15s3-1.567 3-3.5S13.657 8 12 8z"/>
+                            <path d="M12 22c4.418 0 8-1.79 8-4v-4c0-2.21-3.582-4-8-4s-8 1.79-8 4v4c0 2.21 3.582 4 8 4z"/>
+                        </svg>
+                        <span>الساعات الفعلية:</span>
+                    </div>
+                    <div class="font-medium {{ $task->is_over_estimate ? 'text-red-600' : 'text-green-600' }}">
+                        {{ formatHoursMinutes($task->total_tracked_hours) }}
+                        @if($task->is_over_estimate)
+                            <svg xmlns="http://www.w3.org/2000/svg" class="inline w-4 h-4 text-red-500 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"/>
+                            </svg>
+                        @endif
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>تاريخ الإكمال:</span>
+                    </div>
+                    <div class="font-medium">{{ $task->completed_at ? $task->completed_at->format('Y-m-d') : 'غير مكتملة' }}</div>
+                </div>
+            </div>
+
+            @if($task->estimated_hours > 0)
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>تقدم المهمة</span>
+                        <span>{{ number_format(min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100), 1) }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full {{ $task->total_tracked_hours > $task->estimated_hours ? 'bg-red-500' : 'bg-indigo-600' }}" 
+                             style="width: {{ min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100) }}%"></div>
+                    </div>
+                </div>
             @endif
-          </div>
         </div>
-        <div>
-          <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    @endforeach
+
+    @if($project->tasks->count() == 0)
+        <div class="text-center py-12">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 w-16 h-16 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 17v-6h13v6m-5-6V4H6v7H2l7 8 7-8"/>
             </svg>
-            <span>تاريخ الإكمال:</span>
-          </div>
-          <div class="font-medium">{{ $task->completed_at ? $task->completed_at->format('Y-m-d') : 'غير مكتملة' }}</div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مهام</h3>
+            <p class="text-sm text-gray-500 mb-6">ابدأ بإضافة مهام لهذا المشروع</p>
+            <button onclick="toggleAddTaskForm()" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
+                إضافة أول مهمة
+            </button>
         </div>
-      </div>
-
-      @if($task->estimated_hours > 0)
-        <div class="mt-4">
-          <div class="flex justify-between text-xs text-gray-600 mb-1">
-            <span>تقدم المهمة</span>
-            <span>{{ number_format(min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100), 1) }}%</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="h-2 rounded-full {{ $task->total_tracked_hours > $task->estimated_hours ? 'bg-red-500' : 'bg-indigo-600' }}" 
-                 style="width: {{ min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100) }}%"></div>
-          </div>
-        </div>
-      @endif
-    </div>
-  @endforeach
-
-  @if($project->tasks->count() == 0)
-    <div class="text-center py-12">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 w-16 h-16 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 17v-6h13v6m-5-6V4H6v7H2l7 8 7-8"/>
-      </svg>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مهام</h3>
-      <p class="text-sm text-gray-500 mb-6">ابدأ بإضافة مهام لهذا المشروع</p>
-      <button onclick="toggleAddTaskForm()" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
-        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
-        إضافة أول مهمة
-      </button>
-    </div>
-  @endif
+    @endif
 </div>
+
 
 <!-- مودال تعديل المهمة -->
 <div id="editTaskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">

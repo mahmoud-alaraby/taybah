@@ -100,7 +100,7 @@
     <!-- الرئيسية -->
     <a href="{{ route('employee.dashboard') }}"
        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.dashboard') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-tachometer-alt ml-3 text-sm"></i>
+        <i class="fas fa-tachometer-alt ml-2 text-sm"></i>
         الرئيسية
     </a>
 
@@ -155,7 +155,7 @@
     @endif
 
     {{-- الأعمال/العمليات --}}
-    @php
+    <!-- @php
         $showOpsMenu = auth('employee')->user()->hasPermission('general_operations')
             || auth('employee')->user()->hasPermission('photography_booking')
             || auth('employee')->user()->hasPermission('designers_account')
@@ -192,7 +192,7 @@
             <a href="{{ route('employee.designer-task-accounts.index') }}"
                class="block px-3 py-2 rounded-md text-sm hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.designer-task-accounts.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-palette ml-2 text-sm"></i>
-                حساب المصممين
+                حساب المصممين بالتاسك
             </a>
             @endif
             @if(auth('employee')->user()->hasPermission('renewal_dates'))
@@ -211,7 +211,7 @@
             @endif
         </div>
     </div>
-    @endif
+    @endif -->
 
     {{-- المتابعة: المشاريع-الحضور-التقارير --}}
     @php
@@ -254,7 +254,43 @@
         </div>
     </div>
     @endif
+    @if(auth('employee')->user()->hasPermission('general_operations'))
+                    <a href="{{ route('employee.general-operations') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.general-operations') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-cogs ml-2 text-sm"></i>
+                        التشغيل العام
+                    </a>
+                    @endif
 
+   
+                    @if(auth('employee')->user()->hasPermission('photography_booking'))
+                    <a href="{{ route('employee.photography-booking.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-camera ml-2 text-sm"></i>
+                        <span class="flex-1">حجوزات التصوير والمونتاج</span>
+                    </a>
+                    @endif
+              @if(auth('employee')->user()->hasPermission('designers_account'))
+                    <a href="{{ route('employee.designer-task-accounts.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.designer-task-accounts.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-palette ml-2 text-sm"></i>
+                         حساب المصممين بالتاسك
+                    </a>
+                    @endif
+                 @if(auth('employee')->user()->hasPermission('renewal_dates'))
+                    <a href="{{ route('employee.renewal-dates.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.renewal-dates*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-calendar-alt ml-2 text-sm"></i>
+                        مواعيد التجديد
+                    </a>
+                    @endif
+        @if(auth('employee')->user()->hasPermission('receipts_payments'))
+                    <a href="{{ route('employee.receipts-payments') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.receipts-payments*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-money-bill-wave ml-2 text-sm"></i>
+                        المقبوضات والمدفوعات
+                    </a>
+                    @endif
     {{-- للموظف --}}
     @php
         $hasWorkChatMenu = auth('employee')->user()->hasPermission('design_follow_up')

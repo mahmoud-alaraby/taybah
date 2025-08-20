@@ -99,99 +99,139 @@
 </div>
 
 
-    <!-- جدول الحضور -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        @if($attendances->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($attendances as $attendance)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-8 w-8">
-                                            <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                                                <span class="text-xs font-medium text-gray-700">
-                                                    {{ mb_substr($attendance->employee->name, 0, 1) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="mr-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ $attendance->employee->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $attendance->employee->employee_id }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $attendance->date->format('Y-m-d') }}
-                                    <div class="text-xs text-gray-500">{{ $attendance->date->translatedFormat('l') }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div class="flex items-center">
-                                        <span class="text-gray-900">{{ $attendance->check_in_time->format('H:i') }}</span>
-                                        @if($attendance->is_late)
-                                            <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                متأخر {{ $attendance->late_minutes }}د
+@php
+    // دالة لعرض الوقت بصيغة 12 ساعة ثم AM/PM مع فراغ صغير وتدعيم سليم في RTL
+    function formatTimeTo12HourWithAmPmSpace($time) {
+        if (!$time) return '';
+        $hour = (int)$time->format('H');
+        $minute = $time->format('i');
+        $hour12 = $hour % 12;
+        if ($hour12 == 0) $hour12 = 12;
+        $ampm = $hour < 12 ? 'AM' : 'PM';
+        // نستخدم &nbsp; لجعل am/pm ملتصق بالوقت ونستخدم direction:ltr لعكس اتجاه الـRTL
+        return sprintf('%02d:%s&nbsp;%s', $hour12, $minute, $ampm);
+    }
+
+    function formatHoursToHoursMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+
+    function formatLateTime($minutes) {
+        $minutes = abs($minutes);
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        return sprintf('%02d:%02d', $hours, $mins);
+    }
+@endphp
+
+<!-- جدول الحضور -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    @if($attendances->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($attendances as $attendance)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8">
+                                        <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-gray-700">
+                                                {{ mb_substr($attendance->employee->name, 0, 1) }}
                                             </span>
-                                        @endif
+                                        </div>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $attendance->check_out_time ? $attendance->check_out_time->format('H:i') : 'لم ينصرف' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ number_format($attendance->total_hours, 1) }} ساعة
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($attendance->overtime_hours > 0)
-                                        <span class="text-purple-600 font-medium">{{ number_format($attendance->overtime_hours, 1) }} ساعة</span>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="mr-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ $attendance->employee->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $attendance->employee->employee_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $attendance->date->format('Y-m-d') }}
+                                <div class="text-xs text-gray-500">{{ $attendance->date->translatedFormat('l') }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                                    <span class="text-gray-900" style="direction: ltr; display: inline-block;">
+                                        {!! formatTimeTo12HourWithAmPmSpace($attendance->check_in_time) !!}
+                                    </span>
                                     @if($attendance->is_late)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <i class="fas fa-exclamation-triangle ml-1"></i>
-                                            متأخر
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-check ml-1"></i>
-                                            في الموعد
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            متأخر {{ formatLateTime($attendance->late_minutes) }}
                                         </span>
                                     @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            @if($attendances->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                    {{ $attendances->appends(request()->query())->links() }}
-                </div>
-            @endif
-        @else
-            <div class="text-center py-12">
-                <i class="fas fa-calendar-times text-6xl text-gray-400 mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد سجل حضور</h3>
-                <p class="text-sm text-gray-500">لم يتم تسجيل أي حضور للفترة المحددة</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($attendance->check_out_time)
+                                    <span style="direction: ltr; display: inline-block;">
+                                        {!! formatTimeTo12HourWithAmPmSpace($attendance->check_out_time) !!}
+                                    </span>
+                                @else
+                                    لم ينصرف
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ formatHoursToHoursMinutes($attendance->total_hours) }} ساعة
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if($attendance->overtime_hours > 0)
+                                    <span class="text-purple-600 font-medium">
+                                        {{ formatHoursToHoursMinutes($attendance->overtime_hours) }} ساعة
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($attendance->is_late)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-exclamation-triangle ml-1"></i>
+                                        متأخر
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check ml-1"></i>
+                                        في الموعد
+                                    </span>
+                                @endif
+                            </td>
+                            
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        @if($attendances->hasPages())
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                {{ $attendances->appends(request()->query())->links() }}
             </div>
         @endif
-    </div>
+    @else
+        <div class="text-center py-12">
+            <i class="fas fa-calendar-times text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد سجل حضور</h3>
+            <p class="text-sm text-gray-500">لم يتم تسجيل أي حضور للفترة المحددة</p>
+        </div>
+    @endif
+</div>
+
 </div>
 @endsection

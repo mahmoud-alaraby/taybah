@@ -103,28 +103,28 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span class="font-semibold mr-1">التارجيت:</span> {{ $target }} ساعات
+                    <span class="font-semibold mr-1">   التارجيت :  </span>  {{ $target }} ساعات
                 </div>
 
                 <div class="flex items-center p-3 bg-blue-50 border-l-4 border-blue-400 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span class="font-semibold mr-1">إجمالي ساعات العمل:</span> {{ $total }}
+                    <span class="font-semibold mr-1">   إجمالي ساعات العمل : </span> {{ $total }}
                 </div>
 
                 <div class="flex items-center p-3 bg-green-50 border-l-4 border-green-400 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span class="font-semibold mr-1">نسبة الإنجاز:</span> {{ $achievement }}%
+                    <span class="font-semibold mr-1"> نسبة الإنجاز : </span>  {{ $achievement }}%
                 </div>
 
                 <div class="flex items-center p-3 bg-red-50 border-l-4 border-red-400 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span class="font-semibold mr-1">الساعات الإضافية:</span> {{ $overtime }}
+                    <span class="font-semibold mr-1"> الساعات الإضافية : </span>  {{ $overtime }}
                 </div>
             </div>
 
