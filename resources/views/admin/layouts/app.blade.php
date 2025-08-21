@@ -114,7 +114,7 @@
         <button @click="open = !open"
                 class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
             <i class="fas fa-users-cog ml-2"></i>
-            إدارة المستخدمين
+            إدارة المستخدمين 
             <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-1 mt-1 text-gray-300 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -130,15 +130,17 @@
                 <i class="fas fa-users ml-2"></i>
                 إدارة الموظفين
             </a>
-        </div>
-    </div>
 
-    <!-- إدارة الأدوار -->
+                <!-- إدارة الأدوار -->
     <a href="{{ route('admin.roles.index') }}"
        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.roles.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
         <i class="fas fa-user-tag ml-2"></i>
         إدارة الأدوار
     </a>
+        </div>
+    </div>
+
+
 
     <!-- قائمة المهام -->
     <a href="{{ route('admin.tasks.index') }}"
@@ -186,7 +188,7 @@
         <button @click="open = !open"
                 class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
             <i class="fas fa-phone-alt ml-2"></i>
-            التواصل مع العملاء
+          إدارة العملاء
             <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-1 mt-1 text-gray-300 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -215,54 +217,7 @@
         </div>
     </div>
 
-    <!-- مواعيد التجديد -->
-    <a href="{{ route('admin.renewal-dates.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-calendar-alt ml-2"></i>
-        مواعيد التجديد
-        @if(isset($upcomingRenewalsCount) && $upcomingRenewalsCount > 0)
-            <span class="bg-yellow-500 text-white text-xs rounded-full px-2 py-1 mr-2">
-                {{ $upcomingRenewalsCount }}
-            </span>
-        @endif
-    </a>
-
-    <!-- المقبوضات والمدفوعات -->
-    <a href="{{ route('admin.receipts-payments.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-money-bill-wave ml-2"></i>
-        المقبوضات والمدفوعات
-    </a>
-
-    <!-- نظام التشغيل العام -->
-    <a href="{{ route('admin.operation-system.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-calendar-check ml-2"></i>
-        نظام التشغيل العام
-    </a>
-
-    <!-- حجوزات التصوير والمونتاج -->
-    <a href="{{ route('admin.photography-booking.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-camera ml-2"></i>
-        حجوزات التصوير والمونتاج
-    </a>
-
-    <!-- تكاليف التصوير -->
-    <a href="{{ route('admin.photography-costs.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-costs.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-camera-retro ml-2"></i>
-        تكاليف التصوير
-    </a>
-
-    <!-- حساب المصممين بالتاسك -->
-    <a href="{{ route('admin.designer-task-accounts.index') }}"
-       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
-       {{ request()->routeIs('admin.designer-task-accounts.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-        <i class="fas fa-pencil-ruler ml-2"></i>
-        حساب المصممين بالتاسك
-    </a>
-
+    
     <!-- متابعة العمل -->
     <div x-data="{ open: false }" class="space-y-1">
         <button @click="open = !open"
@@ -287,8 +242,63 @@
         </div>
     </div>
 
+        <!-- المقبوضات والمدفوعات -->
+    <a href="{{ route('admin.receipts-payments.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.receipts-payments.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-money-bill-wave ml-2"></i>
+        المقبوضات والمدفوعات
+    </a>
+
+    
+    <!-- نظام التشغيل العام -->
+    <a href="{{ route('admin.operation-system.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.operation-system.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-calendar-check ml-2"></i>
+        نظام التشغيل العام
+    </a>
+
+        <!-- حجوزات التصوير والمونتاج -->
+    <a href="{{ route('admin.photography-booking.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-camera ml-2"></i>
+        حجوزات التصوير والمونتاج
+    </a>
+
+        <!-- تكاليف التصوير -->
+    <a href="{{ route('admin.photography-costs.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.photography-costs.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-camera-retro ml-2"></i>
+        تكاليف التصوير
+    </a>
+
+    <!-- حساب المصممين بالتاسك -->
+    <a href="{{ route('admin.designer-task-accounts.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+       {{ request()->routeIs('admin.designer-task-accounts.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-pencil-ruler ml-2"></i>
+        حساب المصممين بالتاسك
+    </a>
+
+
+
+
+    <!-- مواعيد التجديد -->
+    <a href="{{ route('admin.renewal-dates.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('admin.renewal-dates.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-calendar-alt ml-2"></i>
+        مواعيد التجديد
+        @if(isset($upcomingRenewalsCount) && $upcomingRenewalsCount > 0)
+            <span class="bg-yellow-500 text-white text-xs rounded-full px-2 py-1 mr-2">
+                {{ $upcomingRenewalsCount }}
+            </span>
+        @endif
+    </a>
+
+
+
+
     <!-- تسجيل خروج -->
-    <div class="mt-6 pt-6 border-t border-gray-700">
+    <div class="mt-2 pt-6 border-t border-gray-700">
         <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <button type="submit" class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-red-600 hover:text-white transition-colors prevent-flash">

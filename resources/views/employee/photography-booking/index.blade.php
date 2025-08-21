@@ -408,7 +408,7 @@
                             <div>
                                 <span class="font-medium text-gray-900">الجوال:</span> 
                                 @if($booking->client_phone)
-                                    <a href="tel:{{ $booking->client_phone }}" class="text-blue-600 hover:text-blue-800">{{ $booking->client_phone }}</a>
+                                    <a href="tel:{{ $booking->client_phone }}" class="text-blue-600 hover:text-blue-800 mr-1">{{ $booking->client_phone }}</a>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif

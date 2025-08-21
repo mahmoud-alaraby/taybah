@@ -175,11 +175,11 @@
                                                 class="text-red-600 hover:text-red-800">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        <button onclick="quickEdit({{ $customer->id }})" 
+                                        <!-- <button onclick="quickEdit({{ $customer->id }})" 
                                                 class="text-purple-600 hover:text-purple-800" 
                                                 title="تعديل سريع للتصنيفات">
                                             <i class="fas fa-tags"></i>
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </td>
                             </tr>

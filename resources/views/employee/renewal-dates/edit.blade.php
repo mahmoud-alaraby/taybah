@@ -28,17 +28,17 @@
                     <div class="mt-1">
                         @if($renewalDate->isOverdue())
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                <i class="fas fa-exclamation-triangle ml-1"></i>
                                 متأخر {{ abs($renewalDate->getDaysUntilRenewal()) }} يوم
                             </span>
                         @elseif($renewalDate->isToday())
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <i class="fas fa-calendar-day mr-1"></i>
+                                <i class="fas fa-calendar-day ml-1"></i>
                                 موعد التجديد اليوم
                             </span>
                         @elseif($renewalDate->isUpcoming(3))
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                <i class="fas fa-clock mr-1"></i>
+                                <i class="fas fa-clock ml-1"></i>
                                 باقي {{ $renewalDate->getDaysUntilRenewal() }} يوم
                             </span>
                         @else

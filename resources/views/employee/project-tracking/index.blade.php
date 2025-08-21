@@ -7,29 +7,44 @@
 @section('content')
 <div class="space-y-6" x-data="projectTracking()" x-init="init()">
     
-   @php
-    if (!function_exists('formatHoursToHoursMinutes')) {
-        function formatHoursToHoursMinutes($hoursFloat) {
-            $totalMinutes = round($hoursFloat * 60);
-            $hours = floor($totalMinutes / 60);
-            $minutes = $totalMinutes % 60;
-            return sprintf('%02d:%02d', $hours, $minutes);
-        }
+@php
+if (!function_exists('formatHoursToHoursMinutes')) {
+    function formatHoursToHoursMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
+}
 
-    if (!function_exists('formatLateTime')) {
-        function formatLateTime($minutes) {
-            $minutes = abs($minutes);
-            $hours = floor($minutes / 60);
-            $mins = $minutes % 60;
-            return sprintf('%02d:%02d', $hours, $mins);
-        }
+if (!function_exists('formatLateTime')) {
+    function formatLateTime($minutes) {
+        $minutes = abs($minutes);
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        return sprintf('%02d:%02d', $hours, $mins);
     }
+}
+
+// دالة الوقت بنظام 12 مع AM/PM كابيتال بعد الوقت
+if (!function_exists('formatTime12h')) {
+    function formatTime12h($carbonTime) {
+        if (is_string($carbonTime)) {
+            $carbonTime = \Carbon\Carbon::parse($carbonTime);
+        }
+        $hour = $carbonTime->hour;
+        $minute = $carbonTime->minute;
+        $suffix = ($hour >= 12) ? 'PM' : 'AM';
+        $hour12 = $hour % 12;
+        if ($hour12 == 0) $hour12 = 12;
+        // لاحظ أن AM/PM تأتي بعد الوقت مباشرة
+        return sprintf('%02d:%02d %s', $hour12, $minute, $suffix);
+    }
+}
 @endphp
 
 <!-- شريط الحالة العلوي -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
     <!-- بصمة الحضور -->
     <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-blue-600 to-blue-400 bg-blue-50">
         <div class="flex items-center justify-between">
@@ -57,7 +72,7 @@
                     @else
                         <button @click="checkOut()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700 transition-colors duration-200">
                             <!-- أيقونة خروج -->
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 24 24" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M17 16l4-4m0 0l-4-4m4 4H7" />
                                 <path d="M3 12h4" />
                             </svg>
@@ -67,7 +82,7 @@
                 @else
                     <button @click="checkIn()" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700 transition-colors duration-200">
                         <!-- أيقونة بصمة إصبع -->
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 24 24" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 11c0-3.314-3-6-7-6s-7 2.686-7 6 3 6 7 6 7-2.686 7-6z" />
                             <path d="M12 11v6" />
                             <path d="M16 10v5" />
@@ -81,7 +96,7 @@
             <div class="mt-4 text-xs font-semibold text-blue-800">
                 <div class="flex justify-between mb-2">
                     <span>وقت الحضور:</span>
-                    <span>{{ $todayAttendance->check_in_time->timezone('Asia/Riyadh')->format('H:i') }}</span>
+                    <span>{{ formatTime12h($todayAttendance->check_in_time->timezone('Asia/Riyadh')) }}</span>
                 </div>
                 @if($todayAttendance->is_late)
                     <div class="flex justify-between text-red-700 font-semibold">
@@ -97,6 +112,8 @@
             </div>
         @endif
     </div>
+
+
 
     <!-- الاستوب ووتش -->
     <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-yellow-500 to-yellow-300  text-center">
@@ -196,50 +213,72 @@
 @endphp
 
 <!-- قائمة المشاريع والمهام -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 rtl">
+
     <!-- المشاريع -->
     <div class="bg-white rounded-lg shadow">
         <div class="p-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">مشاريعي النشطة</h3>
+            <h3 class="text-xl font-semibold text-gray-900 flex items-center space-x-2 rtl:space-x-reverse">
+                <i class="fas fa-folder-open text-green-600 text-lg"></i>
+                <span>مشاريعي النشطة</span>
+            </h3>
         </div>
         <div class="p-4">
             @if($activeProjects->count() > 0)
-                <div class="space-y-4">
+                <div class="space-y-5">
                     @foreach($activeProjects as $project)
-                        <div class="border border-gray-200 rounded-lg p-3">
-                            <div class="flex justify-between items-start mb-2">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-3">
                                 <div>
-                                    <h4 class="font-medium text-gray-900">{{ $project->name }}</h4>
+                                    <h4 class="font-semibold text-gray-900 text-lg flex items-center space-x-2 rtl:space-x-reverse">
+                                        <i class="fas fa-project-diagram text-blue-600"></i>
+                                        <span>{{ $project->name }}</span>
+                                    </h4>
                                     @if($project->client_name)
-                                        <p class="text-sm text-gray-500">العميل: {{ $project->client_name }}</p>
+                                        <p class="text-sm text-gray-600 mt-1 flex items-center space-x-1 rtl:space-x-reverse">
+                                            <i class="fas fa-user text-gray-400"></i>
+                                            <span>العميل: {{ $project->client_name }}</span>
+                                        </p>
                                     @endif
                                 </div>
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                                     {{ $project->completion_percentage }}%
                                 </span>
                             </div>
                             
                             <!-- مهام المشروع -->
-                            <div class="space-y-2">
+                            <div class="space-y-3">
                                 @foreach($project->tasks as $task)
-                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                                         <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-900">{{ $task->name }}</p>
-                                            <div class="flex items-center space-x-4 space-x-reverse text-xs text-gray-500">
-                                                <span>مقدر: {{ formatHoursToHoursMinutes($task->estimated_hours) }} ساعة:دقيقة</span>
-                                                <span>فعلي: {{ formatHoursToHoursMinutes($task->total_tracked_hours) }} ساعة:دقيقة</span>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                                            <p class="text-base font-medium text-gray-900 flex items-center space-x-2 rtl:space-x-reverse">
+                                                <i class="fas fa-tasks text-yellow-600"></i>
+                                                <span>{{ $task->name }}</span>
+                                            </p>
+                                            <div class="flex items-center space-x-4 rtl:space-x-reverse text-sm text-gray-600 mt-1">
+                                                <span class="flex items-center space-x-1 rtl:space-x-reverse">
+                                                    <i class="fas fa-hourglass-start text-blue-400"></i>
+                                                    <span>مقدر: {{ formatHoursToHoursMinutes($task->estimated_hours) }} ساعة:دقيقة</span>
+                                                </span>
+                                                <span class="flex items-center space-x-1 rtl:space-x-reverse">
+                                                    <i class="fas fa-clock text-green-400"></i>
+                                                    <span>فعلي: {{ formatHoursToHoursMinutes($task->total_tracked_hours) }} ساعة:دقيقة</span>
+                                                </span>
+                                                <span class="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-semibold
                                                     {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                                      ($task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
+                                                        ($task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800')
+                                                    }}">
                                                     {{ $task->status === 'completed' ? 'مكتملة' : 
                                                        ($task->status === 'in_progress' ? 'قيد التنفيذ' : 'معلقة') }}
                                                 </span>
                                             </div>
                                         </div>
+                                        
                                         @if($task->status !== 'completed')
                                             <button @click="startTimerForTask({{ $project->id }}, {{ $task->id }})" 
-                                                class="ml-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                                class=" px-3 py-1 rounded-md bg-green-600 text-white  text-sm hover:bg-green-700 flex items-center space-x-1 rtl:space-x-reverse">
                                                 <i class="fas fa-play"></i>
+                                                <span>ابدأ</span>
                                             </button>
                                         @endif
                                     </div>
@@ -249,11 +288,11 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-project-diagram text-4xl mb-4"></i>
-                    <p>لا توجد مشاريع نشطة</p>
+                <div class="text-center py-10 text-gray-500 flex flex-col items-center space-y-4">
+                    <i class="fas fa-folder-open text-5xl"></i>
+                    <p class="text-lg">لا توجد مشاريع نشطة</p>
                     <button @click="showCreateProjectModal()" 
-                        class="mt-2 text-blue-600 hover:text-blue-800">
+                        class="mt-2 text-blue-600 hover:text-blue-800 text-base font-medium">
                         إنشاء مشروع جديد
                     </button>
                 </div>
@@ -261,71 +300,63 @@
         </div>
     </div>
 
-  <!-- سجل اليوم -->
-<div class="bg-white rounded-lg shadow-lg">
-    <div class="p-4 border-b border-gray-300 bg-gradient-to-r from-green-50 via-green-100 to-green-50 relative">
-        <h3 class="text-lg font-semibold text-green-900 flex items-center space-x-2 rtl:space-x-reverse">
-            <!-- أيقونة ساعة محسنة مع خلفية نصف شفافة دائرية -->
-            <span class="inline-flex items-center justify-center w-8 h-8 bg-green-200 bg-opacity-30 rounded-full">
-                <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+
+    <!-- سجل اليوم -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="p-4 border-b border-gray-300 bg-gradient-to-r from-green-50 via-green-100 to-green-50 relative">
+            <h3 class="text-xl font-semibold text-green-900 flex items-center space-x-2 rtl:space-x-reverse">
+                <!-- أيقونة ساعة محسنة مع خلفية نصف شفافة دائرية -->
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-green-200 bg-opacity-30 rounded-full">
+                    <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </span>
+                <span>سجل العمل اليوم</span>
+                <span class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-600 to-green-300 rounded-l-md"></span>
+            </h3>
+        </div>
+        <div class="">
+            <div class=" p-4 m-4 border rounded-md border-gray-200" x-show="todayEntries.length > 0">
+                <template x-for="entry in todayEntries" :key="entry.id">
+                    <div class="flex mb-3 items-center justify-between p-3 bg-gray-50 rounded shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-green-400">
+                        <div>
+                            <p class="text-base font-semibold text-green-900 mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                                <i class="fas fa-tasks text-yellow-700"></i>
+                                <span x-text="entry.task.name"></span>
+                            </p>
+                            <p class="text-sm text-green-700 flex items-center space-x-1 rtl:space-x-reverse">
+                                <i class="fas fa-project-diagram"></i>
+                                <span x-text="entry.project.name"></span>
+                            </p>
+                            <p class="text-sm text-green-600 flex mb-4 items-center space-x-1 rtl:space-x-reverse">
+                                <i class="fas fa-clock text-red-600"></i>
+                                <span x-text="entry.start_time + ' - ' + (entry.end_time || 'جاري')"></span>
+                            </p>
+                        </div>
+                        <div class="text-right flex flex-col items-end justify-center space-y-1 rtl:space-y-reverse">
+                            <p class="text-base font-semibold text-green-700" x-text="entry.formatted_duration"></p>
+                            <p class="text-sm text-green-500" x-text="entry.hours + ' ساعة:دقيقة'"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div x-show="todayEntries.length === 0" class="text-center py-14 text-green-400">
+                <!-- أيقونة ساعة توقف محسنة -->
+                <svg class="mx-auto w-20 h-20 mb-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
+                    <circle cx="12" cy="12" r="10" class="text-green-300" stroke="currentColor"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12" class="text-green-400" stroke="currentColor"></line>
+                    <line x1="12" y1="16" x2="12" y2="16" class="text-green-400" stroke="currentColor"></line>
                 </svg>
-            </span>
-            <span>سجل العمل اليوم</span>
-
-            <!-- بوردر ليفت متدرج -->
-            <span class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-600 to-green-300 rounded-l-md"></span>
-        </h3>
-    </div>
-    <div class="">
-        <div class="space-y-3" x-show="todayEntries.length > 0">
-            <template x-for="entry in todayEntries" :key="entry.id">
-                <div class="flex items-center justify-between p-3 bg-green-50 rounded shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-green-400">
-                    <div>
-                        <p class="text-sm font-semibold text-green-900 mb-3" x-text="entry.project.name"></p>
-                        <p class="text-xs text-green-700 mb-3 flex items-center space-x-1 rtl:space-x-reverse">
-                            <!-- أيقونة مهام محسنة -->
-                            <svg class="w-4 h-4 text-yellow-700 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                <path d="M9 12l2 2 4-4"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            <span x-text="entry.task.name"></span>
-                        </p>
-                       
-                        <p class="text-xs text-green-600 flex mb-3 items-center space-x-1 rtl:space-x-reverse">
-                            <!-- أيقونة ساعة وقت محسنة -->
-                            <svg class="w-4 h-4 text-red-700 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            <span x-text="entry.start_time + ' - ' + (entry.end_time || 'جاري')"></span>
-                        </p>
-                    </div>
-                    <div class="text-right flex flex-col items-end justify-center space-y-1 rtl:space-y-reverse">
-                        <p class="text-sm font-semibold text-green-700" x-text="entry.formatted_duration"></p>
-                        <p class="text-xs text-green-500" x-text="entry.hours + ' ساعة:دقيقة'"></p>
-                    </div>
-                </div>
-            </template>
-        </div>
-        <div x-show="todayEntries.length === 0" class="text-center py-12 text-green-400">
-            <!-- أيقونة ساعة توقف محسنة -->
-            <svg class="mx-auto w-16 h-16 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="10" class="text-green-300" stroke="currentColor"></circle>
-                <line x1="12" y1="8" x2="12" y2="12" class="text-green-400" stroke="currentColor"></line>
-                <line x1="12" y1="16" x2="12" y2="16" class="text-green-400" stroke="currentColor"></line>
-            </svg>
-            <p>لم تبدأ العمل بعد اليوم</p>
+                <p class="text-lg">لم تبدأ العمل بعد اليوم</p>
+            </div>
         </div>
     </div>
-</div>
 
 </div>
+
 
 
 <!-- مودال بدء العداد -->

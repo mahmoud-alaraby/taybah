@@ -4,7 +4,7 @@
 @section('title', 'قائمة المهام اليومية')
 
 @section('content')
-<div class="max-w-5xl mx-auto p-3 lg:p-4">
+<div class="max-w-6xl mx-auto p-3 lg:p-4">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-4 lg:p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">

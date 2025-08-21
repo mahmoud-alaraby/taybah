@@ -66,10 +66,11 @@ class CustomerMovement extends Model
     /**
      * حساب إجمالي المدفوع
      */
-    public function getTotalPaidAttribute(): float
-    {
-        return $this->first_payment + $this->second_payment + $this->third_payment + $this->fourth_payment;
-    }
+  // حساب إجمالي المدفوع لكل سجل
+public function getTotalPaidAttribute(): float
+{
+    return $this->first_payment + $this->second_payment + $this->third_payment + $this->fourth_payment;
+}
 
     /**
      * الحصول على أنواع العملاء
@@ -100,26 +101,24 @@ class CustomerMovement extends Model
         ];
     }
 
-    /**
-     * scope للبحث
-     */
-    public function scopeSearch($query, $search)
-    {
-        return $query->where(function ($q) use ($search) {
-            $q->where('customer_name', 'like', '%' . $search . '%')
-              ->orWhere('customer_phone', 'like', '%' . $search . '%')
-              ->orWhere('work_description', 'like', '%' . $search . '%');
-        });
-    }
+  
+// scope للبحث النصي
+public function scopeSearch($query, $search)
+{
+    return $query->where(function ($q) use ($search) {
+        $q->where('customer_name', 'like', '%' . $search . '%')
+          ->orWhere('customer_phone', 'like', '%' . $search . '%')
+          ->orWhere('work_description', 'like', '%' . $search . '%');
+    });
+}
 
-    /**
-     * scope للفترة
-     */
-    public function scopeForPeriod($query, $year, $month)
-    {
-        return $query->whereYear('agreement_start_date', $year)
-                    ->whereMonth('agreement_start_date', $month);
-    }
+   
+// scope للفترة (سنة وشهر)
+public function scopeForPeriod($query, $year, $month)
+{
+    return $query->whereYear('agreement_start_date', $year)
+                 ->whereMonth('agreement_start_date', $month);
+}
 
     /**
      * scope للموظف الحالي
@@ -129,56 +128,55 @@ class CustomerMovement extends Model
         return $query->where('employee_id', auth('employee')->id());
     }
 
-    /**
-     * الحصول على إجمالي المبالغ المتفق عليها لشهر معين
-     */
-    public static function getTotalAgreedForMonth($year, $month, $employeeId = null)
-    {
-        $query = self::whereYear('agreement_start_date', $year)
-                    ->whereMonth('agreement_start_date', $month);
-        
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
-        }
-        
-        return $query->sum('agreed_amount');
+  
+// الحصول على إجمالي المبالغ المتفق عليها لشهر معين وموظف (اختياري)
+public static function getTotalAgreedForMonth($year, $month, $employeeId = null)
+{
+    $query = self::whereYear('agreement_start_date', $year)
+                 ->whereMonth('agreement_start_date', $month);
+
+    if ($employeeId) {
+        $query->where('employee_id', $employeeId);
     }
 
-    /**
-     * الحصول على إجمالي المبالغ المدفوعة لشهر معين
-     */
-    public static function getTotalPaidForMonth($year, $month, $employeeId = null)
-    {
-        $query = self::whereYear('agreement_start_date', $year)
-                    ->whereMonth('agreement_start_date', $month);
-        
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
-        }
-        
-        $results = $query->selectRaw('
-            SUM(first_payment + second_payment + third_payment + fourth_payment) as total_paid
-        ')->first();
-        
-        return $results->total_paid ?? 0;
+    return $query->sum('agreed_amount');
+}
+
+
+   
+public static function getTotalPaidForMonth($year, $month, $employeeId = null)
+{
+    $query = self::whereYear('agreement_start_date', $year)
+                 ->whereMonth('agreement_start_date', $month);
+
+    if ($employeeId) {
+        $query->where('employee_id', $employeeId);
     }
 
-    /**
-     * الحصول على إجمالي الديون لشهر معين
-     */
-    public static function getTotalDebtsForMonth($year, $month, $employeeId = null)
-    {
-        $query = self::whereYear('agreement_start_date', $year)
-                    ->whereMonth('agreement_start_date', $month);
-        
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
-        }
-        
-        $results = $query->selectRaw('
-            SUM(agreed_amount - (first_payment + second_payment + third_payment + fourth_payment)) as total_debts
-        ')->first();
-        
-        return $results->total_debts ?? 0;
+    // بدل استخدام SUM(first_payment + second_payment + ...) بشكل مباشر،
+    // يمكن استخدام دالة sum للحقول منفصلة ثم جمعهم برمجياً إذا كانت هناك مشكلة
+
+    $totalFirstPayment = (clone $query)->sum('first_payment');
+    $totalSecondPayment = (clone $query)->sum('second_payment');
+    $totalThirdPayment = (clone $query)->sum('third_payment');
+    $totalFourthPayment = (clone $query)->sum('fourth_payment');
+
+    return $totalFirstPayment + $totalSecondPayment + $totalThirdPayment + $totalFourthPayment;
+}
+
+   
+// الحصول على إجمالي الديون لشهر معين وموظف (اختياري)
+public static function getTotalDebtsForMonth($year, $month, $employeeId = null)
+{
+    $query = self::whereYear('agreement_start_date', $year)
+                 ->whereMonth('agreement_start_date', $month);
+
+    if ($employeeId) {
+        $query->where('employee_id', $employeeId);
     }
+
+    $results = $query->selectRaw('SUM(agreed_amount - (first_payment + second_payment + third_payment + fourth_payment)) as total_debts')->first();
+
+    return $results->total_debts ?? 0;
+}
 }

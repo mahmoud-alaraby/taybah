@@ -157,12 +157,12 @@
             <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
                 <button type="submit" 
                         class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-save mr-2"></i>
+                    <i class="fas fa-save ml-2"></i>
                     حفظ الحدث
                 </button>
                 <a href="{{ route('employee.renewal-dates.index') }}" 
                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors text-center inline-flex items-center justify-center">
-                    <i class="fas fa-times mr-2"></i>
+                    <i class="fas fa-times ml-2"></i>
                     إلغاء
                 </a>
             </div>
@@ -172,7 +172,7 @@
     <!-- Help Section -->
     <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h4 class="text-lg font-semibold text-blue-800 flex items-center mb-3">
-            <i class="fas fa-info-circle mr-2"></i>
+            <i class="fas fa-info-circle ml-2"></i>
             معلومات مفيدة
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">

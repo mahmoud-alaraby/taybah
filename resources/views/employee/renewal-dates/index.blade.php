@@ -401,10 +401,10 @@
                                                 class="text-green-600 hover:text-green-900 transition-colors p-1 rounded" title="مكتمل">
                                             <i class="fas fa-check"></i>
                                         </button>
-                                        <button onclick="renewEvent({{ $renewal->id }})" 
+                                        <!-- <button onclick="renewEvent({{ $renewal->id }})" 
                                                 class="text-purple-600 hover:text-purple-900 transition-colors p-1 rounded" title="تجديد">
                                             <i class="fas fa-refresh"></i>
-                                        </button>
+                                        </button> -->
                                     @endif
                                     <!-- زر الحذف -->
                                     <button type="button" 

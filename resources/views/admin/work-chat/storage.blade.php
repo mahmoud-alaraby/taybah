@@ -17,50 +17,47 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- إحصائيات عامة -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-hdd text-white text-sm"></i>
-                    </div>
-                </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">إجمالي المساحة</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ formatBytes($totalSize) }}</p>
-                </div>
+ <!-- إحصائيات عامة مع التصميم العصري -->
+<div class=" px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <!-- إجمالي المساحة -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl p-4 text-white shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90">إجمالي المساحة</p>
+                <p class="text-2xl font-bold">{{ formatBytes($totalSize) }}</p>
             </div>
+            <svg class="w-8 h-8 opacity-80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 13l4 4L19 7" />
+            </svg>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-file text-white text-sm"></i>
-                    </div>
-                </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">عدد الملفات</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($fileCount) }}</p>
-                </div>
+        <!-- عدد الملفات -->
+        <div class="bg-gradient-to-r from-green-500 to-green-700 rounded-xl p-4 text-white shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90">عدد الملفات</p>
+                <p class="text-2xl font-bold">{{ number_format($fileCount) }}</p>
             </div>
+            <svg class="w-8 h-8 opacity-80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-3-3v6m-6-6v12a2 2 0 002 2h8a2 2 0 002-2V9l-6-6-6 6z"/>
+            </svg>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clock text-white text-sm"></i>
-                    </div>
-                </div>
-                <div class="mr-3 flex-1">
-                    <p class="text-sm font-medium text-gray-500">ملفات قديمة (+3 شهور)</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $oldFiles->count ?? 0 }}</p>
-                </div>
+        <!-- ملفات قديمة (+3 شهور) -->
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90">ملفات قديمة (+3 شهور)</p>
+                <p class="text-2xl font-bold">{{ $oldFiles->count ?? 0 }}</p>
             </div>
+            <svg class="w-8 h-8 opacity-80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
         </div>
     </div>
+</div>
+
 
     <!-- إحصائيات تفصيلية -->
     <div class="bg-white shadow rounded-lg">

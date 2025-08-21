@@ -344,7 +344,7 @@
     @foreach($project->tasks as $task)
         <div class="relative bg-white p-6 rounded-xl shadow-lg overflow-hidden group">
             <!-- Gradient Border from right -->
-            <div class="absolute top-0 right-0 h-full w-2 rounded-l-xl bg-gradient-to-b from-red-400 via-red-500 to-red-700"></div>
+            <div class="absolute top-0 right-0 h-full w-2 rounded-l-xl bg-gradient-to-b from-red-400 via-green-500 to-red-700"></div>
 
             <div class="flex justify-between items-start space-x-4 space-x-reverse">
                 <div class="flex-1">
@@ -441,7 +441,7 @@
                         <span>{{ number_format(min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100), 1) }}%</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="h-2 rounded-full {{ $task->total_tracked_hours > $task->estimated_hours ? 'bg-red-500' : 'bg-indigo-600' }}" 
+                        <div class="h-2 rounded-full {{ $task->total_tracked_hours > $task->estimated_hours ? 'bg-green-500' : 'bg-indigo-600' }}" 
                              style="width: {{ min(100, ($task->total_tracked_hours / $task->estimated_hours) * 100) }}%"></div>
                     </div>
                 </div>

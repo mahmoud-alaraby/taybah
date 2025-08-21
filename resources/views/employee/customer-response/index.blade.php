@@ -56,7 +56,7 @@
             @forelse($categories as $cat)
                 <div class="flex items-center justify-between border rounded p-3 bg-gray-50 hover:shadow">
                     <div class="flex items-center gap-5">
-                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 text-xl">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-red-600 text-xl">
                             <i class="{{ $cat->icon ?? 'fas fa-tag' }}"></i>
                         </span>
                         <span class="font-semibold text-lg">{{ $cat->name }}</span>

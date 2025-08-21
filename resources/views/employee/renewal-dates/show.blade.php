@@ -197,11 +197,11 @@
                         <i class="fas fa-check ml-2"></i>
                         تحديد كمكتمل
                     </button>
-                    <button onclick="renewEvent({{ $renewalDate->id }})" 
+                    <!-- <button onclick="renewEvent({{ $renewalDate->id }})" 
                             class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors inline-flex items-center justify-center">
                         <i class="fas fa-refresh ml-2"></i>
                         إنشاء تجديد جديد
-                    </button>
+                    </button> -->
                     <a href="{{ route('employee.renewal-dates.edit', $renewalDate) }}" 
                        class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg transition-colors inline-flex items-center justify-center">
                         <i class="fas fa-edit ml-2"></i>

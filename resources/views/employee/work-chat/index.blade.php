@@ -8,7 +8,7 @@
 <div class="space-y-6">
     <!-- Header with Filter Tabs -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+        <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
             <h2 class="text-xl font-semibold text-white flex items-center">
                 <i class="fas fa-comments ml-3"></i>
                 شاتات العمل
@@ -255,7 +255,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div class="bg-white rounded-lg p-4 shadow-sm">
                 <div class="flex items-center mb-3">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center ml-3">
                         <i class="fas fa-comment text-white text-xs"></i>
                     </div>
                     <h5 class="font-medium text-gray-900">الرسائل</h5>
@@ -265,7 +265,7 @@
             
             <div class="bg-white rounded-lg p-4 shadow-sm">
                 <div class="flex items-center mb-3">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center ml-3">
                         <i class="fas fa-file text-white text-xs"></i>
                     </div>
                     <h5 class="font-medium text-gray-900">المرفقات</h5>
@@ -275,7 +275,7 @@
             
             <div class="bg-white rounded-lg p-4 shadow-sm">
                 <div class="flex items-center mb-3">
-                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center ml-3">
                         <i class="fas fa-bell text-white text-xs"></i>
                     </div>
                     <h5 class="font-medium text-gray-900">الإشعارات</h5>
@@ -285,7 +285,7 @@
             
             <div class="bg-white rounded-lg p-4 shadow-sm">
                 <div class="flex items-center mb-3">
-                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center ml-3">
                         <i class="fas fa-link text-white text-xs"></i>
                     </div>
                     <h5 class="font-medium text-gray-900">المشاركة</h5>

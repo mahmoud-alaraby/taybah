@@ -84,7 +84,7 @@ $payments = \App\Models\PhotographyCost::where('type', 'payment')
                 <div>
                     <div class="mb-2 text-gray-800 font-semibold text-base">المقبوضات</div>
                     <div class="w-full bg-gray-100 rounded-full h-6">
-                        <div style="width: {{ $receipts + $payments > 0 ? ($receipts/($receipts+$payments))*100 : 0 }}%" class="h-6 bg-green-500 rounded-full flex items-center pl-2 text-white font-bold text-base">
+                        <div style="width: {{ $receipts + $payments > 0 ? ($receipts/($receipts+$payments))*100 : 0 }}%" class="h-6 bg-green-500 rounded-full flex items-center pl-2 text-white font-bold text-sm">
                             {{ number_format($receipts,2) }} ريال
                         </div>
                     </div>
@@ -92,7 +92,7 @@ $payments = \App\Models\PhotographyCost::where('type', 'payment')
                 <div>
                     <div class="mb-2 text-gray-800 font-semibold text-base">المدفوعات</div>
                     <div class="w-full bg-gray-100 rounded-full h-6">
-                        <div style="width: {{ $receipts + $payments > 0 ? ($payments/($receipts+$payments))*100 : 0 }}%" class="h-6 bg-yellow-400 rounded-full flex items-center pl-2 text-white font-bold text-base">
+                        <div style="width: {{ $receipts + $payments > 0 ? ($payments/($receipts+$payments))*100 : 0 }}%" class="h-6 bg-yellow-400 rounded-full flex items-center pl-2 text-white font-bold text-sm">
                             {{ number_format($payments,2) }} ريال
                         </div>
                     </div>

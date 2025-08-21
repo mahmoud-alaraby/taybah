@@ -112,6 +112,52 @@ class PotentialCustomerController extends Controller
         return redirect()->route('admin.potential-customers.index')->with('success', 'تم تحديث العميل المحتمل بنجاح');
     }
     
+    public function printReport(Request $request)
+{
+    $search = $request->get('search');
+    $employeeId = $request->get('employee_id');
+    $classificationName = $request->get('classification'); // لتصفية حسب تصنيف
+
+    $query = \App\Models\PotentialCustomer::with('employee')
+        ->orderBy('created_at', 'desc');
+
+    if ($employeeId) {
+        $query->where('employee_id', $employeeId);
+    }
+
+    if ($classificationName) {
+        $query->withClassification($classificationName);
+    }
+
+    if ($search) {
+        $query->search($search);
+    }
+
+    $customers = $query->get();
+
+    // جلب الموظف المحدد (إن وجد)
+    $selectedEmployee = $employeeId ? \App\Models\Employee::find($employeeId) : null;
+
+    // جلب التصنيف المحدد (إن وجد)
+    $selectedClassification = $classificationName ? \App\Models\PotentialCustomerClassification::where('name', $classificationName)->first() : null;
+
+    // إحصائيات التصنيفات: مصفوفة من ['display_name'=>..., 'count'=>...]
+    $classificationStats = \App\Models\PotentialCustomer::getClassificationStats($employeeId);
+
+    // مجموع العملاء الكلي
+    $totalCustomers = $customers->count();
+
+    // تمرير كل المتغيرات إلى الفيو
+    return view('admin.potential-customers.print-report', compact(
+        'customers',
+        'selectedEmployee',
+        'selectedClassification',
+        'search',
+        'classificationStats',
+        'totalCustomers'
+    ));
+}
+
     public function destroy(PotentialCustomer $potentialCustomer)
     {
         $potentialCustomer->delete();

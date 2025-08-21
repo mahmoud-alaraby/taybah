@@ -60,10 +60,10 @@
         </div>
         <div class="md:col-span-4 flex justify-end space-x-2 space-x-reverse">
             <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-blue-700">
-                <i class="fas fa-search ml-1"></i> بحث
+                <i class="fas fa-search ml-2"></i> بحث
             </button>
             <a href="{{ route('admin.employees.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
-                <i class="fas fa-times ml-1"></i> إلغاء
+                <i class="fas fa-times ml-2"></i> إلغاء
             </a>
         </div>
     </form>
@@ -132,12 +132,12 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $employee->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            <i class="fas {{ $employee->status == 'active' ? 'fa-check-circle' : 'fa-times-circle' }} ml-1"></i>
+                                            <i class="fas {{ $employee->status == 'active' ? 'fa-check-circle' : 'fa-times-circle' }} ml-2"></i>
                                             {{ $employee->status == 'active' ? 'نشط' : 'غير نشط' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <i class="fas fa-calendar-alt ml-1"></i>
+                                        <i class="fas fa-calendar-alt ml-2"></i>
                                         {{ $employee->hire_date ? $employee->hire_date->format('Y-m-d') : '-' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">

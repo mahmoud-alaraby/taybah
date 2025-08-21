@@ -186,9 +186,9 @@
                         <button onclick="markCompleted({{ $renewalDate->id }})" class="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 flex items-center justify-center gap-2">
                             <i class="fas fa-check"></i> تحديد كمكتمل
                         </button>
-                        <button onclick="renewEvent({{ $renewalDate->id }})" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg py-3 flex items-center justify-center gap-2">
+                        <!-- <button onclick="renewEvent({{ $renewalDate->id }})" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg py-3 flex items-center justify-center gap-2">
                             <i class="fas fa-refresh"></i> إنشاء تجديد جديد
-                        </button>
+                        </button> -->
                         <a href="{{ route('admin.renewal-dates.edit', $renewalDate) }}" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg py-3 flex items-center justify-center gap-2">
                             <i class="fas fa-edit"></i> تعديل الحدث
                         </a>
