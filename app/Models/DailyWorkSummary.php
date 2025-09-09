@@ -12,6 +12,7 @@ class DailyWorkSummary extends Model
 
     protected $fillable = [
         'employee_id',
+        'employee_type',
         'date',
         'total_work_hours',
         'overtime_hours',
@@ -30,48 +31,21 @@ class DailyWorkSummary extends Model
     // Relations
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(\App\Models\Employee::class, 'employee_id');
     }
 
-    // Methods
-    public static function generateForEmployee($employeeId, $date = null)
+    public function admin()
     {
-        $date = $date ?? Carbon::today();
-        
-        $timeEntries = TimeTracking::forEmployee($employeeId)
-            ->forDate($date)
-            ->with(['project', 'task'])
-            ->get();
+        return $this->belongsTo(\App\Models\Admin::class, 'employee_id');
+    }
 
-        $totalHours = $timeEntries->sum('hours');
-        $overtimeHours = max(0, $totalHours - 7);
-        $targetPercentage = min(100, ($totalHours / 7) * 100);
-
-        $projectsWorked = $timeEntries->groupBy('project_id')->map(function($entries, $projectId) {
-            $project = $entries->first()->project;
-            return [
-                'project_id' => $projectId,
-                'project_name' => $project->name,
-                'hours' => $entries->sum('hours'),
-                'tasks' => $entries->map(function($entry) {
-                    return [
-                        'task_id' => $entry->task_id,
-                        'task_name' => $entry->task->name,
-                        'hours' => $entry->hours,
-                    ];
-                })->toArray()
-            ];
-        })->values()->toArray();
-
-        return self::updateOrCreate(
-            ['employee_id' => $employeeId, 'date' => $date],
-            [
-                'total_work_hours' => $totalHours,
-                'overtime_hours' => $overtimeHours,
-                'projects_worked' => $projectsWorked,
-                'daily_target_percentage' => $targetPercentage,
-            ]
-        );
+    // Accessor للحصول على المستخدم حسب النوع
+    public function getUserAttribute()
+    {
+        if ($this->employee_type === 'admin') {
+            return $this->admin;
+        }
+        return $this->employee;
     }
 
     // Scopes
@@ -80,5 +54,81 @@ class DailyWorkSummary extends Model
         return $query->whereYear('date', $year)->whereMonth('date', $month);
     }
 
+    public function scopeForEmployee($query, $employeeId, $type = 'employee')
+    {
+        return $query->where('employee_id', $employeeId)->where('employee_type', $type);
+    }
 
+    public function scopeForDate($query, $date)
+    {
+        return $query->whereDate('date', $date);
+    }
+
+    // Methods
+    public static function generateForEmployee($employeeId, $date, $employeeType = 'employee')
+    {
+        $timeEntries = TimeTracking::where('employee_id', $employeeId)
+            ->where('employee_type', $employeeType)
+            ->whereDate('date', $date)
+            ->with(['project', 'task'])
+            ->get();
+
+        $totalSeconds = $timeEntries->sum('total_seconds');
+        $totalHours = $totalSeconds / 3600;
+        $overtimeHours = max(0, $totalHours - 7);
+        $targetPercentage = $totalHours > 0 ? min(100, ($totalHours / 7) * 100) : 0;
+
+        $projectsWorked = $timeEntries->groupBy('project_id')->map(function($entries, $projectId) {
+            $project = $entries->first()->project;
+            return [
+                'project_id' => $projectId,
+                'project_name' => $project ? $project->name : 'مشروع محذوف',
+                'hours' => round($entries->sum('total_seconds') / 3600, 2),
+                'tasks' => $entries->map(function($entry) {
+                    return [
+                        'task_id' => $entry->task_id,
+                        'task_name' => $entry->task ? $entry->task->name : 'مهمة محذوفة',
+                        'hours' => round($entry->total_seconds / 3600, 2),
+                        'description' => $entry->description
+                    ];
+                })->toArray()
+            ];
+        })->values()->toArray();
+
+        return self::updateOrCreate(
+            [
+                'employee_id' => $employeeId,
+                'employee_type' => $employeeType,
+                'date' => $date
+            ],
+            [
+                'total_work_hours' => round($totalHours, 2),
+                'overtime_hours' => round($overtimeHours, 2),
+                'projects_worked' => $projectsWorked,
+                'daily_target_percentage' => round($targetPercentage, 2),
+            ]
+        );
+    }
+
+    // Accessors
+    public function getFormattedTotalHoursAttribute()
+    {
+        return $this->formatHoursMinutes($this->total_work_hours);
+    }
+
+    public function getFormattedOvertimeHoursAttribute()
+    {
+        return $this->formatHoursMinutes($this->overtime_hours);
+    }
+
+    private function formatHoursMinutes($hours)
+    {
+        if ($hours < 0) $hours = 0;
+        
+        $totalMinutes = round($hours * 60);
+        $displayHours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        
+        return sprintf('%02d:%02d', $displayHours, $minutes);
+    }
 }

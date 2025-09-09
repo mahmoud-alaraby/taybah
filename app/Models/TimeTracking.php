@@ -1,5 +1,4 @@
 <?php
-// تحديث TimeTracking Model لتحديث حالة المهام تلقائياً
 
 namespace App\Models;
 
@@ -10,6 +9,8 @@ use Carbon\Carbon;
 class TimeTracking extends Model
 {
     use HasFactory;
+
+    protected $table = 'time_trackings';
 
     protected $fillable = [
         'employee_id',
@@ -28,15 +29,11 @@ class TimeTracking extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'date' => 'date',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'total_seconds' => 'integer',
     ];
 
     // Relations
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class);
-    }
-
     public function project()
     {
         return $this->belongsTo(Project::class);
@@ -47,105 +44,86 @@ class TimeTracking extends Model
         return $this->belongsTo(ProjectTask::class, 'task_id');
     }
 
-    // Accessors
-    public function getFormattedDurationAttribute()
+    public function employee()
     {
-        $hours = floor($this->total_seconds / 3600);
-        $minutes = floor(($this->total_seconds % 3600) / 60);
-        $seconds = $this->total_seconds % 60;
-        
-        return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+        return $this->belongsTo(\App\Models\Employee::class, 'employee_id');
     }
 
-    public function getHoursAttribute()
+    public function admin()
     {
-        return round($this->total_seconds / 3600, 2);
+        return $this->belongsTo(\App\Models\Admin::class, 'employee_id');
     }
 
-    // Methods
-    public static function startTimer($employeeId, $projectId, $taskId, $description = null)
+    // Accessor للحصول على المستخدم حسب النوع
+    public function getUserAttribute()
     {
-        // إيقاف أي timer نشط للموظف
-        self::where('employee_id', $employeeId)
-            ->where('is_active', true)
-            ->each(function($timer) {
-                $timer->stopTimer();
-            });
-
-        return self::create([
-            'employee_id' => $employeeId,
-            'project_id' => $projectId,
-            'task_id' => $taskId,
-            'start_time' => now(),
-            'description' => $description,
-            'date' => Carbon::today(),
-            'is_active' => true,
-            'total_seconds' => 0,
-        ]);
-    }
-
-    public function stopTimer()
-    {
-        $this->end_time = now();
-        $this->total_seconds = $this->start_time->diffInSeconds($this->end_time);
-        $this->is_active = false;
-        $this->save();
-
-        // تحديث actual_hours في المهمة
-        if ($this->task) {
-            $oldActualHours = $this->task->actual_hours;
-            $this->task->increment('actual_hours', $this->hours);
-            
-            // تحديث حالة المهمة تلقائياً
-            $this->updateTaskStatus();
+        if ($this->employee_type === 'admin') {
+            return $this->admin;
         }
-
-        return $this;
-    }
-
-    // تحديث حالة المهمة بناءً على الساعات المنجزة
-    private function updateTaskStatus()
-    {
-        $task = $this->task;
-        
-        if (!$task || $task->status === 'completed') {
-            return;
-        }
-
-        $completionPercentage = 0;
-        if ($task->estimated_hours > 0) {
-            $completionPercentage = ($task->actual_hours / $task->estimated_hours) * 100;
-        }
-
-        // تحديث الحالة بناءً على نسبة الإنجاز
-        if ($completionPercentage >= 100) {
-            $task->update([
-                'status' => 'completed',
-                'completed_at' => now()
-            ]);
-        } elseif ($completionPercentage >= 10 && $task->status === 'pending') {
-            $task->update([
-                'status' => 'in_progress'
-            ]);
-        }
+        return $this->employee;
     }
 
     // Scopes
+    public function scopeForDate($query, $date)
+    {
+        return $query->whereDate('date', $date);
+    }
+
+    public function scopeForEmployee($query, $employeeId, $type = 'employee')
+    {
+        return $query->where('employee_id', $employeeId)->where('employee_type', $type);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    public function scopeForDate($query, $date)
+    // Methods
+    public function stopTimer()
     {
-        return $query->where('date', $date);
+        if ($this->is_active) {
+            $endTime = now();
+            $totalSeconds = $this->start_time->diffInSeconds($endTime);
+            
+            $this->update([
+                'end_time' => $endTime,
+                'total_seconds' => $totalSeconds,
+                'is_active' => false,
+            ]);
+
+            // تحديث actual_hours في المهمة
+            if ($this->task) {
+                $this->task->increment('actual_hours', $totalSeconds / 3600);
+            }
+        }
+        
+        return $this;
     }
 
-    public function scopeForEmployee($query, $employeeId)
+    // Accessor للوقت المنسق
+    public function getFormattedDurationAttribute()
     {
-        return $query->where('employee_id', $employeeId);
+        return $this->formatHoursMinutes($this->total_seconds / 3600);
     }
 
+    public function getCurrentDurationAttribute()
+    {
+        if ($this->is_active) {
+            $currentSeconds = $this->start_time->diffInSeconds(now());
+            return $this->formatHoursMinutes($currentSeconds / 3600);
+        }
+        return $this->formatted_duration;
+    }
 
-
+    private function formatHoursMinutes($hours)
+    {
+        if ($hours < 0) $hours = 0;
+        
+        $totalMinutes = round($hours * 60);
+        $displayHours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        
+        return sprintf('%02d:%02d', $displayHours, $minutes);
+    }
 }

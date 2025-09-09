@@ -194,11 +194,7 @@ if (!function_exists('formatTime12h')) {
                 <i class="fas fa-chart-line ml-2"></i>
                 التقارير
             </a>
-            <button @click="refreshTodayEntries()" 
-                    class="inline-flex items-center px-3 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">
-                <i class="fas fa-sync-alt ml-2"></i>
-                تحديث
-            </button>
+         
         </div>
     </div>
 

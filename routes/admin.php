@@ -70,27 +70,28 @@ Route::middleware('admin.auth')->group(function () {
 
 
     // نظام متابعة المشاريع والمهام للأدمن الشخصي
-    Route::prefix('project-tracking')->name('admin.project-tracking.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'index'])->name('index');
-        
-        // البصمة الشخصية للأدمن
-        Route::post('/check-in', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkIn'])->name('check-in');
-        Route::post('/check-out', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkOut'])->name('check-out');
-        
-        // الاستوب ووتش الشخصي للأدمن
-        Route::post('/start-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'startTimer'])->name('start-timer');
-        Route::post('/stop-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
-        Route::post('/pause-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
-        Route::get('/active-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
-        Route::get('/today-entries', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
-        
-        // إنشاء مشاريع ومهام شخصية للأدمن
-        Route::post('/create-project', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'createProject'])->name('create-project');
-        Route::post('/add-task', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
-        
-        // التقارير الشخصية للأدمن
-        Route::get('/reports', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'reports'])->name('reports');
-    });
+  // نظام متابعة المشاريع والمهام للأدمن الشخصي
+Route::prefix('project-tracking')->name('admin.project-tracking.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'index'])->name('index');
+    
+    // البصمة الشخصية للأدمن
+    Route::post('/check-in', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkIn'])->name('check-in');
+    Route::post('/check-out', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkOut'])->name('check-out');
+    
+    // الاستوب ووتش الشخصي للأدمن
+    Route::post('/start-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'startTimer'])->name('start-timer');
+    Route::post('/stop-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
+    Route::post('/pause-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
+    Route::get('/active-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
+    Route::get('/today-entries', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
+    
+    // إنشاء مشاريع ومهام شخصية للأدمن
+    Route::post('/create-project', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'createProject'])->name('create-project');
+    Route::post('/add-task', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
+    
+    // التقارير الشخصية للأدمن
+    Route::get('/reports', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'reports'])->name('reports');
+});
     // إدارة المقبوضات والمدفوعات
     Route::prefix('receipts-payments')->name('admin.receipts-payments.')->group(function () {
         Route::get('/', [ReceiptsPaymentsController::class, 'index'])->name('index');

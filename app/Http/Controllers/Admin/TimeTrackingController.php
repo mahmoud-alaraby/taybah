@@ -12,45 +12,61 @@ use Carbon\Carbon;
 
 class TimeTrackingController extends Controller
 {
-    public function index(Request $request)
-    {
-        $date = $request->get('date', Carbon::today()->format('Y-m-d'));
-        $employeeId = $request->get('employee_id');
-        $projectId = $request->get('project_id');
+  public function index(Request $request)
+{
+    $date = $request->get('date', Carbon::today()->format('Y-m-d'));
+    $employeeId = $request->get('employee_id');
+    $projectId = $request->get('project_id');
 
-        $query = TimeTracking::with(['employee', 'project', 'task'])
-            ->where('date', $date);
+    $query = TimeTracking::with(['employee', 'admin', 'project', 'task'])
+        ->where('date', $date);
 
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
-        }
-
-        if ($projectId) {
-            $query->where('project_id', $projectId);
-        }
-
-        $timeEntries = $query->orderBy('start_time', 'desc')->get();
-        $employees = Employee::active()->get();
-        $projects = Project::where('status', 'active')->get();
-
-        // إحصائيات اليوم - مع التحقق من وجود البيانات
-        $dailyStats = [
-            'total_hours' => $timeEntries->sum('hours') ?: 0,
-            'active_sessions' => $timeEntries->where('is_active', true)->count(),
-            'employees_working' => $timeEntries->pluck('employee_id')->unique()->count(),
-            'projects_active' => $timeEntries->pluck('project_id')->unique()->count(),
-        ];
-
-        return view('admin.time-tracking.index', compact(
-            'timeEntries',
-            'employees',
-            'projects',
-            'date',
-            'employeeId',
-            'projectId',
-            'dailyStats'
-        ));
+    if ($employeeId) {
+        $query->where('employee_id', $employeeId);
     }
+
+    if ($projectId) {
+        $query->where('project_id', $projectId);
+    }
+
+    $timeEntries = $query->orderBy('start_time', 'desc')->get();
+
+    // جلب جميع الموظفين والنشطاء فقط
+    $employees = Employee::active()->get();
+
+    // جلب جميع الـ admins النشطين
+    $admins = \App\Models\Admin::where('status', 'active')->get();
+
+    // دمج المجموعتين (يمكنك دمجهم في مجموعة واحدة)
+    $users = $employees->map(function ($item) {
+        $item->type = 'employee';
+        return $item;
+    })->merge($admins->map(function ($item) {
+        $item->type = 'admin';
+        return $item;
+    }));
+
+    $projects = Project::where('status', 'active')->get();
+
+    // إحصائيات اليوم - مع التحقق من وجود البيانات
+    $dailyStats = [
+        'total_hours' => $timeEntries->sum('hours') ?: 0,
+        'active_sessions' => $timeEntries->where('is_active', true)->count(),
+        'employees_working' => $timeEntries->pluck('employee_id')->unique()->count(),
+        'projects_active' => $timeEntries->pluck('project_id')->unique()->count(),
+    ];
+
+    return view('admin.time-tracking.index', compact(
+        'timeEntries',
+        'users',
+        'projects',
+        'date',
+        'employeeId',
+        'projectId',
+        'dailyStats'
+    ));
+}
+
 
     public function reports(Request $request)
     {

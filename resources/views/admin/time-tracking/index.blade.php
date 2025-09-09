@@ -18,12 +18,14 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">الموظف</label>
                 <select name="employee_id" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
                     <option value="">جميع الموظفين</option>
-                    @foreach($employees as $employee)
-                        <option value="{{ $employee->id }}" {{ $employeeId == $employee->id ? 'selected' : '' }}>
-                            {{ $employee->name }}
-                        </option>
-                    @endforeach
+                   @foreach($users as $user)
+    <option value="{{ $user->id }}" {{ $employeeId == $user->id ? 'selected' : '' }}>
+        {{ $user->name }} @if($user->type == 'admin') (أدمن) @endif
+    </option>
+@endforeach
+
                 </select>
+                
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">المشروع</label>
@@ -139,13 +141,16 @@
                                         <div class="flex-shrink-0 h-8 w-8">
                                             <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                                                 <span class="text-xs font-medium text-gray-700">
-                                                    {{ mb_substr($entry->employee->name, 0, 1) }}
+                                                 {{ mb_substr(optional($entry->user)->name ?? 'غير معروف', 0, 1) }}
+
                                                 </span>
                                             </div>
                                         </div>
                                         <div class="mr-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ $entry->employee->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $entry->employee->employee_id }}</div>
+                                            <div class="text-sm font-medium text-gray-900">{{ optional($entry->user)->name ?? 'غير معروف' }}
+</div>
+                                            <div class="text-sm text-gray-500">{{ optional($entry->user)->employee_id ?? '' }}
+</div>
                                         </div>
                                     </div>
                                 </td>
