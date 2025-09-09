@@ -140,4 +140,46 @@ class Project extends Model
             $q->where('assigned_to', $employeeId);
         });
     }
+
+    // إضافة scope للمشاريع النشطة
+
+// إضافة accessor لنسبة الإنجاز
+   /**
+
+
+
+     * Scope للمشاريع المكتملة  
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+
+    /**
+     * إجمالي الساعات المقدرة
+     */
+    public function getTotalEstimatedHoursAttribute()
+    {
+        return $this->tasks()->sum('estimated_hours');
+    }
+
+    /**
+     * إجمالي الساعات الفعلية
+     */
+    public function getTotalActualHoursAttribute()
+    {
+        return $this->tasks()->sum('actual_hours');
+    }
+    public function creatorEmployee()
+{
+    return $this->belongsTo(Employee::class, 'created_by')->where('created_by_type', 'employee');
 }
+
+public function creatorAdmin()
+{
+    return $this->belongsTo(Admin::class, 'created_by')->where('created_by_type', 'admin');
+}
+
+}
+

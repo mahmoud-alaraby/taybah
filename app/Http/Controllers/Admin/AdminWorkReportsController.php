@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Models\TimeTracking;
 use App\Models\Project;
 use App\Models\Employee;
+use App\Models\Admin;
 
 class AdminWorkReportsController extends Controller
 {
@@ -30,7 +31,7 @@ class AdminWorkReportsController extends Controller
 
     private function dailyReport($employeeId, $projectId, $date)
     {
-        $query = TimeTracking::with(['project','task','employee'])
+        $query = TimeTracking::with(['project','task'])
             ->whereDate('date', $date);
 
         if ($employeeId) $query->where('employee_id', $employeeId);
@@ -38,20 +39,38 @@ class AdminWorkReportsController extends Controller
 
         $entries = $query->get();
 
-        $grouped = $entries->groupBy('employee_id')->map(function($rows){
+        // استعلام لتحميل بيانات الأدمن أو الموظف بناء على employee_type
+        $employeeIds = $entries->pluck('employee_id')->unique();
+        $employeeTypes = $entries->pluck('employee_type');
+
+        // تحميل جميع الموظفين والأدمن المرتبطين في الوقت نفسه
+        $employees = Employee::whereIn('id', $employeeIds)->get()->keyBy('id');
+        $admins = Admin::whereIn('id', $employeeIds)->get()->keyBy('id');
+
+        $grouped = $entries->groupBy('employee_id')->map(function($rows) use ($employees, $admins) {
+            $first = $rows->first();
+            $person = null;
+
+            if ($first->employee_type == 'admin') {
+                $person = $admins->get($first->employee_id);
+            } else {
+                $person = $employees->get($first->employee_id);
+            }
+
             return [
-                'employee' => $rows->first()->employee,
-                'projects' => $rows->groupBy('project_id')->map(function($pRows){
+                'employee' => $person,
+                'projects' => $rows->groupBy('project_id')->map(function($pRows) {
                     return [
                         'project' => $pRows->first()->project,
-                        'tasks'   => $pRows->groupBy('task_id')->map(function($tRows){
+                        'tasks'   => $pRows->groupBy('task_id')->map(function($tRows) {
                             $hours = $tRows->sum('hours');
+
                             return [
                                 'task' => $tRows->first()->task,
                                 'hours' => $hours,
                                 'target' => 7,
-                                'achievement' => round(($hours/7)*100,1),
-                                'overtime' => max(0, $hours - 7)
+                                'achievement' => round(($hours / 7) * 100, 1),
+                                'overtime' => max(0, $hours - 7),
                             ];
                         })->values()
                     ];
@@ -73,7 +92,7 @@ class AdminWorkReportsController extends Controller
         $start = Carbon::parse($date)->startOfWeek();
         $end   = Carbon::parse($date)->endOfWeek();
 
-        $query = TimeTracking::with(['project','task','employee'])
+        $query = TimeTracking::with(['project','task'])
             ->whereBetween('date', [$start, $end]);
 
         if ($employeeId) $query->where('employee_id', $employeeId);
@@ -81,11 +100,24 @@ class AdminWorkReportsController extends Controller
 
         $entries = $query->get();
 
-        $grouped = $entries->groupBy('employee_id')->map(function($rows) {
+        $employeeIds = $entries->pluck('employee_id')->unique();
+        $employees = Employee::whereIn('id', $employeeIds)->get()->keyBy('id');
+        $admins = Admin::whereIn('id', $employeeIds)->get()->keyBy('id');
+
+        $grouped = $entries->groupBy('employee_id')->map(function($rows) use ($employees, $admins) {
             $totalHours = $rows->sum('hours');
             $targetHours = 42; // 6 أيام × 7 ساعات
+            $first = $rows->first();
+            $person = null;
+
+            if ($first->employee_type == 'admin') {
+                $person = $admins->get($first->employee_id);
+            } else {
+                $person = $employees->get($first->employee_id);
+            }
+
             return [
-                'employee' => $rows->first()->employee,
+                'employee' => $person,
                 'total_hours' => $totalHours,
                 'target_hours' => $targetHours,
                 'achievement' => round(($totalHours/$targetHours)*100,1),
@@ -93,9 +125,9 @@ class AdminWorkReportsController extends Controller
                 'tasks' => $rows->groupBy('task_id')->map(function($tRows){
                     return [
                         'task' => $tRows->first()->task,
-                        'hours' => $tRows->sum('hours')
+                        'hours' => $tRows->sum('hours'),
                     ];
-                })->values()
+                })->values(),
             ];
         });
 
@@ -116,7 +148,7 @@ class AdminWorkReportsController extends Controller
         $start = Carbon::create($year,$month,1);
         $end   = $start->copy()->endOfMonth();
 
-        $query = TimeTracking::with(['project','task','employee'])
+        $query = TimeTracking::with(['project','task'])
             ->whereBetween('date', [$start, $end]);
 
         if ($employeeId) $query->where('employee_id', $employeeId);
@@ -124,11 +156,24 @@ class AdminWorkReportsController extends Controller
 
         $entries = $query->get();
 
-        $grouped = $entries->groupBy('employee_id')->map(function($rows) {
+        $employeeIds = $entries->pluck('employee_id')->unique();
+        $employees = Employee::whereIn('id', $employeeIds)->get()->keyBy('id');
+        $admins = Admin::whereIn('id', $employeeIds)->get()->keyBy('id');
+
+        $grouped = $entries->groupBy('employee_id')->map(function($rows) use ($employees, $admins) {
             $totalHours = $rows->sum('hours');
             $targetHours = 182; // 26 يوم × 7 ساعات
+            $first = $rows->first();
+            $person = null;
+
+            if ($first->employee_type == 'admin') {
+                $person = $admins->get($first->employee_id);
+            } else {
+                $person = $employees->get($first->employee_id);
+            }
+
             return [
-                'employee' => $rows->first()->employee,
+                'employee' => $person,
                 'total_hours' => $totalHours,
                 'target_hours' => $targetHours,
                 'achievement' => round(($totalHours/$targetHours)*100,1),
@@ -136,9 +181,9 @@ class AdminWorkReportsController extends Controller
                 'tasks' => $rows->groupBy('task_id')->map(function($tRows){
                     return [
                         'task' => $tRows->first()->task,
-                        'hours' => $tRows->sum('hours')
+                        'hours' => $tRows->sum('hours'),
                     ];
-                })->values()
+                })->values(),
             ];
         });
 

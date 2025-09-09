@@ -13,6 +13,7 @@ class TimeTracking extends Model
 
     protected $fillable = [
         'employee_id',
+        'employee_type',
         'project_id',
         'task_id',
         'start_time',
@@ -27,7 +28,7 @@ class TimeTracking extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'date' => 'date',
-        'is_active' => 'boolean',
+        'is_active' => 'boolean'
     ];
 
     // Relations
@@ -144,4 +145,7 @@ class TimeTracking extends Model
     {
         return $query->where('employee_id', $employeeId);
     }
+
+
+
 }

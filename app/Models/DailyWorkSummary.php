@@ -79,4 +79,6 @@ class DailyWorkSummary extends Model
     {
         return $query->whereYear('date', $year)->whereMonth('date', $month);
     }
+
+
 }

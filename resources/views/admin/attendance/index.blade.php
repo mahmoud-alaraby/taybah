@@ -13,7 +13,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">الموظف</label>
                 <select name="employee_id" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
                     <option value="">جميع الموظفين</option>
-                    @foreach($employees as $employee)
+                    @foreach($users as $employee)
                         <option value="{{ $employee->id }}" {{ $employeeId == $employee->id ? 'selected' : '' }}>
                             {{ $employee->name }} ({{ $employee->employee_id }})
                         </option>
@@ -98,9 +98,7 @@
     </div>
 </div>
 
-
 @php
-    // دالة لعرض الوقت بصيغة 12 ساعة ثم AM/PM مع فراغ صغير وتدعيم سليم في RTL
     function formatTimeTo12HourWithAmPmSpace($time) {
         if (!$time) return '';
         $hour = (int)$time->format('H');
@@ -108,7 +106,6 @@
         $hour12 = $hour % 12;
         if ($hour12 == 0) $hour12 = 12;
         $ampm = $hour < 12 ? 'AM' : 'PM';
-        // نستخدم &nbsp; لجعل am/pm ملتصق بالوقت ونستخدم direction:ltr لعكس اتجاه الـRTL
         return sprintf('%02d:%s&nbsp;%s', $hour12, $minute, $ampm);
     }
 
@@ -151,13 +148,17 @@
                                     <div class="flex-shrink-0 h-8 w-8">
                                         <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                                             <span class="text-xs font-medium text-gray-700">
-                                                {{ mb_substr($attendance->employee->name, 0, 1) }}
+                                                {{ mb_substr(optional($attendance->user)->name ?? 'غير محدد', 0, 1) }}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="mr-3">
-                                        <div class="text-sm font-medium text-gray-900">{{ $attendance->employee->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $attendance->employee->employee_id }}</div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ optional($attendance->employee)->name ?? optional($attendance->admin)->name ?? 'غير معروف' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ optional($attendance->employee)->employee_id ?? 'بدون معرف' }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -211,13 +212,12 @@
                                     </span>
                                 @endif
                             </td>
-                            
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         @if($attendances->hasPages())
             <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
@@ -231,7 +231,5 @@
             <p class="text-sm text-gray-500">لم يتم تسجيل أي حضور للفترة المحددة</p>
         </div>
     @endif
-</div>
-
 </div>
 @endsection

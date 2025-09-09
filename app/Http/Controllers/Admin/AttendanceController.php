@@ -5,18 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeAttendance;
 use App\Models\Employee;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
+
     public function index(Request $request)
     {
         $year = $request->get('year', date('Y'));
         $month = $request->get('month', date('n'));
         $employeeId = $request->get('employee_id');
 
-        $query = EmployeeAttendance::with('employee')
+        $query = EmployeeAttendance::with(['employee', 'admin'])
             ->whereYear('date', $year)
             ->whereMonth('date', $month);
 
@@ -25,9 +27,24 @@ class AttendanceController extends Controller
         }
 
         $attendances = $query->orderBy('date', 'desc')->paginate(15);
-        $employees = Employee::active()->get();
 
-        // إحصائيات الشهر - مع التحقق من وجود البيانات
+        // جلب الموظفين النشطين
+        $employees = Employee::where('status', 'active')->get();
+
+        // جلب الادمنز النشطين
+        $admins = Admin::where('status', 'active')->get();
+
+        // دمج الـ employees والـ admins مع تمييز النوع وإضافة معرف لفلترة الاختيار
+        $users = $employees->map(function ($item) {
+            $item->type = 'employee';
+            return $item;
+        })->merge(
+            $admins->map(function ($item) {
+                $item->type = 'admin';
+                return $item;
+            })
+        )->sortBy('name')->values();
+
         $monthlyStats = [
             'total_days' => $this->getWorkingDaysInMonth($year, $month),
             'on_time_percentage' => $this->getOnTimePercentage($year, $month, $employeeId),
@@ -37,13 +54,16 @@ class AttendanceController extends Controller
 
         return view('admin.attendance.index', compact(
             'attendances',
-            'employees',
+            'users',
             'year',
             'month',
             'employeeId',
             'monthlyStats'
         ));
     }
+
+
+
 
     public function reports(Request $request)
     {

@@ -395,7 +395,9 @@
                         </svg>
                         <span>الموظف المسؤول:</span>
                     </div>
-                    <div class="font-medium">{{ $task->assignedEmployee ? $task->assignedEmployee->name : 'غير محدد' }}</div>
+                    <div class="font-medium">
+                        {{ $task->assigned_person ? $task->assigned_person->name : 'غير محدد' }}
+</div>
                 </div>
                 <div>
                     <div class="flex items-center space-x-1 space-x-reverse mb-1 text-gray-500 font-semibold">

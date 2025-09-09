@@ -12,6 +12,7 @@ class EmployeeAttendance extends Model
 
     protected $fillable = [
         'employee_id',
+        'employee_type',
         'check_in_time',
         'check_out_time',
         'is_late',
@@ -32,10 +33,10 @@ class EmployeeAttendance extends Model
     ];
 
     // Relations
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class);
-    }
+    // public function employee()
+    // {
+    //     return $this->belongsTo(Employee::class);
+    // }
 
     // Scopes
     public function scopeForMonth($query, $year, $month)
@@ -49,17 +50,18 @@ class EmployeeAttendance extends Model
     }
 
     // Methods
-    public static function checkIn($employeeId)
+    public static function checkIn($employeeId, $employeeType = 'employee')
     {
         $today = Carbon::today();
         $checkInTime = Carbon::now();
-        $targetTime = Carbon::today()->setTime(10, 0); // 10:00 AM
+        $workStartTime = Carbon::today()->setTime(10, 0); // 10:00 AM
         
-        $isLate = $checkInTime->gt($targetTime->addMinutes(10)); // بعد 10:10
-        $lateMinutes = $isLate ? $checkInTime->diffInMinutes($targetTime->subMinutes(10)) : 0;
+        // حساب التأخير بالدقائق
+        $isLate = $checkInTime->gt($workStartTime);
+        $lateMinutes = $isLate ? $checkInTime->diffInMinutes($workStartTime) : 0;
 
         return self::updateOrCreate(
-            ['employee_id' => $employeeId, 'date' => $today],
+            ['employee_id' => $employeeId, 'employee_type' => $employeeType, 'date' => $today],
             [
                 'check_in_time' => $checkInTime,
                 'is_late' => $isLate,
@@ -74,12 +76,74 @@ class EmployeeAttendance extends Model
         $this->check_out_time = $checkOutTime;
         
         if ($this->check_in_time) {
-            $totalHours = $this->check_in_time->diffInHours($checkOutTime, true);
+            // حساب إجمالي الساعات بالدقائق ثم تحويل للساعات
+            $totalMinutes = $this->check_in_time->diffInMinutes($checkOutTime);
+            $totalHours = round($totalMinutes / 60, 2);
+            
+            $standardWorkHours = 7; // 7 ساعات عمل معيارية
+            $overtimeHours = max(0, $totalHours - $standardWorkHours);
+
             $this->total_hours = $totalHours;
-            $this->overtime_hours = max(0, $totalHours - 7); // 7 ساعات هو التارجت
+            $this->overtime_hours = round($overtimeHours, 2);
         }
         
         $this->save();
         return $this;
     }
+
+    // Helper methods لتحويل الوقت
+    public function getLateTimeFormattedAttribute()
+    {
+        if (!$this->is_late || $this->late_minutes <= 0) {
+            return null;
+        }
+
+        $hours = floor($this->late_minutes / 60);
+        $minutes = $this->late_minutes % 60;
+        
+        if ($hours > 0) {
+            return "{$hours} ساعة و {$minutes} دقيقة";
+        } else {
+            return "{$minutes} دقيقة";
+        }
+    }
+
+    public function getTotalHoursFormattedAttribute()
+    {
+        if (!$this->total_hours) {
+            return '0:00';
+        }
+
+        $totalMinutes = round($this->total_hours * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        
+        return sprintf('%d:%02d', $hours, $minutes);
+    }
+
+//     public function admin()
+// {
+//     return $this->belongsTo(Admin::class, 'employee_id');
+// }
+
+public function getUserAttribute()
+{
+    if ($this->employee_type === 'admin') {
+        return $this->admin;
+    }
+    // افتراضياً employee
+    return $this->employee;
+}
+
+public function employee()
+{
+    return $this->belongsTo(Employee::class, 'employee_id');
+}
+
+public function admin()
+{
+    return $this->belongsTo(Admin::class, 'employee_id');
+}
+
+
 }

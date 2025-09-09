@@ -76,8 +76,15 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['tasks.assignedEmployee', 'timeTracking.employee']);
+    
 
+        
+    // Eager load assignedEmployee و assignedAdmin
+ $project->load([
+    'tasks.assignedEmployee',
+    'tasks.assignedAdmin',
+    'timeTracking.employee'
+]);
         // إحصائيات المشروع
         $projectStats = [
             'total_tasks' => $project->tasks()->count(),

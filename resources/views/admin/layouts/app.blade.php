@@ -160,6 +160,15 @@
             </svg>
         </button>
         <div x-show="open" x-transition class="pl-6 space-y-1">
+            
+
+    <a href="{{ route('admin.project-tracking.index') }}" 
+       class="flex text-gray-400 items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.project-tracking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="nav-icon fas fa-project-diagram"></i>
+        <p>  نظام الحضور والستوب ووتش</p>
+    </a>
+
+
             <a href="{{ route('admin.projects.index') }}"
                class="flex text-gray-400 items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.projects.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                 <i class="fas fa-project-diagram ml-2"></i>
