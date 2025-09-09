@@ -223,7 +223,10 @@
                             <td>{{ Str::limit($movement->work_description, 50) }}</td>
                             <td>{{ $movement->agreement_start_date->format('Y-m-d') }}</td>
                             <td>{{ $movement->initial_delivery_date->format('Y-m-d') }}</td>
-                            <td>{{ $movement->final_delivery_date->format('Y-m-d') }}</td>
+                          <td>
+    {{ $movement->final_delivery_date?->format('Y-m-d') ?? '---' }}
+</td>
+
                             <td class="positive">{{ number_format($movement->agreed_amount, 2) }}</td>
                             <td>{{ number_format($movement->first_payment, 2) }}</td>
                             <td>{{ number_format($movement->second_payment, 2) }}</td>

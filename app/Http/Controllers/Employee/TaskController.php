@@ -10,16 +10,59 @@ use Carbon\Carbon;
 
 class TaskController extends Controller
 {
-    public function index()
-    {
-        $today = Carbon::now()->toDateString();
-        $tasks = DailyTask::whereDate('task_date', $today)
-            ->where('created_by_employee', auth('employee')->id()) // إظهار المهام الخاصة بالمستخدم الحالي فقط
-            ->orderBy('created_at', 'desc')
-            ->paginate(10); // إضافة الباجينيشن
+  public function index(Request $request)
+{
+    $query = DailyTask::where('created_by_employee', auth('employee')->id());
 
-        return view('employee.tasks.index', compact('tasks'));
+    // فلتر الحالة
+    if ($request->has('status') && in_array($request->status, ['pending', 'completed'])) {
+        $query->where('status', $request->status);
     }
+
+    // فلتر التاريخ الكامل فقط (yyyy-mm-dd)
+    if ($request->filled('date')) {
+        $query->whereDate('task_date', $request->date);
+    }
+
+    // البحث
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('title', 'LIKE', "%{$search}%")
+              ->orWhere('details', 'LIKE', "%{$search}%");
+        });
+    }
+
+    $tasks = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    return view('employee.tasks.index', compact('tasks'));
+}
+
+public function print(Request $request)
+{
+    $query = DailyTask::where('created_by_employee', auth('employee')->id());
+
+    if ($request->has('status') && in_array($request->status, ['pending', 'completed'])) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('date')) {
+        $query->whereDate('task_date', $request->date);
+    }
+
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('title', 'LIKE', "%{$search}%")
+              ->orWhere('details', 'LIKE', "%{$search}%");
+        });
+    }
+
+    $tasks = $query->orderBy('created_at', 'desc')->get();
+
+    return view('employee.tasks.print', compact('tasks'));
+}
+
 
     public function store(Request $request)
     {

@@ -136,18 +136,20 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div>
-                        <label for="final_delivery_date" class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-calendar-check text-red-500"></i> موعد التسليم النهائي <span class="text-red-500">*</span>
-                        </label>
-                        <input id="final_delivery_date" type="date" name="final_delivery_date"
-                               value="{{ old('final_delivery_date', $customerMovement->final_delivery_date->format('Y-m-d')) }}"
-                               class="w-full h-12 bg-gray-50 rounded-lg border border-gray-300 px-3 shadow-sm focus:ring-2 focus:ring-red-300 focus:border-red-400 transition"
-                               required>
-                        @error('final_delivery_date')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                  <div>
+    <label for="final_delivery_date" class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+        <i class="fas fa-calendar-check text-red-500"></i> موعد التسليم النهائي 
+        <span class="text-red-500">*</span>
+    </label>
+    <input id="final_delivery_date" type="date" name="final_delivery_date"
+           value="{{ old('final_delivery_date', isset($customerMovement) && $customerMovement->final_delivery_date ? $customerMovement->final_delivery_date->format('Y-m-d') : '') }}"
+           class="w-full h-12 bg-gray-50 rounded-lg border border-gray-300 px-3 shadow-sm focus:ring-2 focus:ring-red-300 focus:border-red-400 transition"
+           required>
+    @error('final_delivery_date')
+    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
+
                     <div>
                         <label for="agreed_amount" class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
                             <i class="fas fa-money-bill text-red-500"></i> المبلغ المتفق عليه (ريال) <span class="text-red-500">*</span>

@@ -255,7 +255,13 @@
                                     <div class="text-xs text-gray-500">
                                         <div>بداية: {{ $movement->agreement_start_date->format('Y-m-d') }}</div>
                                         <div>أولي: {{ $movement->initial_delivery_date->format('Y-m-d') }}</div>
-                                        <div>نهائي: {{ $movement->final_delivery_date->format('Y-m-d') }}</div>
+<div>
+    @if($movement->final_delivery_date)
+          نهائي: 
+  {{ $movement->final_delivery_date->format('Y-m-d') }}
+  
+    @endif
+</div>
                                     </div>
                                 </td>
                                 <td class="px-3 py-4 whitespace-nowrap">

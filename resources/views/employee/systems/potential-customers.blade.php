@@ -17,7 +17,7 @@
 
         <div class="p-4">
             <!-- All Customers Tab -->
-            <div class="flex flex-wrap gap-2 mb-4">
+            <!-- <div class="flex flex-wrap gap-2 mb-4">
                 <a href="{{ route('employee.potential-customers', array_merge(request()->query(), ['classification' => ''])) }}" 
                    class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ !request('classification') ? 'bg-gradient-to-r from-red-400 to-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                     <i class="fas fa-users ml-1"></i>
@@ -26,7 +26,7 @@
                         {{ array_sum(array_column($classificationStats, 'count')) }}
                     </span>
                 </a>
-            </div>
+            </div> -->
 
             <!-- Classification Tabs -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

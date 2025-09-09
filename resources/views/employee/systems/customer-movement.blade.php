@@ -172,7 +172,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">التسليم النهائي</label>
-                                <input type="date" name="final_delivery_date" required
+                                <input type="date" name="final_delivery_date" 
                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 text-sm">
                             </div>
                         </div>
@@ -313,7 +313,16 @@
                                 <div class="text-xs text-gray-500 flex flex-col gap-1">
                                     <span><i class="far fa-calendar-check ml-1"></i> بداية: {{ $movement->agreement_start_date->format('Y-m-d') }}</span>
                                     <span><i class="far fa-calendar-alt ml-1"></i> أولي: {{ $movement->initial_delivery_date->format('Y-m-d') }}</span>
-                                    <span><i class="far fa-calendar ml-1"></i> نهائي: {{ $movement->final_delivery_date->format('Y-m-d') }}</span>
+<span>
+ 
+    
+    @if($movement->final_delivery_date)
+       <i class="far fa-calendar ml-1"></i> 
+نهائي : {{ $movement->final_delivery_date->format('Y-m-d') }}
+ 
+  
+    @endif
+</span>
                                 </div>
                             </td>
                             <td class="px-3 py-4 whitespace-nowrap">

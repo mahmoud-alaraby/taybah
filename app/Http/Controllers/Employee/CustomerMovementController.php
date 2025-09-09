@@ -75,61 +75,60 @@ class CustomerMovementController extends Controller
         ));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:20',
-            'work_description' => 'required|string|max:1000',
-            'agreement_start_date' => 'required|date',
-            'initial_delivery_date' => 'required|date|after_or_equal:agreement_start_date',
-            'final_delivery_date' => 'required|date|after_or_equal:initial_delivery_date',
-            'agreed_amount' => 'required|numeric|min:0',
-            'first_payment' => 'nullable|numeric|min:0',
-            'second_payment' => 'nullable|numeric|min:0',
-            'third_payment' => 'nullable|numeric|min:0',
-            'fourth_payment' => 'nullable|numeric|min:0',
-            'customer_type' => 'required|in:' . implode(',', array_keys(CustomerMovement::getCustomerTypes())),
-            'work_status' => 'required|in:' . implode(',', array_keys(CustomerMovement::getWorkStatuses())),
-        ], [
-            'customer_name.required' => 'اسم العميل مطلوب',
-            'customer_phone.required' => 'رقم جوال العميل مطلوب',
-            'work_description.required' => 'وصف العمل مطلوب',
-            'agreement_start_date.required' => 'بداية الاتفاق مطلوبة',
-            'initial_delivery_date.required' => 'موعد التسليم الأولي مطلوب',
-            'final_delivery_date.required' => 'موعد التسليم النهائي مطلوب',
-            'agreed_amount.required' => 'المبلغ المتفق عليه مطلوب',
-            'customer_type.required' => 'نوعية العميل مطلوبة',
-            'work_status.required' => 'حالة العمل مطلوبة',
+   public function store(Request $request)
+{
+    $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'customer_phone' => 'required|string|max:20',
+        'work_description' => 'required|string|max:1000',
+        'agreement_start_date' => 'required|date',
+        'initial_delivery_date' => 'required|date|after_or_equal:agreement_start_date',
+        'final_delivery_date' => 'nullable|date|after_or_equal:initial_delivery_date', // أصبحت nullable
+        'agreed_amount' => 'required|numeric|min:0',
+        'first_payment' => 'nullable|numeric|min:0',
+        'second_payment' => 'nullable|numeric|min:0',
+        'third_payment' => 'nullable|numeric|min:0',
+        'fourth_payment' => 'nullable|numeric|min:0',
+        'customer_type' => 'required|in:' . implode(',', array_keys(CustomerMovement::getCustomerTypes())),
+        'work_status' => 'required|in:' . implode(',', array_keys(CustomerMovement::getWorkStatuses())),
+    ], [
+        'customer_name.required' => 'اسم العميل مطلوب',
+        'customer_phone.required' => 'رقم جوال العميل مطلوب',
+        'work_description.required' => 'وصف العمل مطلوب',
+        'agreement_start_date.required' => 'بداية الاتفاق مطلوبة',
+        'initial_delivery_date.required' => 'موعد التسليم الأولي مطلوب',
+        //'final_delivery_date.required' => 'موعد التسليم النهائي مطلوب', // حذفناها
+        'agreed_amount.required' => 'المبلغ المتفق عليه مطلوب',
+        'customer_type.required' => 'نوعية العميل مطلوبة',
+        'work_status.required' => 'حالة العمل مطلوبة',
+    ]);
+
+    try {
+        CustomerMovement::create([
+            'employee_id' => auth('employee')->id(),
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone,
+            'work_description' => $request->work_description,
+            'agreement_start_date' => $request->agreement_start_date,
+            'initial_delivery_date' => $request->initial_delivery_date,
+            'final_delivery_date' => $request->final_delivery_date,
+            'agreed_amount' => $request->agreed_amount,
+            'first_payment' => $request->first_payment ?? 0,
+            'second_payment' => $request->second_payment ?? 0,
+            'third_payment' => $request->third_payment ?? 0,
+            'fourth_payment' => $request->fourth_payment ?? 0,
+            'customer_type' => $request->customer_type,
+            'work_status' => $request->work_status,
         ]);
-
-        try {
-            CustomerMovement::create([
-                'employee_id' => auth('employee')->id(),
-                'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone,
-                'work_description' => $request->work_description,
-                'agreement_start_date' => $request->agreement_start_date,
-                'initial_delivery_date' => $request->initial_delivery_date,
-                'final_delivery_date' => $request->final_delivery_date,
-                'agreed_amount' => $request->agreed_amount,
-                'first_payment' => $request->first_payment ?? 0,
-                'second_payment' => $request->second_payment ?? 0,
-                'third_payment' => $request->third_payment ?? 0,
-                'fourth_payment' => $request->fourth_payment ?? 0,
-                'customer_type' => $request->customer_type,
-                'work_status' => $request->work_status,
-            ]);
-        } catch (\Exception $e) {
-            // يمكنك هنا تسجيل الخطأ في اللوغ إذا أردت: \Log::error($e);
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['general' => 'حدث خطأ أثناء حفظ البيانات، حاول مرة أخرى لاحقاً.']);
-        }
-
-        return redirect()->route('employee.customer-movement')
-                         ->with('success', 'تم إضافة حركة العميل بنجاح');
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->withInput()
+            ->withErrors(['general' => 'حدث خطأ أثناء حفظ البيانات، حاول مرة أخرى لاحقاً.']);
     }
+
+    return redirect()->route('employee.customer-movement')
+        ->with('success', 'تم إضافة حركة العميل بنجاح');
+}
 
     public function edit(CustomerMovement $customerMovement)
     {
@@ -147,57 +146,58 @@ class CustomerMovementController extends Controller
         ));
     }
 
-    public function update(Request $request, CustomerMovement $customerMovement)
-    {
-        if ($customerMovement->employee_id !== auth('employee')->id()) {
-            abort(403);
-        }
-
-        $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:20',
-            'work_description' => 'required|string|max:1000',
-            'agreement_start_date' => 'required|date',
-            'initial_delivery_date' => 'required|date|after_or_equal:agreement_start_date',
-            'final_delivery_date' => 'required|date|after_or_equal:initial_delivery_date',
-            'agreed_amount' => 'required|numeric|min:0',
-            'first_payment' => 'nullable|numeric|min:0',
-            'second_payment' => 'nullable|numeric|min:0',
-            'third_payment' => 'nullable|numeric|min:0',
-            'fourth_payment' => 'nullable|numeric|min:0',
-            'customer_type' => 'required|in:' . implode(',', array_keys(CustomerMovement::getCustomerTypes())),
-            'work_status' => 'required|in:' . implode(',', array_keys(CustomerMovement::getWorkStatuses())),
-        ], [
-            'customer_name.required' => 'اسم العميل مطلوب',
-            'customer_phone.required' => 'رقم جوال العميل مطلوب',
-            'work_description.required' => 'وصف العمل مطلوب',
-            'agreement_start_date.required' => 'بداية الاتفاق مطلوبة',
-            'initial_delivery_date.required' => 'موعد التسليم الأولي مطلوب',
-            'final_delivery_date.required' => 'موعد التسليم النهائي مطلوب',
-            'agreed_amount.required' => 'المبلغ المتفق عليه مطلوب',
-            'customer_type.required' => 'نوعية العميل مطلوبة',
-            'work_status.required' => 'حالة العمل مطلوبة',
-        ]);
-
-        $customerMovement->update([
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'work_description' => $request->work_description,
-            'agreement_start_date' => $request->agreement_start_date,
-            'initial_delivery_date' => $request->initial_delivery_date,
-            'final_delivery_date' => $request->final_delivery_date,
-            'agreed_amount' => $request->agreed_amount,
-            'first_payment' => $request->first_payment ?? 0,
-            'second_payment' => $request->second_payment ?? 0,
-            'third_payment' => $request->third_payment ?? 0,
-            'fourth_payment' => $request->fourth_payment ?? 0,
-            'customer_type' => $request->customer_type,
-            'work_status' => $request->work_status,
-        ]);
-
-        return redirect()->route('employee.customer-movement')
-                         ->with('success', 'تم تحديث حركة العميل بنجاح');
+   
+public function update(Request $request, CustomerMovement $customerMovement)
+{
+    if ($customerMovement->employee_id !== auth('employee')->id()) {
+        abort(403);
     }
+
+    $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'customer_phone' => 'required|string|max:20',
+        'work_description' => 'required|string|max:1000',
+        'agreement_start_date' => 'required|date',
+        'initial_delivery_date' => 'required|date|after_or_equal:agreement_start_date',
+        'final_delivery_date' => 'nullable|date|after_or_equal:initial_delivery_date', // أصبحت nullable
+        'agreed_amount' => 'required|numeric|min:0',
+        'first_payment' => 'nullable|numeric|min:0',
+        'second_payment' => 'nullable|numeric|min:0',
+        'third_payment' => 'nullable|numeric|min:0',
+        'fourth_payment' => 'nullable|numeric|min:0',
+        'customer_type' => 'required|in:' . implode(',', array_keys(CustomerMovement::getCustomerTypes())),
+        'work_status' => 'required|in:' . implode(',', array_keys(CustomerMovement::getWorkStatuses())),
+    ], [
+        'customer_name.required' => 'اسم العميل مطلوب',
+        'customer_phone.required' => 'رقم جوال العميل مطلوب',
+        'work_description.required' => 'وصف العمل مطلوب',
+        'agreement_start_date.required' => 'بداية الاتفاق مطلوبة',
+        'initial_delivery_date.required' => 'موعد التسليم الأولي مطلوب',
+        //'final_delivery_date.required' => 'موعد التسليم النهائي مطلوب', // حذفناها
+        'agreed_amount.required' => 'المبلغ المتفق عليه مطلوب',
+        'customer_type.required' => 'نوعية العميل مطلوبة',
+        'work_status.required' => 'حالة العمل مطلوبة',
+    ]);
+
+    $customerMovement->update([
+        'customer_name' => $request->customer_name,
+        'customer_phone' => $request->customer_phone,
+        'work_description' => $request->work_description,
+        'agreement_start_date' => $request->agreement_start_date,
+        'initial_delivery_date' => $request->initial_delivery_date,
+        'final_delivery_date' => $request->final_delivery_date,
+        'agreed_amount' => $request->agreed_amount,
+        'first_payment' => $request->first_payment ?? 0,
+        'second_payment' => $request->second_payment ?? 0,
+        'third_payment' => $request->third_payment ?? 0,
+        'fourth_payment' => $request->fourth_payment ?? 0,
+        'customer_type' => $request->customer_type,
+        'work_status' => $request->work_status,
+    ]);
+
+    return redirect()->route('employee.customer-movement')
+        ->with('success', 'تم تحديث حركة العميل بنجاح');
+}
 
     public function destroy(CustomerMovement $customerMovement)
     {

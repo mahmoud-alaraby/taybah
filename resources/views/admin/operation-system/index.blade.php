@@ -195,6 +195,46 @@
                 </form>
             </div>
         </div>
+        {{-- إضافة زر الطباعة في Header Section بجانب زر "إضافة مهمة جديدة" --}}
+<div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="mr-4">
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">نظام التشغيل العام</h1>
+                    <p class="text-sm text-gray-600">{{ $startDate->translatedFormat('F Y') }}</p>
+                </div>
+            </div>
+            
+            {{-- أزرار الإجراءات --}}
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {{-- زر الطباعة --}}
+                <a href="{{ route('admin.operation-system.print', request()->query()) }}" 
+                   target="_blank"
+                   class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg shadow-sm transition-all duration-200">
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    طباعة التقرير
+                </a>
+                
+                {{-- زر إضافة مهمة جديدة --}}
+                <a href="{{ route('admin.operation-system.create') }}" 
+                   class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-lg shadow-sm transition-all duration-200">
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    إضافة مهمة جديدة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
         {{-- زر لفتح/إغلاق جميع الأيام --}}
         <div class="flex justify-center space-x-2 space-x-reverse mb-6">

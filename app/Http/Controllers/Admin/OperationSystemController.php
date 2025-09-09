@@ -312,4 +312,97 @@ class OperationSystemController extends Controller
             return redirect()->route('admin.operation-system.index')->with('error', 'حدث خطأ أثناء حذف المهمة');
         }
     }
+    /**
+     * طباعة تقرير نظام التشغيل العام مع الفلاتر
+     */
+    public function printReport(Request $request)
+    {
+        // التاريخ الحالي والشهر المحدد
+        $currentDate = Carbon::now();
+        $month = $request->get('month', $currentDate->month);
+        $year = $request->get('year', $currentDate->year);
+        
+        // إنشاء تاريخ البداية والنهاية للشهر
+        $startDate = Carbon::createFromDate($year, $month, 1);
+        $endDate = $startDate->copy()->endOfMonth();
+        
+        // بناء الاستعلام للمهام
+        $query = DB::table('operation_tasks')
+            ->join('employees', 'operation_tasks.assigned_person_id', '=', 'employees.id')
+            ->select(
+                'operation_tasks.*',
+                'employees.name as employee_name',
+                'employees.department',
+                'employees.position',
+                'employees.employee_id'
+            )
+            ->whereBetween('operation_tasks.task_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        
+        // تطبيق الفلاتر
+        $filters = [];
+        
+        if ($request->filled('task_type')) {
+            $query->where('operation_tasks.task_type', $request->task_type);
+            $filters['نوع المهمة'] = $request->task_type == 'design' ? 'تصميم' : 'تسويق';
+        }
+        
+        if ($request->filled('is_reserved')) {
+            $query->where('operation_tasks.is_reserved', $request->is_reserved);
+            $filters['حالة الحجز'] = $request->is_reserved == '1' ? 'محجوز' : 'غير محجوز';
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('operation_tasks.status', $request->status);
+            $statusNames = [
+                'pending' => 'قيد الانتظار',
+                'in_progress' => 'قيد التنفيذ',
+                'completed' => 'مكتملة',
+                'cancelled' => 'ملغية'
+            ];
+            $filters['الحالة'] = $statusNames[$request->status] ?? $request->status;
+        }
+        
+        if ($request->filled('employee_id')) {
+            $query->where('operation_tasks.assigned_person_id', $request->employee_id);
+            $employee = DB::table('employees')->where('id', $request->employee_id)->first();
+            if ($employee) {
+                $filters['الموظف'] = $employee->name;
+            }
+        }
+        
+        if ($request->filled('department')) {
+            $query->where('employees.department', $request->department);
+            $filters['القسم'] = $request->department;
+        }
+        
+        // جلب البيانات مع الترتيب
+        $tasks = $query->orderBy('operation_tasks.task_date', 'asc')
+                      ->orderBy('operation_tasks.created_at', 'asc')
+                      ->get();
+        
+        // تجميع المهام حسب التاريخ
+        $groupedTasks = $tasks->groupBy('task_date');
+        
+        // إحصائيات التقرير
+        $stats = [
+            'total_tasks' => $tasks->count(),
+            'design_tasks' => $tasks->where('task_type', 'design')->count(),
+            'marketing_tasks' => $tasks->where('task_type', 'marketing')->count(),
+            'reserved_tasks' => $tasks->where('is_reserved', 1)->count(),
+            'completed_tasks' => $tasks->where('status', 'completed')->count(),
+            'pending_tasks' => $tasks->whereIn('status', ['pending', 'in_progress'])->count(),
+            'cancelled_tasks' => $tasks->where('status', 'cancelled')->count(),
+        ];
+        
+        return view('admin.operation-system.print', compact(
+            'tasks',
+            'groupedTasks',
+            'startDate',
+            'endDate',
+            'filters',
+            'stats',
+            'month',
+            'year'
+        ));
+    }
 }

@@ -192,17 +192,28 @@ Route::middleware('employee.auth')->group(function () {
 
     // سيستم تكاليف التصوير 
 
-    Route::middleware('employee.permission:photography_costs')->group(function () {
-        Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
-            Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
-            Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
-            Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
-            Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
-            Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
-            Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
-            Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
-        });
+  Route::middleware('employee.permission:photography_costs')->group(function () {
+    Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
+        Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
+        
+        // Routes جديدة مثل سيستم المقبوضات والمدفوعات
+        Route::post('/receipt', [EmployeePhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
+        Route::post('/payment', [EmployeePhotographyCostController::class, 'storePayment'])->name('payment.store');
+        Route::delete('/receipt/{id}', [EmployeePhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
+        Route::delete('/payment/{id}', [EmployeePhotographyCostController::class, 'deletePayment'])->name('payment.delete');
+        Route::get('/print', [EmployeePhotographyCostController::class, 'printReport'])->name('print');
+        
+        // Routes القديمة للتوافق
+        Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
+        Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
+        Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
+        Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
+        Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
+        Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
     });
+});
+
+
 Route::middleware(['employee.auth', 'employee.permission:customer_communication'])
     ->prefix('customer-communication')
     ->name('employee.customer-communication.')
@@ -243,7 +254,9 @@ Route::middleware(['employee.auth', 'employee.permission:customer_communication'
         Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
         Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
         Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
-        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route الحذف
+        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route 
+        Route::get('/tasks/print', [EmployeeTaskController::class, 'print'])->name('tasks.print');
+
     });
 
 

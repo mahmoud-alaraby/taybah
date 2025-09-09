@@ -132,8 +132,11 @@ Route::middleware('admin.auth')->group(function () {
 
     // مسارات نظام التشغيل العام
 
+  // مسارات نظام التشغيل العام
+    // مسارات نظام التشغيل العام
     Route::prefix('operation-system')->name('admin.operation-system.')->group(function () {
         Route::get('/', [OperationSystemController::class, 'index'])->name('index');
+        Route::get('/print', [OperationSystemController::class, 'printReport'])->name('print');
         Route::get('/create', [OperationSystemController::class, 'create'])->name('create');
         Route::post('/', [OperationSystemController::class, 'store'])->name('store');
         Route::get('/{id}', [OperationSystemController::class, 'show'])->name('show');
@@ -172,6 +175,10 @@ Route::middleware('admin.auth')->group(function () {
         Route::post('/tasks', [AdminTaskController::class, 'store'])->name('tasks.store');
         Route::patch('/tasks/{task}', [AdminTaskController::class, 'update'])->name('tasks.update');
         Route::delete('/tasks/{task}', [AdminTaskController::class, 'destroy'])->name('tasks.destroy');
+        // إضافة راوت خاص بطباعة المهام المفلترة أو الحالية
+Route::get('/tasks/print', [AdminTaskController::class, 'print'])->name('tasks.print');
+// الراوت الأساسي مهمش، لن يتغير (وهو لمسار index الحالي)
+
     });
 
     // نظام مواعيد التجديد
@@ -191,16 +198,33 @@ Route::middleware('admin.auth')->group(function () {
 
     // نظام تكاليف التصوير
     // الأدمن
-    Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
-        Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
-        Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
-        Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
-        Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
-        Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
-        Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
-        Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
-    });
-
+    // Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
+    //     Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
+    //     Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
+    //     Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
+    //     Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
+    //     Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
+    //     Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
+    //     Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
+    // });
+// استبدل routes photography-costs الحالية بهذه
+Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
+    Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
+    Route::post('/receipt', [PhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
+    Route::post('/payment', [PhotographyCostController::class, 'storePayment'])->name('payment.store');
+    Route::post('/target', [PhotographyCostController::class, 'updateTarget'])->name('target');
+    Route::delete('/receipt/{id}', [PhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
+    Route::delete('/payment/{id}', [PhotographyCostController::class, 'deletePayment'])->name('payment.delete');
+    Route::get('/print', [PhotographyCostController::class, 'printReport'])->name('print');
+    
+    // Routes القديمة للتوافق
+    Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
+    Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
+    Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
+    Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
+    Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
+    Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
+});
     // سيستم الرد على العملاء 
     Route::prefix('customer-response')->name('admin.customer-response.')->group(function () {
         // الردود

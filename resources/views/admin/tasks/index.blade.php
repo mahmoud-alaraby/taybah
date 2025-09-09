@@ -77,6 +77,8 @@
         </div>
     </div>
 
+  
+
     <!-- نموذج إضافة مهمة محسن -->
     <div class="bg-white p-4 lg:p-5 rounded-lg border border-gray-200 shadow-sm mb-4">
         <h3 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">➕ إضافة مهمة جديدة</h3>
@@ -110,6 +112,48 @@
         </form>
     </div>
 
+
+      <form method="GET" action="{{ route('admin.tasks.index') }}" class="flex flex-wrap items-end gap-4 mb-6 p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
+    {{-- فلتر الحالة --}}
+    <div>
+        <label class="block mb-1 text-gray-700 font-semibold">الحالة</label>
+        <select name="status" class="border border-gray-300 rounded-md p-2 focus:outline-none">
+            <option value="">الكل</option>
+            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مهام مكتملة</option>
+            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>مهام غير مكتملة</option>
+        </select>
+    </div>
+    {{-- فلترة اليوم --}}
+    <!-- <div>
+        <label class="block mb-1 text-gray-700 font-semibold">اليوم</label>
+        <input type="date" name="date" value="{{ request('date') }}" class="border border-gray-300 rounded-md p-2 focus:outline-none" />
+    </div> -->
+    {{-- الشهر --}}
+    <!-- <div>
+        <label class="block mb-1 text-gray-700 font-semibold">الشهر</label>
+        <input type="number" min="1" max="12" name="month" value="{{ request('month') }}" placeholder="01" class="border border-gray-300 rounded-md p-2 focus:outline-none w-20" />
+    </div> -->
+    {{-- السنة --}}
+    <!-- <div>
+        <label class="block mb-1 text-gray-700 font-semibold">السنة</label>
+        <input type="number" name="year" value="{{ request('year') }}" placeholder="2025" class="border border-gray-300 rounded-md p-2 focus:outline-none w-24" />
+    </div> -->
+    {{-- البحث --}}
+    <div class="flex-1">
+        <label class="block mb-1 text-gray-700 font-semibold">بحث</label>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث بالعنوان أو التفاصيل" class="border border-gray-300 rounded-md p-2 focus:outline-none w-full" />
+    </div>
+    {{-- زر البحث --}}
+    <button type="submit" class="bg-gray-700 text-white px-6 py-2 rounded-md font-bold hover:bg-gray-800 transition">
+        بحث
+    </button>
+    {{-- زر الطباعة --}}
+    <a href="{{ route('admin.tasks.print', request()->all()) }}"
+       target="_blank"
+       class="bg-green-600 text-white px-6 py-2 rounded-md font-bold hover:bg-green-700 transition">
+        طباعة
+    </a>
+</form>
     <!-- قائمة المهام المحسنة -->
     <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 lg:p-5 border-b border-gray-200">
