@@ -296,16 +296,35 @@ Route::prefix('photography-costs')->name('admin.photography-costs.')->group(func
     });
 
 
+// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+
 Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
     Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
-    Route::get('/{id}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+    Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+    
+    // إرسال رسالة في الشات
+    Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
+    
+    // تحميل الرسائل الجديدة
+    Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
+    
+    // حذف رسالة معينة (خلال 5 دقائق من الإرسال)
+    Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
+    
+    // إحصائيات سريعة للتحديث التلقائي
+    Route::get('/unread-count', function() {
+        $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
+                                                     ->where('is_read', false)
+                                                     ->count();
+        
+        return response()->json(['count' => $unreadCount]);
+    })->name('unread-count');
+    
+    // Routes القديمة للتوافق مع النظام السابق (يمكن إزالتها لاحقاً)
     Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
     Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
-    
-    Route::delete('note/{note_id}', [AdminCustomerCommunicationController::class, 'destroyNote'])
-        ->name('note.destroy');
-    Route::delete('all-notes/{potential_customer_id}', [AdminCustomerCommunicationController::class, 'destroyAllNotes'])
-        ->name('all-notes.destroy');
+    Route::delete('note/{note_id}', [AdminCustomerCommunicationController::class, 'destroyNote'])->name('note.destroy');
+    Route::delete('all-notes/{potential_customer_id}', [AdminCustomerCommunicationController::class, 'destroyAllNotes'])->name('all-notes.destroy');
 });
 
 
