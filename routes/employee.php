@@ -11,11 +11,10 @@ use App\Http\Controllers\Employee\RenewalDateController as EmployeeRenewalDateCo
 use App\Http\Controllers\Employee\PhotographyCostController as EmployeePhotographyCostController;
 use App\Http\Controllers\Employee\CustomerResponseController;
 use App\Http\Controllers\Employee\EmployeeDesignerTaskAccountEmployeeController;
-use App\Http\Controllers\employee\CustomerCommunicationController;
+use App\Http\Controllers\Employee\CustomerCommunicationController;
 use App\Http\Controllers\Employee\CustomerResponseCategoryInlineController as EmployeeCategoryInlineController;
+
 // Employee Guest Routes (غير مسجل دخول)
-
-
 Route::middleware('employee.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('employee.login');
     Route::post('/login', [AuthController::class, 'login'])->name('employee.login.post');
@@ -113,7 +112,7 @@ Route::middleware('employee.auth')->group(function () {
         })->name('employee.general-operations');
     });
 
-    // نظام حجز التصوير والمونتاج - تعديل الصلاحيات
+    // نظام حجز التصوير والمونتاج
     Route::middleware(['employee.permission:photography_booking'])->group(function () {
         Route::prefix('photography-booking')->name('employee.photography-booking.')->group(function () {
             Route::get('/', [PhotoGraphyBookingController::class, 'index'])->name('index');
@@ -126,10 +125,7 @@ Route::middleware('employee.auth')->group(function () {
         });
     });
 
-    //    سيستم تكاليف التصميم
-
-
-
+    // سيستم تكاليف التصميم
     Route::middleware('employee.permission:designers_account')
         ->prefix('designer-task-accounts')
         ->name('employee.designer-task-accounts.')
@@ -137,7 +133,6 @@ Route::middleware('employee.auth')->group(function () {
             Route::get('/', [EmployeeDesignerTaskAccountEmployeeController::class, 'index'])->name('index');
             Route::get('/{id}', [EmployeeDesignerTaskAccountEmployeeController::class, 'show'])->name('show');
         });
-
 
     Route::middleware('employee.permission:customer_response')->group(function () {
         Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
@@ -150,24 +145,13 @@ Route::middleware('employee.auth')->group(function () {
             Route::put('/{customerResponse}', [CustomerResponseController::class, 'update'])->name('update');
             Route::delete('/{customerResponse}', [CustomerResponseController::class, 'destroy'])->name('destroy');
 
-
-            // إدارة التصنيفات من داخل index (للعمل ضمن نفس الصفحة)
+            // إدارة التصنيفات من داخل index
             Route::post('/categories', [EmployeeCategoryInlineController::class, 'store'])->name('categories.store');
             Route::put('/categories/{category}', [EmployeeCategoryInlineController::class, 'update'])->name('categories.update');
             Route::delete('/categories/{category}', [EmployeeCategoryInlineController::class, 'destroy'])->name('categories.destroy');
             Route::get('/categories/icons', [EmployeeCategoryInlineController::class, 'icons'])->name('categories.icons');
-
-
-            // التصنيفات
-            // Route::get('/categories', [EmployeeCustomerResponseCategoryController::class, 'index'])->name('categories.index');
-            // Route::get('/categories/create', [EmployeeCustomerResponseCategoryController::class, 'create'])->name('categories.create');
-            // Route::post('/categories', [EmployeeCustomerResponseCategoryController::class, 'store'])->name('categories.store');
-            // Route::get('/categories/{category}/edit', [EmployeeCustomerResponseCategoryController::class, 'edit'])->name('categories.edit');
-            // Route::put('/categories/{category}', [EmployeeCustomerResponseCategoryController::class, 'update'])->name('categories.update');
-
         });
     });
-
 
     Route::middleware('employee.permission:task_list')->group(function () {
         Route::get('/task-list', function () {
@@ -191,47 +175,60 @@ Route::middleware('employee.auth')->group(function () {
     });
 
     // سيستم تكاليف التصوير 
-
-  Route::middleware('employee.permission:photography_costs')->group(function () {
-    Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
-        Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
-        
-        // Routes جديدة مثل سيستم المقبوضات والمدفوعات
-        Route::post('/receipt', [EmployeePhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
-        Route::post('/payment', [EmployeePhotographyCostController::class, 'storePayment'])->name('payment.store');
-        Route::delete('/receipt/{id}', [EmployeePhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
-        Route::delete('/payment/{id}', [EmployeePhotographyCostController::class, 'deletePayment'])->name('payment.delete');
-        Route::get('/print', [EmployeePhotographyCostController::class, 'printReport'])->name('print');
-        
-        // Routes القديمة للتوافق
-        Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
-        Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
-        Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
-        Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
-        Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
-        Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
-    });
-});
-
-
-Route::middleware(['employee.auth', 'employee.permission:customer_communication'])
-    ->prefix('customer-communication')
-    ->name('employee.customer-communication.')
-    ->group(function () {
-        Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
-        Route::get('/{id}', [CustomerCommunicationController::class, 'show'])->name('show');
-        Route::post('/{id}/store', [CustomerCommunicationController::class, 'store'])->name('store');
-        Route::post('/{id}/mark-contacted', [CustomerCommunicationController::class, 'markContacted'])->name('markContacted');
-
-   
-        Route::delete('note/{note_id}', [Employee\CustomerCommunicationController::class, 'destroyNote'])
-            ->name('note.destroy'); 
-        Route::delete('all-notes/{potential_customer_id}', [CustomerCommunicationController::class, 'destroyAllNotes'])
-            ->name('all-notes.destroy');
+    Route::middleware('employee.permission:photography_costs')->group(function () {
+        Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
+            Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
+            
+            Route::post('/receipt', [EmployeePhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
+            Route::post('/payment', [EmployeePhotographyCostController::class, 'storePayment'])->name('payment.store');
+            Route::delete('/receipt/{id}', [EmployeePhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
+            Route::delete('/payment/{id}', [EmployeePhotographyCostController::class, 'deletePayment'])->name('payment.delete');
+            Route::get('/print', [EmployeePhotographyCostController::class, 'printReport'])->name('print');
+            
+            Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
+            Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
+            Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
+            Route::get('/{photographyCost}/edit', [EmployeePhotographyCostController::class, 'edit'])->name('edit');
+            Route::put('/{photographyCost}', [EmployeePhotographyCostController::class, 'update'])->name('update');
+            Route::delete('/{photographyCost}', [EmployeePhotographyCostController::class, 'destroy'])->name('destroy');
+        });
     });
 
-
-
+    // ============== النظام الجديد للتواصل مع العملاء ==============
+    Route::middleware(['employee.permission:customer_communication'])
+        ->prefix('customer-communication')
+        ->name('employee.customer-communication.')
+        ->group(function () {
+            // الصفحة الرئيسية - قائمة العملاء
+            Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
+            
+            // صفحة الشات مع الإدارة بخصوص عميل معين
+            Route::get('/{potentialCustomerId}', [CustomerCommunicationController::class, 'show'])->name('show');
+            
+            // إرسال رسالة في الشات
+            Route::post('/{chatId}/send', [CustomerCommunicationController::class, 'sendMessage'])->name('send-message');
+            
+            // تحميل الرسائل الجديدة
+            Route::get('/{chatId}/messages', [CustomerCommunicationController::class, 'getMessages'])->name('get-messages');
+            
+            // تحديد حالة العميل كـ "تم التواصل"
+            Route::post('/{chatId}/completed', [CustomerCommunicationController::class, 'markAsCompleted'])->name('completed');
+            
+            // حذف رسالة معينة (خلال 5 دقائق من الإرسال)
+            Route::delete('/message/{messageId}', [CustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
+            
+            // إحصائيات سريعة للتحديث التلقائي
+            Route::get('/unread-count', function() {
+                $employee = auth('employee')->user();
+                $unreadCount = \App\Models\CustomerChatMessage::whereHas('chat', function($query) use ($employee) {
+                    $query->where('employee_id', $employee->id);
+                })->where('sender_type', 'admin')
+                  ->where('is_read', false)
+                  ->count();
+                
+                return response()->json(['count' => $unreadCount]);
+            })->name('unread-count');
+        });
 
     Route::middleware('employee.permission:design_follow_up')->group(function () {
         Route::get('/design-follow-up', function () {
@@ -245,22 +242,14 @@ Route::middleware(['employee.auth', 'employee.permission:customer_communication'
         })->name('employee.montage-follow-up');
     });
 
-
     // سيستم المهام 
-
-    // مسارات الموظفين
-
     Route::prefix('employee')->name('employee.')->group(function () {
         Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
         Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
         Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
-        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy'); // إضافة route 
+        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy');
         Route::get('/tasks/print', [EmployeeTaskController::class, 'print'])->name('tasks.print');
-
     });
-
-
-
 
     // نظام متابعة المشاريع والمهام مع الاستوب ووتش
     Route::middleware('employee.permission:project_tracking')->group(function () {
@@ -318,13 +307,23 @@ Route::middleware(['employee.auth', 'employee.permission:customer_communication'
             ->name('employee.montage-follow-up');
     });
 
-    // Routes مشتركة لكلا النوعين
-        // التحقق من الصلاحية داخل الكونترولر حسب نوع الشات
-        Route::prefix('work-chat')->name('employee.work-chat.')->group(function () {
-            Route::get('/{workChat}', [App\Http\Controllers\Employee\WorkChatController::class, 'show'])->name('show');
-            Route::post('/{workChat}/send', [App\Http\Controllers\Employee\WorkChatController::class, 'sendMessage'])->name('send-message');
-            Route::get('/{workChat}/messages', [App\Http\Controllers\Employee\WorkChatController::class, 'getMessages'])->name('get-messages');
-        });
-        
+    // Routes مشتركة للشاتات (التحقق من الصلاحية داخل الكونترولر)
+    Route::prefix('work-chat')->name('employee.work-chat.')->group(function () {
+        Route::get('/{workChat}', [App\Http\Controllers\Employee\WorkChatController::class, 'show'])->name('show');
+        Route::post('/{workChat}/send', [App\Http\Controllers\Employee\WorkChatController::class, 'sendMessage'])->name('send-message');
+        Route::get('/{workChat}/messages', [App\Http\Controllers\Employee\WorkChatController::class, 'getMessages'])->name('get-messages');
+    });
 
+    // في routes/employee.php - أضف هذا للاختبار
+Route::get('/test-file/{path}', function($path) {
+    $fullPath = 'customer-chat/' . $path;
+    if (Storage::disk('public')->exists($fullPath)) {
+        return response()->json([
+            'exists' => true,
+            'url' => asset('storage/' . $fullPath),
+            'size' => Storage::disk('public')->size($fullPath)
+        ]);
+    }
+    return response()->json(['exists' => false]);
+})->where('path', '.*');
 });

@@ -1,66 +1,840 @@
 @extends('employee.layouts.app')
 
+@section('title', 'التواصل بخصوص العميل: ' . $customer->customer_name)
+@section('page-title', 'التواصل مع الإدارة')
+@section('page-subtitle', 'بخصوص العميل: ' . $customer->customer_name)
+
 @section('content')
-<div class="p-6 max-w-4xl mx-auto h-[600px] flex flex-col">
+<style>
+/* تشخيص وتصحيح المشاكل */
+.debug-info {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1000;
+    max-width: 300px;
+}
 
-    <h1 class="text-2xl font-bold mb-6">التواصل بخصوص العميل: {{ $customer->customer_name }}</h1>
+/* Voice Message Animations */
+.waveform-bar {
+    animation: wave 1.5s ease-in-out infinite alternate;
+}
 
-    {{-- لا يظهر زر حذف جميع الملاحظات للموظف --}}
-    {{-- أزلت زر حذف جميع الملاحظات من هنا --}}
+@keyframes wave {
+    0% { transform: scaleY(0.3); opacity: 0.4; }
+    100% { transform: scaleY(1); opacity: 0.8; }
+}
 
-    <div id="chat-container" class="flex-grow overflow-y-auto bg-gray-50 rounded p-5 border flex flex-col space-y-3 text-sm font-sans">
+.waveform-bar.playing {
+    animation: wave 0.8s ease-in-out infinite alternate;
+    opacity: 1;
+}
 
-        @foreach($communications as $msg)
-            @php 
-                $isAdminReply = !empty($msg->admin_reply);
-                $isOdd = $loop->index % 2 === 1;
-            @endphp
+/* Recording Animation */
+.recording-pulse {
+    animation: pulse 1s infinite;
+}
 
-            <div class="max-w-[80%] {{ $isOdd ? 'self-end text-right' : 'self-start text-right' }}">
-                <div class="block p-3 rounded-lg shadow-md min-w-[80%] break-words
-                    {{ $isOdd ? 'bg-gray-300 text-gray-900' : 'bg-red-600 text-white' }}">
-                    {!! nl2br(e($isAdminReply ? $msg->admin_reply : $msg->notes)) !!}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Message appear animation */
+.message-appear {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* New message indicator */
+.new-message-indicator {
+    animation: newMessagePulse 2s ease-in-out 3;
+}
+
+@keyframes newMessagePulse {
+    0%, 100% { background-color: rgba(34, 197, 94, 0.1); }
+    50% { background-color: rgba(34, 197, 94, 0.3); }
+}
+
+/* Fade out animation for deleted messages */
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.8); }
+}
+</style>
+
+<div class="flex h-[calc(100vh-200px)] bg-white shadow-xl rounded-2xl overflow-hidden">
+    
+    <!-- Chat Area -->
+    <div class="flex-1 flex flex-col">
+        
+        <!-- Chat Header -->
+        <div class="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <!-- Customer Avatar -->
+                <div class="h-12 w-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-lg font-bold">
+                    {{ substr($customer->customer_name, 0, 1) }}
                 </div>
-
-                <div class="flex justify-between items-center mt-1 text-xs text-gray-500 {{ $isOdd ? 'text-left' : 'text-right' }}">
-                    <div>
-                        {{ \Carbon\Carbon::parse($msg->created_at)->format('Y-m-d H:i') }}
-
-                        @if(!$isAdminReply && !$msg->is_read_by_employee)
-                            <span class="ml-2 text-red-600 font-semibold">رسالة جديدة</span>
+                
+                <div>
+                    <h3 class="font-semibold text-lg">{{ $customer->customer_name }}</h3>
+                    <div class="flex items-center space-x-3 space-x-reverse text-blue-100">
+                        <span class="text-sm">{{ $customer->phone }}</span>
+                        @php
+                            $classifications = $customer->customer_classifications ?? [];
+                            if (is_string($classifications)) {
+                                $classifications = json_decode($classifications, true) ?? [];
+                            }
+                        @endphp
+                        
+                        @if(in_array('requested_call', $classifications))
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-500 bg-opacity-80 text-white">
+                                <i class="fas fa-phone ml-1"></i>
+                                مكالمة مطلوبة
+                            </span>
+                        @endif
+                        
+                        @if(in_array('requested_visit', $classifications))
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-500 bg-opacity-80 text-white">
+                                <i class="fas fa-building ml-1"></i>
+                                زيارة مطلوبة
+                            </span>
+                        @endif
+                        
+                        @if(in_array('difficult_customer', $classifications))
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-500 bg-opacity-80 text-white">
+                                <i class="fas fa-exclamation-triangle ml-1"></i>
+                                عالي الأولوية
+                            </span>
                         @endif
                     </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <!-- Connection Status -->
+                <div id="connectionStatus" class="flex items-center text-sm text-blue-100">
+                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                    متصل
+                </div>
+                
+                <!-- Chat Actions -->
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    @if($chat->status !== 'completed')
+                        <button onclick="markAsCompleted()" 
+                                class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-check ml-1"></i>
+                            تم التواصل
+                        </button>
+                    @endif
+                    
+                    <a href="{{ route('employee.customer-communication.index') }}" 
+                       class="text-blue-100 hover:text-white p-2 transition-colors">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                    {{-- أيقونة حذف ملاحظة واحدة تظهر فقط لملاحظات الموظف --}}
-                    @if(!$isAdminReply && $msg->employee_id == auth()->id())
-                    <form method="POST" action="{{ route('employee.customer-communication.note.destroy', $msg->id) }}" 
-                          onsubmit="return confirm('هل أنت متأكد من حذف هذه الملاحظة؟');">
-                        @csrf
-                        @method('DELETE')
-                        <!-- <button type="submit" class="text-red-600 hover:text-red-800 p-1 rounded" 
-                            title="حذف الملاحظة">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button> -->
-                    </form>
+        <!-- Customer Info Bar -->
+        <div class="p-4 bg-gray-50 border-b">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-sm text-gray-600">
+                        <span class="font-medium">وصف العمل:</span>
+                        {{ $customer->work_description }}
+                    </p>
+                </div>
+                
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                        {{ $chat->status === 'active' ? 'bg-green-100 text-green-800' : 
+                           ($chat->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') }}">
+                        {{ $chat->status === 'active' ? 'جاري التواصل' : 
+                           ($chat->status === 'pending' ? 'في الانتظار' : 'تم التواصل') }}
+                    </span>
+                    
+                    @if($chat->last_message_at)
+                        <span class="text-xs text-gray-500">
+                            آخر رسالة: {{ $chat->last_message_at->diffForHumans() }}
+                        </span>
                     @endif
                 </div>
             </div>
-        @endforeach
+        </div>
 
+        <!-- Messages Container -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div id="messagesList" class="space-y-4">
+                @if($messages->isEmpty())
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-comments text-blue-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">ابدأ التواصل مع الإدارة</h3>
+                        <p class="text-gray-500">اكتب رسالتك الأولى بخصوص هذا العميل</p>
+                    </div>
+                @else
+                    @foreach($messages as $message)
+                        <div class="flex {{ $message->sender_type === 'employee' ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
+                            <div class="max-w-xs lg:max-w-md">
+                                
+                                <!-- Message Bubble -->
+                                <div class="rounded-2xl px-4 py-3 {{ $message->sender_type === 'employee' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 shadow-sm border' }}">
+                                    
+                                    @if($message->message_type === 'text')
+                                        <p class="break-words leading-relaxed">{{ $message->content }}</p>
+                                        
+                                    @elseif($message->message_type === 'file')
+                                        <div class="space-y-3">
+                                            <!-- File Info -->
+                                            <div class="flex items-center space-x-3 space-x-reverse">
+                                                <div class="flex-shrink-0">
+                                                    @php
+                                                        $extension = pathinfo($message->file_name, PATHINFO_EXTENSION);
+                                                        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                        $isPdf = strtolower($extension) === 'pdf';
+                                                        $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
+                                                    @endphp
+                                                    
+                                                    @if($isImage)
+                                                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                                            <i class="fas fa-image text-white"></i>
+                                                        </div>
+                                                    @elseif($isPdf)
+                                                        <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                                                            <i class="fas fa-file-pdf text-white"></i>
+                                                        </div>
+                                                    @elseif($isDoc)
+                                                        <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
+                                                            <i class="fas fa-file-word text-white"></i>
+                                                        </div>
+                                                    @else
+                                                        <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                                                            <i class="fas fa-file text-white"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="font-medium truncate">{{ $message->file_name }}</p>
+                                                    <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- File Actions -->
+                                            <div class="flex space-x-2 space-x-reverse text-xs">
+                                                <button onclick="previewFile('{{ $message->file_url }}', '{{ $message->file_name }}', '{{ $extension }}')" 
+                                                        class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                    <i class="fas fa-eye ml-1"></i> معاينة
+                                                </button>
+                                                <button onclick="copyToClipboard('{{ $message->file_url }}')" 
+                                                        class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                    <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                                                </button>
+                                                <a href="{{ $message->file_url }}" target="_blank" 
+                                                   class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                    <i class="fas fa-download ml-1"></i> تحميل
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
+                                    @elseif($message->message_type === 'voice')
+                                        <div class="space-y-3">
+                                            <!-- Voice Message Header -->
+                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20' : 'bg-blue-500' }} flex items-center justify-center">
+                                                    <i class="fas fa-microphone text-white text-sm"></i>
+                                                </div>
+                                                <span class="text-sm opacity-90">رسالة صوتية</span>
+                                                @if($message->duration)
+                                                    <span class="text-xs opacity-75">
+                                                        {{ $message->duration_formatted }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            
+                                            <!-- Custom Audio Player -->
+                                            <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                                                <div class="flex items-center space-x-3 space-x-reverse">
+                                                    <!-- Play/Pause Button -->
+                                                    <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
+                                                            class="w-10 h-10 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-500 hover:bg-blue-600' }} flex items-center justify-center transition-colors audio-play-btn">
+                                                        <i class="fas fa-play text-white text-sm"></i>
+                                                    </button>
+                                                    
+                                                    <!-- Waveform/Progress -->
+                                                    <div class="flex-1">
+                                                        <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                                            @for($i = 0; $i < 20; $i++)
+                                                                <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                                                     style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Duration -->
+                                                    <span class="text-xs opacity-75 font-mono duration-display">
+                                                        {{ $message->duration_formatted ?? '0:00' }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Hidden Audio Element -->
+                                                <audio class="hidden voice-audio" preload="metadata">
+                                                    <source src="{{ $message->file_url }}" type="audio/webm">
+                                                </audio>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
+                                    <!-- Message Footer -->
+                                    <div class="flex justify-between items-center mt-3 text-xs opacity-75">
+                                        <div class="flex items-center space-x-2 space-x-reverse">
+                                            <span>{{ $message->created_at->format('H:i') }}</span>
+                                            @if($message->sender_type === 'employee' && $message->created_at->diffInMinutes(now()) <= 5)
+                                                <button onclick="deleteMessage({{ $message->id }})" 
+                                                        class="text-red-400 hover:text-red-300 transition-colors">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                        
+                                        @if($message->sender_type === 'employee')
+                                            <i class="fas {{ $message->is_read ? 'fa-check-double text-blue-200' : 'fa-check text-blue-300' }}"></i>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <!-- Sender Info -->
+                                <div class="flex items-center mt-2 {{ $message->sender_type === 'employee' ? 'justify-end' : 'justify-start' }}">
+                                    @if($message->sender_type === 'admin')
+                                        <div class="flex items-center space-x-2 space-x-reverse">
+                                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                                                <i class="fas fa-user-tie text-white text-xs"></i>
+                                            </div>
+                                            <span class="text-xs text-gray-500">الإدارة</span>
+                                        </div>
+                                    @else
+                                        <div class="flex items-center space-x-2 space-x-reverse">
+                                            <span class="text-xs text-gray-500">أنت</span>
+                                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                                                <i class="fas fa-user text-white text-xs"></i>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t bg-white p-6">
+            <form id="messageForm" class="flex items-end space-x-4 space-x-reverse">
+                <input type="hidden" id="messageType" value="text">
+                
+                <!-- File Input -->
+                <input type="file" id="fileInput" class="hidden" accept="*/*">
+                
+                <!-- Voice Button -->
+                <button type="button" id="voiceBtn" onclick="toggleVoiceRecording()" 
+                        class="flex-shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-200 voice-record-btn">
+                    <i class="fas fa-microphone text-gray-600"></i>
+                </button>
+                
+                <!-- Attachment Button -->
+                <button type="button" onclick="toggleFileInput()" 
+                        class="flex-shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-paperclip text-gray-600"></i>
+                </button>
+                
+                <!-- Text Input -->
+                <div class="flex-1 relative">
+                    <input type="text" id="messageInput" placeholder="اكتب رسالتك للإدارة بخصوص هذا العميل..." 
+                           class="w-full px-6 py-4 rounded-2xl border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 pr-16 text-lg">
+                    
+                    <!-- Send Button -->
+                    <button type="submit" 
+                            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-full flex items-center justify-center transition-all shadow-lg hover:shadow-xl">
+                        <i class="fas fa-paper-plane text-white"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Recording Status -->
+            <div id="recordingStatus" class="hidden mt-4 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-white rounded-full mr-3 recording-pulse"></div>
+                        <div>
+                            <p class="font-medium">جاري التسجيل...</p>
+                            <p class="text-sm text-red-100">اضغط الزر مرة أخرى للإنهاء</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="recordingTime" class="text-xl font-mono">0:00</div>
+                        <div class="text-xs text-red-100">مدة التسجيل</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    {{-- Form to add employee note --}}
-    <form action="{{ route('employee.customer-communication.store', $customer->id) }}" method="POST" class="mt-4 flex space-x-3 max-w-4xl">
-        @csrf
-        <input name="notes" required placeholder="اكتب ملاحظتك هنا..." 
-            class="flex-grow border rounded p-3 resize-none text-right" rows="4">
-        <button type="submit" 
-            class="bg-red-700 hover:bg-red-800 text-white rounded px-6 py-4 font-semibold transition duration-300 shadow-lg shadow-red-500/50 flex items-center justify-center">
-            إرسال
-        </button>
-    </form>
-
 </div>
+
+<!-- Modals and overlays here... -->
 @endsection
+
+@push('scripts')
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+let chatId = {{ $chat->id }};
+let recordingTimer = null;
+let lastMessageId = 0;
+let refreshInterval = null;
+let isPageVisible = true;
+
+// تتبع رؤية الصفحة
+document.addEventListener('visibilitychange', function() {
+    isPageVisible = !document.hidden;
+    if (isPageVisible) {
+        loadNewMessages();
+    }
+});
+
+// بدء تحديث الرسائل كل 5 ثواني
+function startAutoRefresh() {
+    refreshInterval = setInterval(loadNewMessages, 5000);
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+// تحميل الرسائل الجديدة
+function loadNewMessages() {
+    if (!isPageVisible) return;
+    
+    updateConnectionStatus('loading');
+    
+    fetch(`/employee/customer-communication/${chatId}/messages`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network error');
+            return response.json();
+        })
+        .then(data => {
+            updateConnectionStatus('connected');
+            
+            if (data.messages && data.messages.length > 0) {
+                const newMessages = data.messages.filter(msg => msg.id > lastMessageId);
+                
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
+                        addNewMessageToChat(message);
+                        lastMessageId = Math.max(lastMessageId, message.id);
+                    });
+                    
+                    scrollToBottom();
+                    
+                    if (!isPageVisible) {
+                        showNewMessageNotification();
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            updateConnectionStatus('error');
+        });
+}
+
+// تحديث حالة الاتصال
+function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connectionStatus');
+    const indicator = statusElement.querySelector('.w-2');
+    
+    switch (status) {
+        case 'connected':
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+            break;
+        case 'loading':
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>جاري التحديث...';
+            break;
+        case 'error':
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>خطأ في الاتصال';
+            break;
+    }
+}
+
+// إرسال الرسالة
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const messageType = document.getElementById('messageType').value;
+    
+    if (messageType === 'text') {
+        sendTextMessage();
+    } else if (messageType === 'file') {
+        sendFileMessage();
+    }
+});
+
+// إرسال رسالة نصية
+function sendTextMessage() {
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    
+    if (!content) return;
+    
+    const formData = new FormData();
+    formData.append('message_type', 'text');
+    formData.append('content', content);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    
+    fetch(`/employee/customer-communication/${chatId}/send`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
+        } else {
+            alert('حدث خطأ في إرسال الرسالة');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في إرسال الرسالة');
+    });
+}
+
+// تبديل إدخال الملف
+function toggleFileInput() {
+    const fileInput = document.getElementById('fileInput');
+    const messageType = document.getElementById('messageType');
+    
+    if (messageType.value === 'file') {
+        messageType.value = 'text';
+        fileInput.value = '';
+    } else {
+        messageType.value = 'file';
+        fileInput.click();
+    }
+}
+
+// التعامل مع اختيار الملف
+document.getElementById('fileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+            alert('حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت');
+            this.value = '';
+            document.getElementById('messageType').value = 'text';
+            return;
+        }
+        sendFileMessage();
+    }
+});
+
+function sendFileMessage() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('message_type', 'file');
+    formData.append('file', file);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    
+    fetch(`/employee/customer-communication/${chatId}/send`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            fileInput.value = '';
+            document.getElementById('messageType').value = 'text';
+            addNewMessageToChat(data.message);
+            lastMessageId = Math.max(lastMessageId, data.message.id);
+            scrollToBottom();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في إرسال الملف');
+    });
+}
+
+// تسجيل صوتي
+function toggleVoiceRecording() {
+    if (!isRecording) {
+        startRecording();
+    } else {
+        stopRecording();
+    }
+}
+
+function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                sendVoiceMessage(audioBlob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+            
+            mediaRecorder.start();
+            isRecording = true;
+            
+            document.getElementById('voiceBtn').classList.remove('bg-gray-100', 'hover:bg-gray-200');
+            document.getElementById('voiceBtn').classList.add('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+            document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop text-white"></i>';
+            
+            document.getElementById('recordingStatus').classList.remove('hidden');
+            
+            let startTime = Date.now();
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('recordingTime').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        })
+        .catch(error => {
+            console.error('Error accessing microphone:', error);
+            alert('لا يمكن الوصول للميكروفون');
+        });
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        
+        const voiceBtn = document.getElementById('voiceBtn');
+        voiceBtn.classList.remove('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+        voiceBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
+        voiceBtn.innerHTML = '<i class="fas fa-microphone text-gray-600"></i>';
+        
+        document.getElementById('recordingStatus').classList.add('hidden');
+        
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+        }
+    }
+}
+
+function sendVoiceMessage(audioBlob) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        const estimatedDuration = Math.round(audioBlob.size / 16000);
+        
+        const formData = new FormData();
+        formData.append('message_type', 'voice');
+        formData.append('voice', reader.result);
+        formData.append('duration', estimatedDuration);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        
+        fetch(`/employee/customer-communication/${chatId}/send`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addNewMessageToChat(data.message);
+                lastMessageId = Math.max(lastMessageId, data.message.id);
+                scrollToBottom();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في إرسال التسجيل الصوتي');
+        });
+    };
+    reader.readAsDataURL(audioBlob);
+}
+
+// إضافة رسالة جديدة للشات
+function addNewMessageToChat(message) {
+    const messagesList = document.getElementById('messagesList');
+    
+    if (document.querySelector(`[data-message-id="${message.id}"]`)) {
+        return;
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex ${message.sender_type === 'employee' ? 'justify-end' : 'justify-start'} message-appear`;
+    messageDiv.setAttribute('data-message-id', message.id);
+    
+    if (message.sender_type !== 'employee') {
+        messageDiv.classList.add('new-message-indicator');
+    }
+    
+    messageDiv.innerHTML = generateMessageHTML(message);
+    messagesList.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.classList.remove('new-message-indicator');
+    }, 3000);
+}
+
+function generateMessageHTML(message) {
+    let contentHTML = '';
+    
+    if (message.message_type === 'text') {
+        contentHTML = `<p class="break-words leading-relaxed">${message.content}</p>`;
+    } else if (message.message_type === 'voice') {
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-8 h-8 rounded-full ${message.sender_type === 'employee' ? 'bg-white bg-opacity-20' : 'bg-blue-500'} flex items-center justify-center">
+                        <i class="fas fa-microphone text-white text-sm"></i>
+                    </div>
+                    <span class="text-sm opacity-90">رسالة صوتية</span>
+                    <span class="text-xs opacity-75">${message.duration_formatted || '0:00'}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="max-w-xs lg:max-w-md">
+            <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'employee' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
+                ${contentHTML}
+                <div class="flex justify-between items-center mt-3 text-xs opacity-75">
+                    <span>${message.created_at}</span>
+                    ${message.sender_type === 'employee' ? 
+                        `<i class="fas ${message.is_read ? 'fa-check-double text-blue-200' : 'fa-check text-blue-300'}"></i>` : ''
+                    }
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// حذف الرسالة
+function deleteMessage(messageId) {
+    if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+    
+    fetch(`/employee/customer-communication/message/${messageId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-message-id="${messageId}"]`).remove();
+        } else {
+            alert(data.message || 'حدث خطأ في حذف الرسالة');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في حذف الرسالة');
+    });
+}
+
+// تحديد كتم التواصل
+function markAsCompleted() {
+    if (!confirm('هل أنت متأكد من أنه تم التواصل مع العميل؟')) return;
+    
+    fetch(`/employee/customer-communication/${chatId}/completed`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// نسخ الرابط
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('تم نسخ الرابط!');
+    });
+}
+
+// معاينة الملف
+function previewFile(url, filename, extension) {
+    window.open(url, '_blank');
+}
+
+// التمرير لأسفل
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTop = container.scrollHeight;
+}
+
+// تحديد آخر معرف رسالة
+function initializeLastMessageId() {
+    const messages = document.querySelectorAll('[data-message-id]');
+    if (messages.length > 0) {
+        const ids = Array.from(messages).map(msg => parseInt(msg.getAttribute('data-message-id')));
+        lastMessageId = Math.max(...ids);
+    }
+}
+
+// عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    initializeLastMessageId();
+    startAutoRefresh();
+    scrollToBottom();
+    
+    // تركيز على حقل الرسالة
+    document.getElementById('messageInput').focus();
+});
+
+// إيقاف التحديث عند مغادرة الصفحة
+window.addEventListener('beforeunload', function() {
+    if (isRecording) {
+        stopRecording();
+    }
+    stopAutoRefresh();
+});
+
+</script>
+@endpush

@@ -278,4 +278,16 @@ class PotentialCustomer extends Model
                     ->orderBy('created_at', 'desc')
                     ->get();
     }
+    public function customerChat()
+{
+    return $this->hasMany(CustomerChat::class, 'potential_customer_id');
+}
+
+public function activeChatWithEmployee($employeeId)
+{
+    return $this->customerChat()
+                ->where('employee_id', $employeeId)
+                ->whereIn('status', ['pending', 'active'])
+                ->first();
+}
 }
