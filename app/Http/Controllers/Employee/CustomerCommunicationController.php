@@ -19,9 +19,9 @@ class CustomerCommunicationController extends Controller
         $employee = auth('employee')->user();
 
         // الحصول على العملاء المطلوب التواصل معهم (مكالمات أو زيارات)
-        $query = PotentialCustomer::where(function($q) {
+        $query = PotentialCustomer::where(function ($q) {
             $q->whereJsonContains('customer_classifications', 'requested_call')
-              ->orWhereJsonContains('customer_classifications', 'requested_visit');
+                ->orWhereJsonContains('customer_classifications', 'requested_visit');
         });
 
         // تطبيق الفلاتر
@@ -34,23 +34,23 @@ class CustomerCommunicationController extends Controller
         } elseif ($filter === 'my_chats') {
             // العملاء الذين لديهم شاتات مع هذا الموظف
             $customerIds = CustomerChat::where('employee_id', $employee->id)
-                                     ->pluck('potential_customer_id')
-                                     ->toArray();
+                ->pluck('potential_customer_id')
+                ->toArray();
             $query->whereIn('id', $customerIds);
         }
 
-        $customers = $query->with(['customerChat' => function($q) use ($employee) {
-                        $q->where('employee_id', $employee->id)
-                          ->orWhereNull('employee_id');
-                    }])
-                    ->withCount(['customerChat as unread_count' => function($q) use ($employee) {
-                        $q->whereHas('messages', function($msgQuery) {
-                            $msgQuery->where('sender_type', 'admin')
-                                     ->where('is_read', false);
-                        });
-                    }])
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(12);
+        $customers = $query->with(['customerChat' => function ($q) use ($employee) {
+            $q->where('employee_id', $employee->id)
+                ->orWhereNull('employee_id');
+        }])
+            ->withCount(['customerChat as unread_count' => function ($q) use ($employee) {
+                $q->whereHas('messages', function ($msgQuery) {
+                    $msgQuery->where('sender_type', 'admin')
+                        ->where('is_read', false);
+                });
+            }])
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
 
         // الإحصائيات
         $stats = $this->getEmployeeStats();
@@ -61,15 +61,15 @@ class CustomerCommunicationController extends Controller
     public function show($potentialCustomerId)
     {
         $employee = auth('employee')->user();
-        
+
         // البحث عن العميل
         $customer = PotentialCustomer::findOrFail($potentialCustomerId);
-        
+
         // البحث عن الشات بين الموظف والإدارة بخصوص هذا العميل
         $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)
-                           ->where('employee_id', $employee->id)
-                           ->first();
-        
+            ->where('employee_id', $employee->id)
+            ->first();
+
         // إذا لم يوجد شات، ننشئ واحد جديد
         if (!$chat) {
             $chat = CustomerChat::create([
@@ -84,9 +84,9 @@ class CustomerCommunicationController extends Controller
 
         // تحميل الرسائل بين الموظف والإدارة
         $messages = $chat->messages()
-                        ->with('sender')
-                        ->orderBy('created_at', 'asc')
-                        ->get();
+            ->with('sender')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         // تحديد الرسائل كمقروءة للموظف
         $chat->markAsRead('employee');
@@ -105,9 +105,10 @@ class CustomerCommunicationController extends Controller
         $chat = CustomerChat::findOrFail($chatId);
 
         // التحقق من أن هذا الشات خاص بهذا الموظف
-        if ($chat->employee_id !== $employee->id) {
+        if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
+
 
         $request->validate([
             'message_type' => 'required|in:text,file,voice',
@@ -129,12 +130,11 @@ class CustomerCommunicationController extends Controller
                     'message_type' => 'text',
                     'content' => $request->content
                 ]);
-            } 
-            elseif ($request->message_type === 'file') {
+            } elseif ($request->message_type === 'file') {
                 $file = $request->file('file');
                 $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
                 $filePath = $file->storeAs('customer-chat/files', $fileName, 'public');
-                
+
                 $message = CustomerChatMessage::create([
                     'chat_id' => $chat->id,
                     'sender_type' => 'employee',
@@ -145,33 +145,32 @@ class CustomerCommunicationController extends Controller
                     'file_size' => $file->getSize(),
                     'file_type' => $file->getMimeType()
                 ]);
-            }
-            elseif ($request->message_type === 'voice') {
+            } elseif ($request->message_type === 'voice') {
                 $voiceData = $request->voice;
                 if (is_string($voiceData) && str_starts_with($voiceData, 'data:audio')) {
                     // فك تشفير الصوت من base64
                     $audio = base64_decode(explode(',', $voiceData)[1]);
                     $fileName = time() . '_' . Str::random(10) . '.webm';
-                    
+
                     // حفظ الملف
                     $filePath = 'customer-chat/voice/' . $fileName;
                     Storage::disk('public')->put($filePath, $audio);
-                    
+
                     // التأكد من حفظ الملف
                     if (!Storage::disk('public')->exists($filePath)) {
                         throw new \Exception('فشل في حفظ الملف الصوتي');
                     }
-                    
+
                     $duration = $request->duration;
                     $duration = is_numeric($duration) ? (int) $duration : 0;
-                    
+
                     if ($duration > 1000) {
                         $duration = round($duration / 1000);
                     }
-                    
+
                     if ($duration < 1) $duration = 1;
                     elseif ($duration > 600) $duration = 600;
-                    
+
                     $message = CustomerChatMessage::create([
                         'chat_id' => $chat->id,
                         'sender_type' => 'employee',
@@ -183,7 +182,7 @@ class CustomerCommunicationController extends Controller
                         'file_type' => 'audio/webm',
                         'duration' => $duration
                     ]);
-                    
+
                     // تسجيل المسار للتأكد
                     \Log::info('Voice file saved:', [
                         'path' => $filePath,
@@ -200,7 +199,7 @@ class CustomerCommunicationController extends Controller
 
             if ($message) {
                 $message->load('sender');
-                
+
                 $responseData = [
                     'success' => true,
                     'message' => [
@@ -220,16 +219,15 @@ class CustomerCommunicationController extends Controller
                         'file_size' => $message->file_size
                     ]
                 ];
-                
+
                 if ($message->message_type === 'voice') {
                     $voiceDuration = $message->voice_duration;
                     $responseData['message']['duration'] = $voiceDuration['total_seconds'];
                     $responseData['message']['duration_formatted'] = $voiceDuration['formatted'];
                 }
-                
+
                 return response()->json($responseData);
             }
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['success' => false, 'error' => 'فشل في إرسال الرسالة: ' . $e->getMessage()], 500);
@@ -244,17 +242,18 @@ class CustomerCommunicationController extends Controller
         $employee = auth('employee')->user();
         $chat = CustomerChat::findOrFail($chatId);
 
-        if ($chat->employee_id !== $employee->id) {
+        if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
 
+
         $lastMessageId = $request->get('last_message_id', 0);
-        
+
         $newMessages = $chat->messages()
-                          ->where('id', '>', $lastMessageId)
-                          ->with('sender')
-                          ->orderBy('created_at', 'asc')
-                          ->get();
+            ->where('id', '>', $lastMessageId)
+            ->with('sender')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         // تحديد الرسائل من الإدارة كمقروءة
         $chat->messages()
@@ -263,7 +262,7 @@ class CustomerCommunicationController extends Controller
             ->where('id', '>', $lastMessageId)
             ->update(['is_read' => true, 'read_at' => now()]);
 
-        $formattedMessages = $newMessages->map(function($message) {
+        $formattedMessages = $newMessages->map(function ($message) {
             $messageData = [
                 'id' => $message->id,
                 'content' => $message->content,
@@ -279,15 +278,15 @@ class CustomerCommunicationController extends Controller
                 'file_path' => $message->file_path,
                 'file_type' => $message->file_type,
                 'file_size' => $message->file_size,
-                'can_delete' => $message->sender_type === 'employee' && 
-                               $message->created_at->diffInMinutes(now()) <= 5
+                'can_delete' => $message->sender_type === 'employee' &&
+                    $message->created_at->diffInMinutes(now()) <= 5
             ];
-            
+
             if ($message->message_type === 'voice') {
                 $messageData['duration'] = $message->duration;
                 $messageData['duration_formatted'] = $message->duration_formatted;
             }
-            
+
             return $messageData;
         });
 
@@ -303,17 +302,18 @@ class CustomerCommunicationController extends Controller
         $employee = auth('employee')->user();
         $chat = CustomerChat::findOrFail($chatId);
 
-        if ($chat->employee_id !== $employee->id) {
+        if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
 
+
         $messages = $chat->messages()
-                        ->with('sender')
-                        ->orderBy('created_at', 'desc')
-                        ->limit(50)
-                        ->get()
-                        ->reverse()
-                        ->values();
+            ->with('sender')
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values();
 
         // تحديد الرسائل كمقروءة للموظف
         $chat->messages()
@@ -322,7 +322,7 @@ class CustomerCommunicationController extends Controller
             ->update(['is_read' => true, 'read_at' => now()]);
 
         return response()->json([
-            'messages' => $messages->map(function($message) {
+            'messages' => $messages->map(function ($message) {
                 $messageData = [
                     'id' => $message->id,
                     'content' => $message->content,
@@ -335,12 +335,12 @@ class CustomerCommunicationController extends Controller
                     'created_at' => $message->created_at->format('H:i'),
                     'is_read' => $message->is_read
                 ];
-                
+
                 if ($message->message_type === 'voice') {
                     $messageData['duration'] = $message->duration;
                     $messageData['duration_formatted'] = $message->duration_formatted;
                 }
-                
+
                 return $messageData;
             })
         ]);
@@ -351,9 +351,10 @@ class CustomerCommunicationController extends Controller
         $employee = auth('employee')->user();
         $chat = CustomerChat::findOrFail($chatId);
 
-        if ($chat->employee_id !== $employee->id) {
+        if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
+
 
         $chat->update(['status' => 'completed']);
 
@@ -366,9 +367,11 @@ class CustomerCommunicationController extends Controller
         $message = CustomerChatMessage::findOrFail($messageId);
 
         // التحقق من أن الرسالة من هذا الموظف وضمن 5 دقائق
-        if ($message->sender_type !== 'employee' || 
+        if (
+            $message->sender_type !== 'employee' ||
             $message->sender_id !== $employee->id ||
-            $message->created_at->diffInMinutes(now()) > 5) {
+            $message->created_at->diffInMinutes(now()) > 5
+        ) {
             return response()->json(['error' => 'لا يمكن حذف هذه الرسالة'], 403);
         }
 
@@ -385,11 +388,11 @@ class CustomerCommunicationController extends Controller
     private function getEmployeeStats()
     {
         $employee = auth('employee')->user();
-        
+
         // العملاء المطلوب التواصل معهم
-        $totalCustomers = PotentialCustomer::where(function($query) {
+        $totalCustomers = PotentialCustomer::where(function ($query) {
             $query->whereJsonContains('customer_classifications', 'requested_call')
-                  ->orWhereJsonContains('customer_classifications', 'requested_visit');
+                ->orWhereJsonContains('customer_classifications', 'requested_visit');
         })->count();
 
         // عملاء المكالمات
@@ -403,13 +406,13 @@ class CustomerCommunicationController extends Controller
 
         // شاتات هذا الموظف
         $myChats = CustomerChat::where('employee_id', $employee->id)->count();
-        
+
         // الرسائل غير المقروءة من الإدارة
-        $unreadFromAdmin = CustomerChatMessage::whereHas('chat', function($query) use ($employee) {
+        $unreadFromAdmin = CustomerChatMessage::whereHas('chat', function ($query) use ($employee) {
             $query->where('employee_id', $employee->id);
         })->where('sender_type', 'admin')
-          ->where('is_read', false)
-          ->count();
+            ->where('is_read', false)
+            ->count();
 
         return [
             'total_customers' => $totalCustomers,
