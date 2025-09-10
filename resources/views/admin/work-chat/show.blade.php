@@ -76,7 +76,7 @@
                 <div>
                     <h3 class="font-medium">{{ $workChat->employee->name ?? 'موظف محذوف' }}</h3>
                     <p class="text-sm text-blue-100 flex items-center">
-                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                        <span class="w-2 h-2 bg-green-400 rounded-full ml-2 animate-pulse"></span>
                         {{ $workChat->type === 'design' ? 'مصمم' : 'مونتير' }} • متصل
                     </p>
                 </div>
@@ -84,7 +84,7 @@
             
             <div class="flex items-center space-x-2 space-x-reverse">
                 <div id="connectionStatus" class="flex items-center text-sm text-blue-100">
-                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                    <span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>
                     متصل
                 </div>
                 <button onclick="clearChatFiles()" class="text-white hover:text-blue-200 p-2" title="مسح الملفات">
@@ -411,8 +411,8 @@ function updateConnectionStatus(status) {
     
     switch (status) {
         case 'connected':
-            indicator.className = 'w-2 h-2 bg-green-400 rounded-full mr-2';
-            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+            indicator.className = 'w-2 h-2 bg-green-400 rounded-full ml-2';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>متصل';
             break;
         case 'loading':
             indicator.className = 'w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse';

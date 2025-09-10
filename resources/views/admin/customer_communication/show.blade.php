@@ -132,7 +132,7 @@
                 <div class="flex items-center space-x-3 space-x-reverse">
                     <!-- Connection Status -->
                     <div id="connectionStatus" class="flex items-center text-sm text-red-100">
-                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                        <span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>
                         متصل
                     </div>
                     
@@ -509,7 +509,7 @@
         
         switch (status) {
             case 'connected':
-                statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+                statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>متصل';
                 break;
             case 'loading':
                 statusElement.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>جاري التحديث...';
@@ -829,22 +829,58 @@
             contentHTML = `<p class="break-words leading-relaxed">${message.content}</p>`;
         } else if (message.message_type === 'file') {
             contentHTML = `
-                <div class="space-y-3">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-file text-white"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-medium truncate">${message.file_name}</p>
-                            <p class="text-xs opacity-75">${message.file_size_formatted}</p>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2 space-x-reverse text-xs">
-                        <a href="${message.file_url}" target="_blank" class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                            <i class="fas fa-download ml-1"></i> تحميل
-                        </a>
-                    </div>
-                </div>
+                                          <div class="space-y-3">
+                                                <!-- File Info -->
+                                                <div class="flex items-center space-x-3 space-x-reverse">
+                                                    <div class="flex-shrink-0">
+                                                        @php
+                                                            $extension = pathinfo($message->file_name, PATHINFO_EXTENSION);
+                                                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                            $isPdf = strtolower($extension) === 'pdf';
+                                                            $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
+                                                        @endphp
+                                                        
+                                                        @if($isImage)
+                                                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                                                <i class="fas fa-image text-white"></i>
+                                                            </div>
+                                                        @elseif($isPdf)
+                                                            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                                                                <i class="fas fa-file-pdf text-white"></i>
+                                                            </div>
+                                                        @elseif($isDoc)
+                                                            <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
+                                                                <i class="fas fa-file-word text-white"></i>
+                                                            </div>
+                                                        @else
+                                                            <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                                                                <i class="fas fa-file text-white"></i>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="font-medium truncate">{{ $message->file_name }}</p>
+                                                        <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- File Actions -->
+                                                <div class="flex space-x-2 space-x-reverse text-xs">
+                                                    <button onclick="previewFile('{{ $message->file_url }}', '{{ $message->file_name }}', '{{ $extension }}')" 
+                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                        <i class="fas fa-eye ml-1"></i> معاينة
+                                                    </button>
+                                                    <button onclick="copyToClipboard('{{ $message->file_url }}')" 
+                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                                                    </button>
+                                                    <a href="{{ $message->file_url }}" target="_blank" 
+                                                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                                        <i class="fas fa-download ml-1"></i> تحميل
+                                                    </a>
+                                                </div>
+                                            </div>
             `;
         } else if (message.message_type === 'voice') {
             contentHTML = `

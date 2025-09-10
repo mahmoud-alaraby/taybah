@@ -56,7 +56,7 @@
             <div class="flex items-center space-x-3 space-x-reverse">
                 <!-- Connection Status -->
                 <div id="connectionStatus" class="flex items-center text-sm text-blue-100">
-                    <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                    <span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>
                     متصل
                 </div>
                 
@@ -442,7 +442,7 @@ function updateConnectionStatus(status) {
     
     switch (status) {
         case 'connected':
-            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>متصل';
+            statusElement.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full ml-2"></span>متصل';
             break;
         case 'loading':
             statusElement.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>جاري التحديث...';
