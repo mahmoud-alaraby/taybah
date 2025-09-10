@@ -63,7 +63,7 @@ class CustomerCommunicationController extends Controller
                         });
                     }])
                     ->orderBy('created_at', 'desc')
-                    ->paginate(9); // تقليل العدد للكاردات الكبيرة
+                    ->paginate(12);
 
         // الإحصائيات
         $stats = $this->getAdminStats();
@@ -78,15 +78,19 @@ class CustomerCommunicationController extends Controller
         // البحث عن العميل
         $customer = PotentialCustomer::findOrFail($potentialCustomerId);
         
-        // البحث عن الشات الخاص بهذا العميل مع أي موظف
+        // البحث عن الشات الخاص بهذا العميل
         $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)
                            ->with(['employee', 'admin'])
                            ->first();
         
-        // إذا لم يوجد شات، لا يمكن للإدارة بدء شات جديد
+        // إذا لم يوجد شات، يمكن للإدارة بدء شات جديد
         if (!$chat) {
-            return redirect()->route('admin.customer-communication.index')
-                           ->with('error', 'لا يوجد تواصل مبدأ مع هذا العميل من قبل الموظفين');
+            // الحصول على الموظفين المؤهلين
+            $employeesWithPermission = Employee::whereHas('roles.permissions', function($query) {
+                $query->where('name', 'customer_communication');
+            })->get();
+
+            return view('admin.customer_communication.create_chat', compact('customer', 'employeesWithPermission'));
         }
 
         // تحميل الرسائل بين الموظف والإدارة
@@ -126,7 +130,8 @@ class CustomerCommunicationController extends Controller
                 'admin_id' => $admin->id,
                 'status' => 'active',
                 'priority' => 'normal',
-                'customer_type' => in_array('requested_call', $customer->customer_classifications ?? []) ? 'call_request' : 'visit_request'
+                'customer_type' => in_array('requested_call', $customer->customer_classifications ?? []) ? 'call_request' : 'visit_request',
+                'last_message_at' => now()
             ]);
 
             // إرسال رسالة تلقائية
@@ -145,10 +150,8 @@ class CustomerCommunicationController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تعيين الموظف بنجاح'
-        ]);
+        return redirect()->route('admin.customer-communication.show', $potentialCustomerId)
+                        ->with('success', 'تم تعيين الموظف وإنشاء الشات بنجاح');
     }
 
     public function sendMessage(Request $request, $chatId)
@@ -239,39 +242,95 @@ class CustomerCommunicationController extends Controller
                 $message->load('sender');
                 
                 $responseData = [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'message_type' => $message->message_type,
-                    'file_url' => $message->file_url,
-                    'file_name' => $message->file_name,
-                    'file_size_formatted' => $message->file_size_formatted,
-                    'sender_name' => $message->sender_name,
-                    'sender_type' => $message->sender_type,
-                    'created_at' => $message->created_at->format('H:i'),
-                    'is_read' => $message->is_read,
-                    'file_path' => $message->file_path,
-                    'file_type' => $message->file_type,
-                    'file_size' => $message->file_size
+                    'success' => true,
+                    'message' => [
+                        'id' => $message->id,
+                        'content' => $message->content,
+                        'message_type' => $message->message_type,
+                        'file_url' => $message->file_url,
+                        'file_name' => $message->file_name,
+                        'file_size_formatted' => $message->file_size_formatted,
+                        'sender_name' => $message->sender_name,
+                        'sender_type' => $message->sender_type,
+                        'created_at' => $message->created_at->format('H:i'),
+                        'created_at_full' => $message->created_at->format('Y-m-d H:i:s'),
+                        'is_read' => $message->is_read,
+                        'file_path' => $message->file_path,
+                        'file_type' => $message->file_type,
+                        'file_size' => $message->file_size
+                    ]
                 ];
                 
                 if ($message->message_type === 'voice') {
                     $voiceDuration = $message->voice_duration;
-                    $responseData['duration'] = $voiceDuration['total_seconds'];
-                    $responseData['duration_formatted'] = $voiceDuration['formatted'];
+                    $responseData['message']['duration'] = $voiceDuration['total_seconds'];
+                    $responseData['message']['duration_formatted'] = $voiceDuration['formatted'];
                 }
                 
-                return response()->json([
-                    'success' => true,
-                    'message' => $responseData
-                ]);
+                return response()->json($responseData);
             }
 
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => 'فشل في إرسال الرسالة: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'error' => 'فشل في إرسال الرسالة: ' . $e->getMessage()], 500);
         }
 
-        return response()->json(['error' => 'فشل في إرسال الرسالة'], 500);
+        return response()->json(['success' => false, 'error' => 'فشل في إرسال الرسالة'], 500);
+    }
+
+    public function getNewMessages($chatId, Request $request)
+    {
+        $admin = auth('admin')->user();
+        $chat = CustomerChat::findOrFail($chatId);
+
+        $lastMessageId = $request->get('last_message_id', 0);
+        
+        $newMessages = $chat->messages()
+                          ->where('id', '>', $lastMessageId)
+                          ->with('sender')
+                          ->orderBy('created_at', 'asc')
+                          ->get();
+
+        // تحديد الرسائل من الموظف كمقروءة
+        $chat->messages()
+            ->where('sender_type', 'employee')
+            ->where('is_read', false)
+            ->where('id', '>', $lastMessageId)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+        $formattedMessages = $newMessages->map(function($message) {
+            $messageData = [
+                'id' => $message->id,
+                'content' => $message->content,
+                'message_type' => $message->message_type,
+                'file_url' => $message->file_url,
+                'file_name' => $message->file_name,
+                'file_size_formatted' => $message->file_size_formatted,
+                'sender_name' => $message->sender_name,
+                'sender_type' => $message->sender_type,
+                'created_at' => $message->created_at->format('H:i'),
+                'created_at_full' => $message->created_at->format('Y-m-d H:i:s'),
+                'is_read' => $message->is_read,
+                'file_path' => $message->file_path,
+                'file_type' => $message->file_type,
+                'file_size' => $message->file_size,
+                'can_delete' => $message->sender_type === 'admin' && 
+                               $message->created_at->diffInMinutes(now()) <= 30
+            ];
+            
+            if ($message->message_type === 'voice') {
+                $messageData['duration'] = $message->duration;
+                $messageData['duration_formatted'] = $message->duration_formatted;
+            }
+            
+            return $messageData;
+        });
+
+        return response()->json([
+            'success' => true,
+            'messages' => $formattedMessages,
+            'last_message_id' => $newMessages->last()?->id ?? $lastMessageId
+        ]);
     }
 
     public function getMessages($chatId)
@@ -305,7 +364,9 @@ class CustomerCommunicationController extends Controller
                     'sender_name' => $message->sender_name,
                     'sender_type' => $message->sender_type,
                     'created_at' => $message->created_at->format('H:i'),
-                    'is_read' => $message->is_read
+                    'is_read' => $message->is_read,
+                    'can_delete' => $message->sender_type === 'admin' && 
+                                   $message->created_at->diffInMinutes(now()) <= 30
                 ];
                 
                 if ($message->message_type === 'voice') {
@@ -323,10 +384,10 @@ class CustomerCommunicationController extends Controller
         $admin = auth('admin')->user();
         $message = CustomerChatMessage::findOrFail($messageId);
 
-        // التحقق من أن الرسالة من هذا الإدارة وضمن 5 دقائق
+        // التحقق من أن الرسالة من هذا الأدمن وضمن 30 دقيقة
         if ($message->sender_type !== 'admin' || 
             $message->sender_id !== $admin->id ||
-            $message->created_at->diffInMinutes(now()) > 5) {
+            $message->created_at->diffInMinutes(now()) > 30) {
             return response()->json(['error' => 'لا يمكن حذف هذه الرسالة'], 403);
         }
 
@@ -344,6 +405,10 @@ class CustomerCommunicationController extends Controller
     {
         $admin = auth('admin')->user();
         $chat = CustomerChat::findOrFail($chatId);
+
+        if (!confirm('هل أنت متأكد من حذف جميع ملفات هذا الشات؟')) {
+            return response()->json(['error' => 'تم إلغاء العملية'], 400);
+        }
 
         $fileMessages = $chat->messages()
             ->whereIn('message_type', ['file', 'voice'])
@@ -368,6 +433,30 @@ class CustomerCommunicationController extends Controller
             'success' => true,
             'deleted_count' => $deletedCount,
             'freed_space' => $this->formatBytes($freedSpace)
+        ]);
+    }
+
+    public function clearEntireChat($chatId)
+    {
+        $admin = auth('admin')->user();
+        $chat = CustomerChat::findOrFail($chatId);
+
+        // حذف جميع الرسائل والملفات
+        $messages = $chat->messages;
+        
+        foreach ($messages as $message) {
+            if ($message->file_path && Storage::disk('public')->exists('customer-chat/' . $message->file_path)) {
+                Storage::disk('public')->delete('customer-chat/' . $message->file_path);
+            }
+            $message->delete();
+        }
+
+        // حذف الشات نفسه
+        $chat->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف الشات بالكامل'
         ]);
     }
 

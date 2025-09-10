@@ -5,75 +5,7 @@
 @section('page-subtitle', 'بخصوص العميل: ' . $customer->customer_name)
 
 @section('content')
-<style>
-/* تشخيص وتصحيح المشاكل */
-.debug-info {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    z-index: 1000;
-    max-width: 300px;
-}
-
-/* Voice Message Animations */
-.waveform-bar {
-    animation: wave 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes wave {
-    0% { transform: scaleY(0.3); opacity: 0.4; }
-    100% { transform: scaleY(1); opacity: 0.8; }
-}
-
-.waveform-bar.playing {
-    animation: wave 0.8s ease-in-out infinite alternate;
-    opacity: 1;
-}
-
-/* Recording Animation */
-.recording-pulse {
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* Message appear animation */
-.message-appear {
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* New message indicator */
-.new-message-indicator {
-    animation: newMessagePulse 2s ease-in-out 3;
-}
-
-@keyframes newMessagePulse {
-    0%, 100% { background-color: rgba(34, 197, 94, 0.1); }
-    50% { background-color: rgba(34, 197, 94, 0.3); }
-}
-
-/* Fade out animation for deleted messages */
-@keyframes fadeOut {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.8); }
-}
-</style>
-
-<div class="flex h-[calc(100vh-200px)] bg-white shadow-xl rounded-2xl overflow-hidden">
+<div class="flex h-screen max-h-[calc(100vh-200px)] bg-white shadow-xl rounded-2xl overflow-hidden">
     
     <!-- Chat Area -->
     <div class="flex-1 flex flex-col">
@@ -269,7 +201,7 @@
                                                 <div class="flex items-center space-x-3 space-x-reverse">
                                                     <!-- Play/Pause Button -->
                                                     <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
-                                                            class="w-10 h-10 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-500 hover:bg-blue-600' }} flex items-center justify-center transition-colors audio-play-btn">
+                                                            class="w-10 h-10 rounded-full {{ $message->sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-500 hover:bg-blue-600' }} flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 audio-play-btn">
                                                         <i class="fas fa-play text-white text-sm"></i>
                                                     </button>
                                                     
@@ -277,8 +209,8 @@
                                                     <div class="flex-1">
                                                         <div class="h-8 flex items-center space-x-1 space-x-reverse">
                                                             @for($i = 0; $i < 20; $i++)
-                                                                <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
-                                                                     style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
+                                                                <div class="w-1 bg-current opacity-40 rounded-full transition-all duration-150 ease-in-out waveform-bar" 
+                                                                     style="height: {{ rand(20, 100) }}%"></div>
                                                             @endfor
                                                         </div>
                                                     </div>
@@ -340,6 +272,34 @@
             </div>
         </div>
 
+        <!-- File Preview Area (Appears when file is selected) -->
+        <div id="filePreview" class="hidden border-t bg-gray-50 p-4">
+            <div class="transition-all duration-300 border-2 border-dashed border-gray-300 rounded-lg p-4" id="filePreviewBox">
+                <div class="flex items-center gap-3" id="fileInfoContainer">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file text-blue-500 text-xl" id="fileIcon"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900" id="fileName"></p>
+                        <p class="text-sm text-gray-500" id="fileSize"></p>
+                    </div>
+                </div>
+                <div class="w-full h-1 bg-gray-200 rounded-full mt-3 overflow-hidden hidden" id="uploadProgress">
+                    <div class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-300 w-0" id="uploadProgressBar"></div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="sendSelectedFile()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-paper-plane ml-1"></i> إرسال الملف
+                    </button>
+                    <button onclick="cancelFileSelection()" 
+                            class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-times ml-1"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Message Input -->
         <div class="border-t bg-white p-6">
             <form id="messageForm" class="flex items-end space-x-4 space-x-reverse">
@@ -350,7 +310,7 @@
                 
                 <!-- Voice Button -->
                 <button type="button" id="voiceBtn" onclick="toggleVoiceRecording()" 
-                        class="flex-shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-200 voice-record-btn">
+                        class="flex-shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-200">
                     <i class="fas fa-microphone text-gray-600"></i>
                 </button>
                 
@@ -377,7 +337,7 @@
             <div id="recordingStatus" class="hidden mt-4 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl shadow-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <div class="w-4 h-4 bg-white rounded-full mr-3 recording-pulse"></div>
+                        <div class="w-4 h-4 bg-white rounded-full mr-3 animate-pulse"></div>
                         <div>
                             <p class="font-medium">جاري التسجيل...</p>
                             <p class="text-sm text-red-100">اضغط الزر مرة أخرى للإنهاء</p>
@@ -393,7 +353,6 @@
     </div>
 </div>
 
-<!-- Modals and overlays here... -->
 @endsection
 
 @push('scripts')
@@ -406,6 +365,24 @@ let recordingTimer = null;
 let lastMessageId = 0;
 let refreshInterval = null;
 let isPageVisible = true;
+let selectedFile = null;
+
+// CSS للرسوم المتحركة
+const style = document.createElement('style');
+style.textContent = `
+@keyframes wave {
+    0% { transform: scaleY(0.3); opacity: 0.4; }
+    100% { transform: scaleY(1); opacity: 0.8; }
+}
+.waveform-bar {
+    animation: wave 1.5s ease-in-out infinite alternate;
+}
+.waveform-bar.playing {
+    animation: wave 0.8s ease-in-out infinite alternate;
+    opacity: 1;
+}
+`;
+document.head.appendChild(style);
 
 // تتبع رؤية الصفحة
 document.addEventListener('visibilitychange', function() {
@@ -433,7 +410,7 @@ function loadNewMessages() {
     
     updateConnectionStatus('loading');
     
-    fetch(`/employee/customer-communication/${chatId}/messages`)
+    fetch(`/employee/customer-communication/${chatId}/new-messages?last_message_id=${lastMessageId}`)
         .then(response => {
             if (!response.ok) throw new Error('Network error');
             return response.json();
@@ -441,20 +418,15 @@ function loadNewMessages() {
         .then(data => {
             updateConnectionStatus('connected');
             
-            if (data.messages && data.messages.length > 0) {
-                const newMessages = data.messages.filter(msg => msg.id > lastMessageId);
+            if (data.success && data.messages && data.messages.length > 0) {
+                data.messages.forEach(message => {
+                    addNewMessageToChat(message);
+                });
+                lastMessageId = data.last_message_id;
+                scrollToBottom();
                 
-                if (newMessages.length > 0) {
-                    newMessages.forEach(message => {
-                        addNewMessageToChat(message);
-                        lastMessageId = Math.max(lastMessageId, message.id);
-                    });
-                    
-                    scrollToBottom();
-                    
-                    if (!isPageVisible) {
-                        showNewMessageNotification();
-                    }
+                if (!isPageVisible) {
+                    showNewMessageNotification();
                 }
             }
         })
@@ -467,7 +439,6 @@ function loadNewMessages() {
 // تحديث حالة الاتصال
 function updateConnectionStatus(status) {
     const statusElement = document.getElementById('connectionStatus');
-    const indicator = statusElement.querySelector('.w-2');
     
     switch (status) {
         case 'connected':
@@ -490,8 +461,6 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     
     if (messageType === 'text') {
         sendTextMessage();
-    } else if (messageType === 'file') {
-        sendFileMessage();
     }
 });
 
@@ -531,15 +500,7 @@ function sendTextMessage() {
 // تبديل إدخال الملف
 function toggleFileInput() {
     const fileInput = document.getElementById('fileInput');
-    const messageType = document.getElementById('messageType');
-    
-    if (messageType.value === 'file') {
-        messageType.value = 'text';
-        fileInput.value = '';
-    } else {
-        messageType.value = 'file';
-        fileInput.click();
-    }
+    fileInput.click();
 }
 
 // التعامل مع اختيار الملف
@@ -549,23 +510,75 @@ document.getElementById('fileInput').addEventListener('change', function() {
         if (file.size > 10 * 1024 * 1024) {
             alert('حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت');
             this.value = '';
-            document.getElementById('messageType').value = 'text';
             return;
         }
-        sendFileMessage();
+        selectedFile = file;
+        showFilePreview(file);
     }
 });
 
-function sendFileMessage() {
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
+// عرض معاينة الملف
+function showFilePreview(file) {
+    const previewArea = document.getElementById('filePreview');
+    const fileIcon = document.getElementById('fileIcon');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const previewBox = document.getElementById('filePreviewBox');
     
-    if (!file) return;
+    // تحديد أيقونة الملف
+    const extension = file.name.split('.').pop().toLowerCase();
+    let iconClass = 'fa-file';
+    let bgColor = 'bg-gray-100';
+    let iconColor = 'text-gray-500';
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+        iconClass = 'fa-image';
+        bgColor = 'bg-green-100';
+        iconColor = 'text-green-500';
+    } else if (extension === 'pdf') {
+        iconClass = 'fa-file-pdf';
+        bgColor = 'bg-red-100';
+        iconColor = 'text-red-500';
+    } else if (['doc', 'docx'].includes(extension)) {
+        iconClass = 'fa-file-word';
+        bgColor = 'bg-blue-100';
+        iconColor = 'text-blue-500';
+    }
+    
+    fileIcon.className = `fas ${iconClass} ${iconColor} text-xl`;
+    fileIcon.parentElement.className = `w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+    
+    previewBox.classList.remove('border-gray-300');
+    previewBox.classList.add('border-blue-300', 'bg-blue-50');
+    previewArea.classList.remove('hidden');
+}
+
+// إرسال الملف المحدد
+function sendSelectedFile() {
+    if (!selectedFile) return;
+    
+    const previewBox = document.getElementById('filePreviewBox');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progress = document.getElementById('uploadProgress');
+    
+    previewBox.classList.remove('border-blue-300', 'bg-blue-50');
+    previewBox.classList.add('border-gray-300');
+    progress.classList.remove('hidden');
     
     const formData = new FormData();
     formData.append('message_type', 'file');
-    formData.append('file', file);
+    formData.append('file', selectedFile);
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    
+    // محاكاة التقدم
+    let progressValue = 0;
+    const progressInterval = setInterval(() => {
+        progressValue += Math.random() * 30;
+        if (progressValue > 90) progressValue = 90;
+        progressBar.style.width = progressValue + '%';
+    }, 200);
     
     fetch(`/employee/customer-communication/${chatId}/send`, {
         method: 'POST',
@@ -573,18 +586,56 @@ function sendFileMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            fileInput.value = '';
-            document.getElementById('messageType').value = 'text';
-            addNewMessageToChat(data.message);
-            lastMessageId = Math.max(lastMessageId, data.message.id);
-            scrollToBottom();
-        }
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressBar.classList.remove('from-blue-500', 'to-blue-600');
+        progressBar.classList.add('from-green-500', 'to-green-600');
+        
+        setTimeout(() => {
+            if (data.success) {
+                cancelFileSelection();
+                addNewMessageToChat(data.message);
+                lastMessageId = Math.max(lastMessageId, data.message.id);
+                scrollToBottom();
+            } else {
+                alert('فشل في إرسال الملف');
+                cancelFileSelection();
+            }
+        }, 500);
     })
     .catch(error => {
+        clearInterval(progressInterval);
         console.error('Error:', error);
         alert('حدث خطأ في إرسال الملف');
+        cancelFileSelection();
     });
+}
+
+// إلغاء تحديد الملف
+function cancelFileSelection() {
+    const previewArea = document.getElementById('filePreview');
+    const previewBox = document.getElementById('filePreviewBox');
+    const progress = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    previewArea.classList.add('hidden');
+    previewBox.classList.remove('border-blue-300', 'bg-blue-50');
+    previewBox.classList.add('border-gray-300');
+    progress.classList.add('hidden');
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('from-green-500', 'to-green-600');
+    progressBar.classList.add('from-blue-500', 'to-blue-600');
+}
+
+// تنسيق حجم الملف
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 KB';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // تسجيل صوتي
@@ -616,7 +667,7 @@ function startRecording() {
             isRecording = true;
             
             document.getElementById('voiceBtn').classList.remove('bg-gray-100', 'hover:bg-gray-200');
-            document.getElementById('voiceBtn').classList.add('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+            document.getElementById('voiceBtn').classList.add('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
             document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop text-white"></i>';
             
             document.getElementById('recordingStatus').classList.remove('hidden');
@@ -642,7 +693,7 @@ function stopRecording() {
         isRecording = false;
         
         const voiceBtn = document.getElementById('voiceBtn');
-        voiceBtn.classList.remove('bg-red-500', 'hover:bg-red-600', 'recording-pulse');
+        voiceBtn.classList.remove('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
         voiceBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
         voiceBtn.innerHTML = '<i class="fas fa-microphone text-gray-600"></i>';
         
@@ -695,19 +746,23 @@ function addNewMessageToChat(message) {
     }
     
     const messageDiv = document.createElement('div');
-    messageDiv.className = `flex ${message.sender_type === 'employee' ? 'justify-end' : 'justify-start'} message-appear`;
+    messageDiv.className = `flex ${message.sender_type === 'employee' ? 'justify-end' : 'justify-start'} opacity-0 transform translate-y-2 transition-all duration-300`;
     messageDiv.setAttribute('data-message-id', message.id);
     
     if (message.sender_type !== 'employee') {
-        messageDiv.classList.add('new-message-indicator');
+        setTimeout(() => {
+            messageDiv.classList.add('animate-pulse');
+            setTimeout(() => messageDiv.classList.remove('animate-pulse'), 2000);
+        }, 100);
     }
     
     messageDiv.innerHTML = generateMessageHTML(message);
     messagesList.appendChild(messageDiv);
     
+    // تأثير الظهور
     setTimeout(() => {
-        messageDiv.classList.remove('new-message-indicator');
-    }, 3000);
+        messageDiv.classList.remove('opacity-0', 'translate-y-2');
+    }, 50);
 }
 
 function generateMessageHTML(message) {
@@ -715,7 +770,47 @@ function generateMessageHTML(message) {
     
     if (message.message_type === 'text') {
         contentHTML = `<p class="break-words leading-relaxed">${message.content}</p>`;
+    } else if (message.message_type === 'file') {
+        const extension = message.file_name.split('.').pop().toLowerCase();
+        let iconHTML = '';
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center"><i class="fas fa-image text-white"></i></div>';
+        } else if (extension === 'pdf') {
+            iconHTML = '<div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center"><i class="fas fa-file-pdf text-white"></i></div>';
+        } else if (['doc', 'docx'].includes(extension)) {
+            iconHTML = '<div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center"><i class="fas fa-file-word text-white"></i></div>';
+        } else {
+            iconHTML = '<div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center"><i class="fas fa-file text-white"></i></div>';
+        }
+        
+        contentHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">${iconHTML}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">${message.file_name}</p>
+                        <p class="text-xs opacity-75">${message.file_size_formatted}</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 space-x-reverse text-xs">
+                    <button onclick="previewFile('${message.file_url}', '${message.file_name}', '${extension}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-eye ml-1"></i> معاينة
+                    </button>
+                    <button onclick="copyToClipboard('${message.file_url}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                    </button>
+                    <a href="${message.file_url}" target="_blank" 
+                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-download ml-1"></i> تحميل
+                    </a>
+                </div>
+            </div>
+        `;
     } else if (message.message_type === 'voice') {
+        const duration = message.duration_formatted || '0:00';
         contentHTML = `
             <div class="space-y-3">
                 <div class="flex items-center space-x-2 space-x-reverse">
@@ -723,22 +818,68 @@ function generateMessageHTML(message) {
                         <i class="fas fa-microphone text-white text-sm"></i>
                     </div>
                     <span class="text-sm opacity-90">رسالة صوتية</span>
-                    <span class="text-xs opacity-75">${message.duration_formatted || '0:00'}</span>
+                    <span class="text-xs opacity-75">${duration}</span>
+                </div>
+                <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <button onclick="toggleAudioPlay(this, '${message.file_url}')" 
+                                class="w-10 h-10 rounded-full ${message.sender_type === 'employee' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-500 hover:bg-blue-600'} flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 audio-play-btn">
+                            <i class="fas fa-play text-white text-sm"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                ${Array.from({length: 20}, (_, i) => 
+                                    `<div class="w-1 bg-current opacity-40 rounded-full transition-all duration-150 ease-in-out waveform-bar" 
+                                         style="height: ${Math.random() * 80 + 20}%; animation-delay: ${i * 0.1}s"></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        <span class="text-xs opacity-75 font-mono duration-display">${duration}</span>
+                    </div>
+                    <audio class="hidden voice-audio" preload="metadata">
+                        <source src="${message.file_url}" type="audio/webm">
+                    </audio>
                 </div>
             </div>
         `;
     }
+    
+    const canDelete = message.sender_type === 'employee' && message.can_delete;
     
     return `
         <div class="max-w-xs lg:max-w-md">
             <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'employee' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
                 ${contentHTML}
                 <div class="flex justify-between items-center mt-3 text-xs opacity-75">
-                    <span>${message.created_at}</span>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span>${message.created_at}</span>
+                        ${canDelete ? 
+                            `<button onclick="deleteMessage(${message.id})" 
+                                     class="text-red-400 hover:text-red-300 transition-colors">
+                                <i class="fas fa-trash text-xs"></i>
+                             </button>` : ''
+                        }
+                    </div>
                     ${message.sender_type === 'employee' ? 
                         `<i class="fas ${message.is_read ? 'fa-check-double text-blue-200' : 'fa-check text-blue-300'}"></i>` : ''
                     }
                 </div>
+            </div>
+            <div class="flex items-center mt-2 ${message.sender_type === 'employee' ? 'justify-end' : 'justify-start'}">
+                ${message.sender_type === 'admin' ? 
+                    `<div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                            <i class="fas fa-user-tie text-white text-xs"></i>
+                        </div>
+                        <span class="text-xs text-gray-500">الإدارة</span>
+                     </div>` : 
+                    `<div class="flex items-center space-x-2 space-x-reverse">
+                        <span class="text-xs text-gray-500">أنت</span>
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-user text-white text-xs"></i>
+                        </div>
+                     </div>`
+                }
             </div>
         </div>
     `;
@@ -758,7 +899,11 @@ function deleteMessage(messageId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.querySelector(`[data-message-id="${messageId}"]`).remove();
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                messageElement.classList.add('opacity-0', 'scale-90', 'transition-all', 'duration-300');
+                setTimeout(() => messageElement.remove(), 300);
+            }
         } else {
             alert(data.message || 'حدث خطأ في حذف الرسالة');
         }
@@ -767,6 +912,63 @@ function deleteMessage(messageId) {
         console.error('Error:', error);
         alert('حدث خطأ في حذف الرسالة');
     });
+}
+
+// التحكم في تشغيل الصوت
+let currentPlayingAudio = null;
+
+function toggleAudioPlay(button, audioUrl) {
+    const audioElement = button.parentElement.parentElement.querySelector('.voice-audio');
+    const playIcon = button.querySelector('i');
+    const waveformBars = button.parentElement.querySelectorAll('.waveform-bar');
+    const durationDisplay = button.parentElement.querySelector('.duration-display');
+    
+    if (currentPlayingAudio && currentPlayingAudio !== audioElement) {
+        currentPlayingAudio.pause();
+        currentPlayingAudio.currentTime = 0;
+        resetAudioButton(currentPlayingAudio);
+    }
+    
+    if (audioElement.paused) {
+        audioElement.play();
+        currentPlayingAudio = audioElement;
+        
+        playIcon.classList.remove('fa-play');
+        playIcon.classList.add('fa-pause');
+        
+        waveformBars.forEach(bar => bar.classList.add('playing'));
+        
+        audioElement.addEventListener('timeupdate', function() {
+            if (!audioElement.paused) {
+                const currentTime = Math.floor(audioElement.currentTime);
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = currentTime % 60;
+                durationDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            resetAudioButton(audioElement);
+        });
+        
+    } else {
+        audioElement.pause();
+        resetAudioButton(audioElement);
+    }
+}
+
+function resetAudioButton(audioElement) {
+    const container = audioElement.parentElement.parentElement;
+    const button = container.querySelector('.audio-play-btn');
+    const playIcon = button.querySelector('i');
+    const waveformBars = container.querySelectorAll('.waveform-bar');
+    
+    playIcon.classList.remove('fa-pause');
+    playIcon.classList.add('fa-play');
+    
+    waveformBars.forEach(bar => bar.classList.remove('playing'));
+    
+    currentPlayingAudio = null;
 }
 
 // تحديد كتم التواصل
@@ -791,16 +993,26 @@ function markAsCompleted() {
     });
 }
 
-// نسخ الرابط
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('تم نسخ الرابط!');
-    });
-}
-
 // معاينة الملف
 function previewFile(url, filename, extension) {
     window.open(url, '_blank');
+}
+
+// نسخ الرابط
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+        notification.textContent = 'تم نسخ الرابط!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
+    }).catch(() => {
+        alert('فشل في نسخ الرابط');
+    });
 }
 
 // التمرير لأسفل
@@ -818,13 +1030,30 @@ function initializeLastMessageId() {
     }
 }
 
+// إظهار إشعار الرسالة الجديدة
+function showNewMessageNotification() {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("رسالة جديدة من الإدارة", {
+            body: "وصلت رسالة جديدة بخصوص العميل",
+            icon: "/favicon.ico"
+        });
+    }
+}
+
+// طلب إذن الإشعارات
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
 // عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     initializeLastMessageId();
+    requestNotificationPermission();
     startAutoRefresh();
     scrollToBottom();
     
-    // تركيز على حقل الرسالة
     document.getElementById('messageInput').focus();
 });
 
@@ -834,6 +1063,17 @@ window.addEventListener('beforeunload', function() {
         stopRecording();
     }
     stopAutoRefresh();
+});
+
+window.addEventListener('pagehide', function() {
+    stopAutoRefresh();
+});
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        startAutoRefresh();
+        loadNewMessages();
+    }
 });
 
 </script>
