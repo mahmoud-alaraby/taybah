@@ -224,4 +224,32 @@ class CustomerChat extends Model
                    ->where('status', '!=', 'closed')
                    ->first();
     }
+
+     public function getUnreadCountForEmployee()
+    {
+        return $this->messages()
+                   ->where('sender_type', 'admin')
+                   ->where('is_read', false)
+                   ->count();
+    }
+
+    // آخر رسالة
+    public function getLastMessage()
+    {
+        return $this->messages()
+                   ->orderBy('created_at', 'desc')
+                   ->first();
+    }
+
+    // تحديث وقت آخر رسالة تلقائياً
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($chat) {
+            if (!$chat->last_message_at) {
+                $chat->last_message_at = now();
+            }
+        });
+    }
 }

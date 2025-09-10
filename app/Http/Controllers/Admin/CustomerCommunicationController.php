@@ -83,12 +83,17 @@ class CustomerCommunicationController extends Controller
                            ->with(['employee', 'admin'])
                            ->first();
         
-        // إذا لم يوجد شات، يمكن للإدارة بدء شات جديد
+        // إذا لم يوجد شات، عرض صفحة اختيار الموظف
         if (!$chat) {
-            // الحصول على الموظفين المؤهلين
+            // الحصول على الموظفين المؤهلين فقط
             $employeesWithPermission = Employee::whereHas('roles.permissions', function($query) {
                 $query->where('name', 'customer_communication');
-            })->get();
+            })->where('status', 'active')->get();
+
+            if ($employeesWithPermission->isEmpty()) {
+                return redirect()->route('admin.customer-communication.index')
+                                ->with('error', 'لا يوجد موظفين مؤهلين للتواصل مع العملاء حالياً');
+            }
 
             return view('admin.customer_communication.create_chat', compact('customer', 'employeesWithPermission'));
         }
@@ -114,44 +119,115 @@ class CustomerCommunicationController extends Controller
         $admin = auth('admin')->user();
         $customer = PotentialCustomer::findOrFail($potentialCustomerId);
         
-        // التأكد من أن الموظف لديه الصلاحية المطلوبة
+        // التأكد من أن الموظف لديه الصلاحية المطلوبة وأنه نشط
         $employee = Employee::whereHas('roles.permissions', function($query) {
             $query->where('name', 'customer_communication');
-        })->findOrFail($request->employee_id);
+        })->where('status', 'active')->findOrFail($request->employee_id);
 
         // البحث عن شات موجود أو إنشاء جديد
         $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)->first();
         
         if (!$chat) {
+            // تحديد نوع العميل ومستوى الأولوية
+            $classifications = $customer->customer_classifications ?? [];
+            if (is_string($classifications)) {
+                $classifications = json_decode($classifications, true) ?? [];
+            }
+            
+            $customerType = 'general';
+            $priority = 'normal';
+            
+            if (in_array('requested_call', $classifications)) {
+                $customerType = 'call_request';
+                $priority = 'medium';
+            } elseif (in_array('requested_visit', $classifications)) {
+                $customerType = 'visit_request'; 
+                $priority = 'medium';
+            }
+            
+            if (in_array('difficult_customer', $classifications)) {
+                $priority = 'high';
+            }
+
             // إنشاء شات جديد
             $chat = CustomerChat::create([
                 'potential_customer_id' => $potentialCustomerId,
                 'employee_id' => $request->employee_id,
                 'admin_id' => $admin->id,
                 'status' => 'active',
-                'priority' => 'normal',
-                'customer_type' => in_array('requested_call', $customer->customer_classifications ?? []) ? 'call_request' : 'visit_request',
+                'priority' => $priority,
+                'customer_type' => $customerType,
                 'last_message_at' => now()
             ]);
 
-            // إرسال رسالة تلقائية
+            // إرسال رسالة تعريفية تلقائية من الإدارة
+            $introMessage = $this->generateIntroMessage($customer, $employee, $classifications);
+            
             CustomerChatMessage::create([
                 'chat_id' => $chat->id,
                 'sender_type' => 'admin',
                 'sender_id' => $admin->id,
                 'message_type' => 'text',
-                'content' => 'تم تعيينك للتواصل مع هذا العميل. يرجى المتابعة والرد على استفساراته.'
+                'content' => $introMessage
             ]);
+            
+            // تحديث وقت آخر رسالة
+            $chat->update(['last_message_at' => now()]);
         } else {
-            // تحديث الموظف المعين
+            // تحديث الموظف المعين إذا كان الشات موجود
             $chat->update([
                 'employee_id' => $request->employee_id,
-                'admin_id' => $admin->id
+                'admin_id' => $admin->id,
+                'status' => 'active'
             ]);
+            
+            // إرسال رسالة إشعار بالتغيير
+            CustomerChatMessage::create([
+                'chat_id' => $chat->id,
+                'sender_type' => 'admin',
+                'sender_id' => $admin->id,
+                'message_type' => 'text',
+                'content' => "تم تعديل المسؤول عن هذا العميل إلى: {$employee->name}. يرجى متابعة التواصل معه."
+            ]);
+            
+            $chat->update(['last_message_at' => now()]);
         }
 
         return redirect()->route('admin.customer-communication.show', $potentialCustomerId)
-                        ->with('success', 'تم تعيين الموظف وإنشاء الشات بنجاح');
+                        ->with('success', 'تم تعيين الموظف ' . $employee->name . ' وإنشاء الشات بنجاح');
+    }
+
+    private function generateIntroMessage($customer, $employee, $classifications)
+    {
+        $customerType = '';
+        $urgencyLevel = '';
+        
+        if (in_array('requested_call', $classifications)) {
+            $customerType = 'يطلب مكالمة هاتفية';
+        } elseif (in_array('requested_visit', $classifications)) {
+            $customerType = 'يطلب زيارة للمكتب';
+        }
+        
+        if (in_array('difficult_customer', $classifications)) {
+            $urgencyLevel = ' - عميل يتطلب اهتمام خاص (عالي الأولوية)';
+        }
+
+        $message = "مرحباً {$employee->name}،\n\n";
+        $message .= "تم تكليفك بالتواصل مع العميل: {$customer->customer_name}\n";
+        $message .= "رقم الهاتف: {$customer->phone}\n";
+        $message .= "وصف العمل: {$customer->work_description}\n\n";
+        
+        if ($customerType) {
+            $message .= "نوع الطلب: {$customerType}\n";
+        }
+        
+        if ($urgencyLevel) {
+            $message .= "ملاحظة مهمة: {$urgencyLevel}\n";
+        }
+        
+        $message .= "\nيرجى التواصل مع العميل في أقرب وقت ممكن وتحديثي بنتائج المحادثة.";
+        
+        return $message;
     }
 
     public function sendMessage(Request $request, $chatId)
@@ -257,7 +333,8 @@ class CustomerCommunicationController extends Controller
                         'is_read' => $message->is_read,
                         'file_path' => $message->file_path,
                         'file_type' => $message->file_type,
-                        'file_size' => $message->file_size
+                        'file_size' => $message->file_size,
+                        'can_delete' => $message->created_at->diffInMinutes(now()) <= 30
                     ]
                 ];
                 
@@ -406,10 +483,6 @@ class CustomerCommunicationController extends Controller
         $admin = auth('admin')->user();
         $chat = CustomerChat::findOrFail($chatId);
 
-        if (!confirm('هل أنت متأكد من حذف جميع ملفات هذا الشات؟')) {
-            return response()->json(['error' => 'تم إلغاء العملية'], 400);
-        }
-
         $fileMessages = $chat->messages()
             ->whereIn('message_type', ['file', 'voice'])
             ->get();
@@ -476,7 +549,7 @@ class CustomerCommunicationController extends Controller
         // الموظفين المؤهلين للتواصل مع العملاء
         $qualifiedEmployees = Employee::whereHas('roles.permissions', function($query) {
             $query->where('name', 'customer_communication');
-        })->count();
+        })->where('status', 'active')->count();
         
         // العملاء المطلوب التواصل معهم
         $totalCustomers = PotentialCustomer::where(function($query) {

@@ -302,33 +302,36 @@ Route::prefix('photography-costs')->name('admin.photography-costs.')->group(func
 
 // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
+// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+
 Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
+    // الصفحة الرئيسية
     Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
+    
+    // عرض العميل - إما اختيار موظف أو الشات المباشر
     Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
     
-    // تعيين موظف للعميل
+    // تعيين موظف للعميل (Route جديد)
     Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
     
     // إرسال رسالة في الشات
     Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
     
-    // تحميل الرسائل الجديدة
+    // تحميل الرسائل (للتحديث التلقائي)
     Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
     Route::get('/{chatId}/new-messages', [AdminCustomerCommunicationController::class, 'getNewMessages'])->name('get-new-messages');
     
     // حذف رسالة معينة (خلال 30 دقيقة من الإرسال للإدارة)
     Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
     
-    // مسح ملفات الشات فقط
+    // إدارة الشات
     Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
-    
-    // حذف الشات بالكامل
     Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
     
-    // معلومات التخزين
+    // معلومات التخزين (Route جديد)
     Route::get('/storage/info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
     
-    // إحصائيات سريعة للتحديث التلقائي
+    // إحصائيات سريعة للتحديث التلقائي (Route جديد)
     Route::get('/stats/unread-count', function() {
         $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
                                                      ->where('is_read', false)
@@ -337,11 +340,9 @@ Route::prefix('customer-communication')->name('admin.customer-communication.')->
         return response()->json(['count' => $unreadCount]);
     })->name('unread-count');
     
-    // Routes القديمة للتوافق مع النظام السابق (يمكن إزالتها لاحقاً)
+    // Routes القديمة للتوافق (اختيارية - يمكن حذفها)
     Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
     Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
-    Route::delete('note/{note_id}', [AdminCustomerCommunicationController::class, 'destroyNote'])->name('note.destroy');
-    Route::delete('all-notes/{potential_customer_id}', [AdminCustomerCommunicationController::class, 'destroyAllNotes'])->name('all-notes.destroy');
 });
 
 
