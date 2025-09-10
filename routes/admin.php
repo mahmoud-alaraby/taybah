@@ -304,14 +304,19 @@ Route::prefix('photography-costs')->name('admin.photography-costs.')->group(func
 
 // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
+// في ملف routes/admin.php - إضافة route جديد لصفحة إنشاء الشات
+
 Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
     // الصفحة الرئيسية
     Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
     
-    // عرض العميل - إما اختيار موظف أو الشات المباشر
+    // صفحة إنشاء شات جديد (اختيار الموظف) - Route جديد
+    Route::get('/{potentialCustomerId}/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('create-chat');
+    
+    // عرض العميل - الشات المباشر (فقط إذا كان الشات موجود)
     Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
     
-    // تعيين موظف للعميل (Route جديد)
+    // تعيين موظف للعميل
     Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
     
     // إرسال رسالة في الشات
@@ -328,10 +333,10 @@ Route::prefix('customer-communication')->name('admin.customer-communication.')->
     Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
     Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
     
-    // معلومات التخزين (Route جديد)
+    // معلومات التخزين
     Route::get('/storage/info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
     
-    // إحصائيات سريعة للتحديث التلقائي (Route جديد)
+    // إحصائيات سريعة للتحديث التلقائي
     Route::get('/stats/unread-count', function() {
         $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
                                                      ->where('is_read', false)
@@ -339,10 +344,6 @@ Route::prefix('customer-communication')->name('admin.customer-communication.')->
         
         return response()->json(['count' => $unreadCount]);
     })->name('unread-count');
-    
-    // Routes القديمة للتوافق (اختيارية - يمكن حذفها)
-    Route::post('/{id}/reply', [AdminCustomerCommunicationController::class, 'reply'])->name('reply');
-    Route::post('/{id}/mark-read', [AdminCustomerCommunicationController::class, 'markRead'])->name('markRead');
 });
 
 
