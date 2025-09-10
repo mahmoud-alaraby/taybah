@@ -202,39 +202,100 @@ class CustomerCommunicationController extends Controller
                 $message->load('sender');
                 
                 $responseData = [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'message_type' => $message->message_type,
-                    'file_url' => $message->file_url,
-                    'file_name' => $message->file_name,
-                    'file_size_formatted' => $message->file_size_formatted,
-                    'sender_name' => $message->sender_name,
-                    'sender_type' => $message->sender_type,
-                    'created_at' => $message->created_at->format('H:i'),
-                    'is_read' => $message->is_read,
-                    'file_path' => $message->file_path,
-                    'file_type' => $message->file_type,
-                    'file_size' => $message->file_size
+                    'success' => true,
+                    'message' => [
+                        'id' => $message->id,
+                        'content' => $message->content,
+                        'message_type' => $message->message_type,
+                        'file_url' => $message->file_url,
+                        'file_name' => $message->file_name,
+                        'file_size_formatted' => $message->file_size_formatted,
+                        'sender_name' => $message->sender_name,
+                        'sender_type' => $message->sender_type,
+                        'created_at' => $message->created_at->format('H:i'),
+                        'created_at_full' => $message->created_at->format('Y-m-d H:i:s'),
+                        'is_read' => $message->is_read,
+                        'file_path' => $message->file_path,
+                        'file_type' => $message->file_type,
+                        'file_size' => $message->file_size
+                    ]
                 ];
                 
                 if ($message->message_type === 'voice') {
                     $voiceDuration = $message->voice_duration;
-                    $responseData['duration'] = $voiceDuration['total_seconds'];
-                    $responseData['duration_formatted'] = $voiceDuration['formatted'];
+                    $responseData['message']['duration'] = $voiceDuration['total_seconds'];
+                    $responseData['message']['duration_formatted'] = $voiceDuration['formatted'];
                 }
                 
-                return response()->json([
-                    'success' => true,
-                    'message' => $responseData
-                ]);
+                return response()->json($responseData);
             }
 
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => 'فشل في إرسال الرسالة: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'error' => 'فشل في إرسال الرسالة: ' . $e->getMessage()], 500);
         }
 
-        return response()->json(['error' => 'فشل في إرسال الرسالة'], 500);
+        return response()->json(['success' => false, 'error' => 'فشل في إرسال الرسالة'], 500);
+    }
+
+    // دالة محسنة لجلب الرسائل الجديدة فقط
+    public function getNewMessages($chatId, Request $request)
+    {
+        $employee = auth('employee')->user();
+        $chat = CustomerChat::findOrFail($chatId);
+
+        if ($chat->employee_id !== $employee->id) {
+            return response()->json(['error' => 'غير مسموح'], 403);
+        }
+
+        $lastMessageId = $request->get('last_message_id', 0);
+        
+        $newMessages = $chat->messages()
+                          ->where('id', '>', $lastMessageId)
+                          ->with('sender')
+                          ->orderBy('created_at', 'asc')
+                          ->get();
+
+        // تحديد الرسائل من الإدارة كمقروءة
+        $chat->messages()
+            ->where('sender_type', 'admin')
+            ->where('is_read', false)
+            ->where('id', '>', $lastMessageId)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+        $formattedMessages = $newMessages->map(function($message) {
+            $messageData = [
+                'id' => $message->id,
+                'content' => $message->content,
+                'message_type' => $message->message_type,
+                'file_url' => $message->file_url,
+                'file_name' => $message->file_name,
+                'file_size_formatted' => $message->file_size_formatted,
+                'sender_name' => $message->sender_name,
+                'sender_type' => $message->sender_type,
+                'created_at' => $message->created_at->format('H:i'),
+                'created_at_full' => $message->created_at->format('Y-m-d H:i:s'),
+                'is_read' => $message->is_read,
+                'file_path' => $message->file_path,
+                'file_type' => $message->file_type,
+                'file_size' => $message->file_size,
+                'can_delete' => $message->sender_type === 'employee' && 
+                               $message->created_at->diffInMinutes(now()) <= 5
+            ];
+            
+            if ($message->message_type === 'voice') {
+                $messageData['duration'] = $message->duration;
+                $messageData['duration_formatted'] = $message->duration_formatted;
+            }
+            
+            return $messageData;
+        });
+
+        return response()->json([
+            'success' => true,
+            'messages' => $formattedMessages,
+            'last_message_id' => $newMessages->last()?->id ?? $lastMessageId
+        ]);
     }
 
     public function getMessages($chatId)

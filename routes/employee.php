@@ -195,6 +195,7 @@ Route::middleware('employee.auth')->group(function () {
     });
 
     // ============== النظام الجديد للتواصل مع العملاء ==============
+ // ============== النظام الجديد للتواصل مع العملاء ==============
     Route::middleware(['employee.permission:customer_communication'])
         ->prefix('customer-communication')
         ->name('employee.customer-communication.')
@@ -208,7 +209,10 @@ Route::middleware('employee.auth')->group(function () {
             // إرسال رسالة في الشات
             Route::post('/{chatId}/send', [CustomerCommunicationController::class, 'sendMessage'])->name('send-message');
             
-            // تحميل الرسائل الجديدة
+            // تحميل الرسائل الجديدة فقط (محسن)
+            Route::get('/{chatId}/new-messages', [CustomerCommunicationController::class, 'getNewMessages'])->name('new-messages');
+            
+            // تحميل جميع الرسائل
             Route::get('/{chatId}/messages', [CustomerCommunicationController::class, 'getMessages'])->name('get-messages');
             
             // تحديد حالة العميل كـ "تم التواصل"
@@ -229,12 +233,6 @@ Route::middleware('employee.auth')->group(function () {
                 return response()->json(['count' => $unreadCount]);
             })->name('unread-count');
         });
-
-    Route::middleware('employee.permission:design_follow_up')->group(function () {
-        Route::get('/design-follow-up', function () {
-            return view('employee.systems.design-follow-up');
-        })->name('employee.design-follow-up');
-    });
 
     Route::middleware('employee.permission:montage_follow_up')->group(function () {
         Route::get('/montage-follow-up', function () {
