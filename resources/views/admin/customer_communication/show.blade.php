@@ -848,15 +848,51 @@
             `;
         } else if (message.message_type === 'voice') {
             contentHTML = `
-                <div class="space-y-3">
-                    <div class="flex items-center space-x-2 space-x-reverse">
-                        <div class="w-8 h-8 rounded-full ${message.sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500'} flex items-center justify-center">
-                            <i class="fas fa-microphone text-white text-sm"></i>
-                        </div>
-                        <span class="text-sm opacity-90">رسالة صوتية</span>
-                        <span class="text-xs opacity-75">${message.duration_formatted || '0:00'}</span>
-                    </div>
-                </div>
+                                            <div class="space-y-3">
+                                                <!-- Voice Message Header -->
+                                                <div class="flex items-center space-x-2 space-x-reverse">
+                                                    <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500' }} flex items-center justify-center">
+                                                        <i class="fas fa-microphone text-white text-sm"></i>
+                                                    </div>
+                                                    <span class="text-sm opacity-90">رسالة صوتية</span>
+                                                    @if($message->duration)
+                                                        <span class="text-xs opacity-75">
+                                                            {{ $message->duration_formatted }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Custom Audio Player -->
+                                                <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                                                    <div class="flex items-center space-x-3 space-x-reverse">
+                                                        <!-- Play/Pause Button -->
+                                                        <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
+                                                                class="w-10 h-10 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-red-500 hover:bg-red-600' }} flex items-center justify-center transition-colors audio-play-btn">
+                                                            <i class="fas fa-play text-white text-sm"></i>
+                                                        </button>
+                                                        
+                                                        <!-- Waveform/Progress -->
+                                                        <div class="flex-1">
+                                                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                                                @for($i = 0; $i < 20; $i++)
+                                                                    <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                                                         style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Duration -->
+                                                        <span class="text-xs opacity-75 font-mono duration-display">
+                                                            {{ $message->duration_formatted ?? '0:00' }}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Hidden Audio Element -->
+                                                    <audio class="hidden voice-audio" preload="metadata">
+                                                        <source src="{{ $message->file_url }}" type="audio/webm">
+                                                    </audio>
+                                                </div>
+                                            </div>
             `;
         }
         
