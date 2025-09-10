@@ -20,12 +20,12 @@ class WorkChatController extends Controller
 
         $chats = WorkChat::where('admin_id', $adminId)
             ->where('type', $type)
-            ->with(['employee', 'messages' => function($q) {
+            ->with(['employee', 'messages' => function ($q) {
                 $q->latest()->limit(1);
             }])
-            ->withCount(['messages as unread_count' => function($q) use ($adminId) {
+            ->withCount(['messages as unread_count' => function ($q) use ($adminId) {
                 $q->where('sender_type', 'employee')
-                  ->where('is_read', false);
+                    ->where('is_read', false);
             }])
             ->orderBy('last_message_at', 'desc')
             ->get();
@@ -36,11 +36,11 @@ class WorkChatController extends Controller
     public function create(Request $request)
     {
         $type = $request->get('type', 'design');
-        
+
         // قائمة الموظفين حسب النوع
         $permission = $type === 'design' ? 'design_follow_up' : 'montage_follow_up';
-        
-        $employees = Employee::whereHas('roles.permissions', function($q) use ($permission) {
+
+        $employees = Employee::whereHas('roles.permissions', function ($q) use ($permission) {
             $q->where('name', $permission);
         })->where('status', 'active')->get();
 
@@ -67,9 +67,17 @@ class WorkChatController extends Controller
 
     public function show(WorkChat $workChat)
     {
-        // تأكد أن المدير مالك الشات
-        if ($workChat->admin_id !== auth('admin')->id()) {
-            abort(403);
+
+        if ((int)$workChat->admin_id !== (int)auth('admin')->id()) {
+            Log::error('Access denied - ID mismatch', [
+                'chat_admin_id' => $workChat->admin_id,
+                'chat_admin_id_type' => gettype($workChat->admin_id),
+                'current_admin_id' => auth('admin')->id(),
+                'current_admin_id_type' => gettype(auth('admin')->id()),
+                'strict_comparison' => $workChat->admin_id === auth('admin')->id() ? 'true' : 'false',
+                'loose_comparison' => $workChat->admin_id == auth('admin')->id() ? 'true' : 'false'
+            ]);
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
         }
 
         // تحديد الرسائل كمقروءة للمدير
@@ -88,9 +96,19 @@ class WorkChatController extends Controller
 
     public function sendMessage(Request $request, WorkChat $workChat)
     {
-        if ($workChat->admin_id !== auth('admin')->id()) {
-            return response()->json(['error' => 'غير مسموح'], 403);
+
+        if ((int)$workChat->admin_id !== (int)auth('admin')->id()) {
+            Log::error('Access denied - ID mismatch', [
+                'chat_admin_id' => $workChat->admin_id,
+                'chat_admin_id_type' => gettype($workChat->admin_id),
+                'current_admin_id' => auth('admin')->id(),
+                'current_admin_id_type' => gettype(auth('admin')->id()),
+                'strict_comparison' => $workChat->admin_id === auth('admin')->id() ? 'true' : 'false',
+                'loose_comparison' => $workChat->admin_id == auth('admin')->id() ? 'true' : 'false'
+            ]);
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
         }
+
 
         $request->validate([
             'message_type' => 'required|in:text,file,voice',
@@ -108,12 +126,11 @@ class WorkChatController extends Controller
                 auth('admin')->id(),
                 $request->content
             );
-        } 
-        elseif ($request->message_type === 'file') {
+        } elseif ($request->message_type === 'file') {
             $file = $request->file('file');
             $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('work-chat/files', $fileName, 'public');
-            
+
             $message = WorkChatMessage::createFileMessage(
                 $workChat->id,
                 'admin',
@@ -125,8 +142,7 @@ class WorkChatController extends Controller
                     'type' => $file->getMimeType()
                 ]
             );
-        }
-        elseif ($request->message_type === 'voice') {
+        } elseif ($request->message_type === 'voice') {
             // التعامل مع الصوت (base64 أو ملف)
             $voiceData = $request->voice;
             if (is_string($voiceData) && str_starts_with($voiceData, 'data:audio')) {
@@ -134,25 +150,25 @@ class WorkChatController extends Controller
                 $audio = base64_decode(explode(',', $voiceData)[1]);
                 $fileName = time() . '_' . Str::random(10) . '.webm';
                 Storage::disk('public')->put('work-chat/voice/' . $fileName, $audio);
-                
+
                 // تحسين معالجة المدة الزمنية
                 $duration = $request->duration;
-                
+
                 // التأكد من أن المدة رقم صحيح
                 $duration = is_numeric($duration) ? (int) $duration : 0;
-                
+
                 // إذا كانت المدة كبيرة جداً، فهي على الأرجح بالميلي ثانية
                 if ($duration > 1000) {
                     $duration = round($duration / 1000);
                 }
-                
+
                 // تأكد من أن المدة منطقية (بين 1 ثانية و 10 دقائق)
                 if ($duration < 1) {
                     $duration = 1; // أقل مدة ثانية واحدة
                 } elseif ($duration > 600) {
                     $duration = 600; // أقصى مدة 10 دقائق
                 }
-                
+
                 $message = WorkChatMessage::createVoiceMessage(
                     $workChat->id,
                     'admin',
@@ -169,7 +185,7 @@ class WorkChatController extends Controller
 
         if ($message) {
             $message->load('sender');
-            
+
             // إرجاع البيانات مع المدة المصححة
             $responseData = [
                 'id' => $message->id,
@@ -183,14 +199,14 @@ class WorkChatController extends Controller
                 'created_at' => $message->created_at->format('H:i'),
                 'is_read' => $message->is_read
             ];
-            
+
             // إضافة معلومات المدة للرسائل الصوتية
             if ($message->message_type === 'voice') {
                 $voiceDuration = $message->voice_duration;
                 $responseData['duration'] = $voiceDuration['total_seconds'];
                 $responseData['duration_formatted'] = $voiceDuration['formatted'];
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => $responseData
@@ -202,9 +218,18 @@ class WorkChatController extends Controller
 
     public function getMessages(WorkChat $workChat)
     {
-        if ($workChat->admin_id !== auth('admin')->id()) {
-            return response()->json(['error' => 'غير مسموح'], 403);
+        if ((int)$workChat->admin_id !== (int)auth('admin')->id()) {
+            Log::error('Access denied - ID mismatch', [
+                'chat_admin_id' => $workChat->admin_id,
+                'chat_admin_id_type' => gettype($workChat->admin_id),
+                'current_admin_id' => auth('admin')->id(),
+                'current_admin_id_type' => gettype(auth('admin')->id()),
+                'strict_comparison' => $workChat->admin_id === auth('admin')->id() ? 'true' : 'false',
+                'loose_comparison' => $workChat->admin_id == auth('admin')->id() ? 'true' : 'false'
+            ]);
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
         }
+
 
         $messages = $workChat->messages()
             ->with('sender')
@@ -221,7 +246,7 @@ class WorkChatController extends Controller
             ->update(['is_read' => true, 'read_at' => now()]);
 
         return response()->json([
-            'messages' => $messages->map(function($message) {
+            'messages' => $messages->map(function ($message) {
                 $messageData = [
                     'id' => $message->id,
                     'content' => $message->content,
@@ -234,14 +259,14 @@ class WorkChatController extends Controller
                     'created_at' => $message->created_at->format('H:i'),
                     'is_read' => $message->is_read
                 ];
-                
+
                 // إضافة معلومات المدة للرسائل الصوتية
                 if ($message->message_type === 'voice') {
                     $voiceDuration = $message->voice_duration;
                     $messageData['duration'] = $voiceDuration['total_seconds'];
                     $messageData['duration_formatted'] = $voiceDuration['formatted'];
                 }
-                
+
                 return $messageData;
             })
         ]);
@@ -249,12 +274,20 @@ class WorkChatController extends Controller
 
     public function destroy(WorkChat $workChat)
     {
-        if ($workChat->admin_id !== auth('admin')->id()) {
-            abort(403);
+        if ((int)$workChat->admin_id !== (int)auth('admin')->id()) {
+            Log::error('Access denied - ID mismatch', [
+                'chat_admin_id' => $workChat->admin_id,
+                'chat_admin_id_type' => gettype($workChat->admin_id),
+                'current_admin_id' => auth('admin')->id(),
+                'current_admin_id_type' => gettype(auth('admin')->id()),
+                'strict_comparison' => $workChat->admin_id === auth('admin')->id() ? 'true' : 'false',
+                'loose_comparison' => $workChat->admin_id == auth('admin')->id() ? 'true' : 'false'
+            ]);
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
         }
 
         // حذف جميع الملفات المرتبطة
-        $workChat->messages()->each(function($message) {
+        $workChat->messages()->each(function ($message) {
             $message->deleteFile();
         });
 
@@ -266,9 +299,18 @@ class WorkChatController extends Controller
 
     public function clearFiles(WorkChat $workChat)
     {
-        if ($workChat->admin_id !== auth('admin')->id()) {
-            return response()->json(['error' => 'غير مسموح'], 403);
+        if ((int)$workChat->admin_id !== (int)auth('admin')->id()) {
+            Log::error('Access denied - ID mismatch', [
+                'chat_admin_id' => $workChat->admin_id,
+                'chat_admin_id_type' => gettype($workChat->admin_id),
+                'current_admin_id' => auth('admin')->id(),
+                'current_admin_id_type' => gettype(auth('admin')->id()),
+                'strict_comparison' => $workChat->admin_id === auth('admin')->id() ? 'true' : 'false',
+                'loose_comparison' => $workChat->admin_id == auth('admin')->id() ? 'true' : 'false'
+            ]);
+            abort(403, 'ليس لديك صلاحية للوصول لهذا الشات');
         }
+
 
         $fileMessages = $workChat->messages()
             ->whereIn('message_type', ['file', 'voice'])
@@ -305,19 +347,19 @@ class WorkChatController extends Controller
     public function storageManagement()
     {
         $adminId = auth('admin')->id();
-        
+
         $totalSize = WorkChatMessage::whereNotNull('file_size')->sum('file_size');
         $fileCount = WorkChatMessage::whereIn('message_type', ['file', 'voice'])->count();
-        
+
         // إحصائيات تفصيلية
         $fileStats = WorkChatMessage::selectRaw('
             message_type,
             COUNT(*) as count,
             SUM(file_size) as total_size
         ')
-        ->whereIn('message_type', ['file', 'voice'])
-        ->groupBy('message_type')
-        ->get();
+            ->whereIn('message_type', ['file', 'voice'])
+            ->groupBy('message_type')
+            ->get();
 
         $oldFiles = WorkChatMessage::whereIn('message_type', ['file', 'voice'])
             ->where('created_at', '<', now()->subMonths(3))
@@ -327,7 +369,7 @@ class WorkChatController extends Controller
         // قائمة الشاتات للمدير الحالي
         $userChats = WorkChat::where('admin_id', $adminId)
             ->with(['employee'])
-            ->withCount(['messages as file_count' => function($q) {
+            ->withCount(['messages as file_count' => function ($q) {
                 $q->whereIn('message_type', ['file', 'voice']);
             }])
             ->having('file_count', '>', 0)
@@ -384,7 +426,7 @@ class WorkChatController extends Controller
     private function createBackup($specificChatId = null)
     {
         $zip = new ZipArchive();
-        
+
         // تحديد اسم الملف
         if ($specificChatId) {
             $chat = WorkChat::find($specificChatId);
@@ -392,16 +434,16 @@ class WorkChatController extends Controller
         } else {
             $backupName = 'all_chats_backup_' . date('Y_m_d_H_i_s') . '.zip';
         }
-        
+
         $backupPath = storage_path('app/backups/' . $backupName);
-        
+
         // إنشاء مجلد البكاب إذا لم يكن موجود
         if (!file_exists(storage_path('app/backups'))) {
             mkdir(storage_path('app/backups'), 0755, true);
         }
 
         if ($zip->open($backupPath, ZipArchive::CREATE) === TRUE) {
-            
+
             // استعلام الرسائل
             $query = WorkChatMessage::whereIn('message_type', ['file', 'voice'])
                 ->whereNotNull('file_path')
@@ -412,7 +454,7 @@ class WorkChatController extends Controller
                 $query->where('chat_id', $specificChatId);
             } else {
                 // فقط الشاتات التي يملكها المدير الحالي
-                $query->whereHas('chat', function($q) {
+                $query->whereHas('chat', function ($q) {
                     $q->where('admin_id', auth('admin')->id());
                 });
             }
@@ -426,20 +468,20 @@ class WorkChatController extends Controller
             foreach ($messages as $message) {
                 $chat = $message->chat;
                 $filePath = storage_path('app/public/work-chat/' . $message->file_path);
-                
+
                 if (file_exists($filePath)) {
                     // تنظيم الملفات حسب الشات
                     $chatFolder = "Chat_{$chat->id}_{$chat->type}_" . Str::slug($chat->title);
-                    
+
                     // تحديد نوع المجلد (files أو voices)
                     $typeFolder = $message->message_type === 'voice' ? 'voices' : 'files';
-                    
+
                     // مسار الملف في الـ ZIP
                     $zipFilePath = $chatFolder . '/' . $typeFolder . '/' . $message->file_name;
-                    
+
                     // إضافة الملف للـ ZIP
                     $zip->addFile($filePath, $zipFilePath);
-                    
+
                     // جمع معلومات الشات
                     if (!isset($processedChats[$chat->id])) {
                         $chatInfo[] = [
@@ -470,7 +512,7 @@ class WorkChatController extends Controller
                 'chats' => $chatInfo,
                 'total_files' => $messages->count()
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            
+
             $zip->addFromString('backup_details.json', $detailsContent);
 
             $zip->close();

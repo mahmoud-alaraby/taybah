@@ -49,7 +49,7 @@ class WorkChatController extends Controller
         $employee = auth('employee')->user();
         
         // تأكد أن الموظف مشارك في الشات
-        if ($workChat->employee_id !== $employee->id) {
+        if ((int)$workChat->employee_id !== (int)$employee->id) {
             abort(403);
         }
 
@@ -80,7 +80,7 @@ class WorkChatController extends Controller
     {
         $employee = auth('employee')->user();
         
-        if ($workChat->employee_id !== $employee->id) {
+        if ((int)$workChat->employee_id !== (int)$employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
 
@@ -205,7 +205,7 @@ class WorkChatController extends Controller
     {
         $employee = auth('employee')->user();
         
-        if ($workChat->employee_id !== $employee->id) {
+        if ((int)$workChat->employee_id !== (int)$employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
 
