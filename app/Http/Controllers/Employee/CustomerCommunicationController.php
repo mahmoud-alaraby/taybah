@@ -32,25 +32,56 @@ class CustomerCommunicationController extends Controller
         } elseif ($filter === 'high_priority') {
             $query->whereJsonContains('customer_classifications', 'difficult_customer');
         } elseif ($filter === 'my_chats') {
-            // العملاء الذين لديهم شاتات مع هذا الموظف
+            // العملاء الذين لديهم شاتات مع هذا الموظف فقط
             $customerIds = CustomerChat::where('employee_id', $employee->id)
                 ->pluck('potential_customer_id')
                 ->toArray();
             $query->whereIn('id', $customerIds);
         }
 
+        // تحميل العملاء مع الشاتات المناسبة
         $customers = $query->with(['customerChat' => function ($q) use ($employee) {
-            $q->where('employee_id', $employee->id)
-                ->orWhereNull('employee_id');
+            // إظهار الشاتات التي:
+            // 1. ليس لها موظف مسؤول (NULL)
+            // 2. أو التي يكون هذا الموظف مسؤول عنها
+            $q->where(function($subQuery) use ($employee) {
+                $subQuery->whereNull('employee_id')
+                         ->orWhere('employee_id', $employee->id);
+            })->with(['employee', 'admin']);
         }])
             ->withCount(['customerChat as unread_count' => function ($q) use ($employee) {
-                $q->whereHas('messages', function ($msgQuery) {
+                $q->where(function($subQuery) use ($employee) {
+                    $subQuery->whereNull('employee_id')
+                             ->orWhere('employee_id', $employee->id);
+                })->whereHas('messages', function ($msgQuery) {
                     $msgQuery->where('sender_type', 'admin')
                         ->where('is_read', false);
                 });
             }])
             ->orderBy('created_at', 'desc')
             ->paginate(12);
+
+        // فلترة إضافية للعملاء - إزالة العملاء اللي عندهم شاتات مع موظفين آخرين فقط
+        $customers->getCollection()->transform(function ($customer) use ($employee) {
+            // التحقق من وجود شات للعميل
+            $allChats = CustomerChat::where('potential_customer_id', $customer->id)->get();
+            
+            if ($allChats->isNotEmpty()) {
+                // إذا كان هناك شات محدد لموظف آخر، لا نظهر العميل
+                $chatForOtherEmployee = $allChats->where('employee_id', '!=', $employee->id)
+                                                 ->whereNotNull('employee_id')
+                                                 ->first();
+                
+                if ($chatForOtherEmployee) {
+                    return null; // سيتم إزالة هذا العميل
+                }
+            }
+            
+            return $customer;
+        });
+
+        // إزالة العناصر الفارغة
+        $customers->setCollection($customers->getCollection()->filter());
 
         // الإحصائيات
         $stats = $this->getEmployeeStats();
@@ -67,19 +98,37 @@ class CustomerCommunicationController extends Controller
 
         // البحث عن الشات بين الموظف والإدارة بخصوص هذا العميل
         $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)
-            ->where('employee_id', $employee->id)
+            ->where(function($query) use ($employee) {
+                // إما شات بدون موظف مسؤول أو شات لهذا الموظف
+                $query->whereNull('employee_id')
+                      ->orWhere('employee_id', $employee->id);
+            })
             ->first();
 
-        // إذا لم يوجد شات، ننشئ واحد جديد
+        // التحقق من وجود شات لموظف آخر
+        $chatForOtherEmployee = CustomerChat::where('potential_customer_id', $potentialCustomerId)
+            ->where('employee_id', '!=', $employee->id)
+            ->whereNotNull('employee_id')
+            ->first();
+
+        if ($chatForOtherEmployee) {
+            return redirect()->route('employee.customer-communication.index')
+                ->with('error', 'هذا العميل مُكلف لموظف آخر');
+        }
+
+        // إذا لم يوجد شات، ننشئ واحد جديد ونربطه بهذا الموظف
         if (!$chat) {
             $chat = CustomerChat::create([
                 'potential_customer_id' => $potentialCustomerId,
-                'employee_id' => $employee->id,
+                'employee_id' => $employee->id, // ربط الشات بهذا الموظف فوراً
                 'status' => 'pending',
                 'priority' => $this->determineCustomerPriority($customer),
                 'customer_type' => $this->determineCustomerType($customer),
                 'last_message_at' => now()
             ]);
+        } elseif (is_null($chat->employee_id)) {
+            // إذا كان الشات موجود بدون موظف مسؤول، نربطه بهذا الموظف
+            $chat->update(['employee_id' => $employee->id]);
         }
 
         // تحميل الرسائل بين الموظف والإدارة
@@ -108,7 +157,6 @@ class CustomerCommunicationController extends Controller
         if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
-
 
         $request->validate([
             'message_type' => 'required|in:text,file,voice',
@@ -182,13 +230,6 @@ class CustomerCommunicationController extends Controller
                         'file_type' => 'audio/webm',
                         'duration' => $duration
                     ]);
-
-                    // تسجيل المسار للتأكد
-                    \Log::info('Voice file saved:', [
-                        'path' => $filePath,
-                        'url' => asset('storage/' . $filePath),
-                        'exists' => Storage::disk('public')->exists($filePath)
-                    ]);
                 }
             }
 
@@ -245,7 +286,6 @@ class CustomerCommunicationController extends Controller
         if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
-
 
         $lastMessageId = $request->get('last_message_id', 0);
 
@@ -306,7 +346,6 @@ class CustomerCommunicationController extends Controller
             return response()->json(['error' => 'غير مسموح'], 403);
         }
 
-
         $messages = $chat->messages()
             ->with('sender')
             ->orderBy('created_at', 'desc')
@@ -354,7 +393,6 @@ class CustomerCommunicationController extends Controller
         if ((int) $chat->employee_id !== (int) $employee->id) {
             return response()->json(['error' => 'غير مسموح'], 403);
         }
-
 
         $chat->update(['status' => 'completed']);
 
@@ -404,12 +442,18 @@ class CustomerCommunicationController extends Controller
         // العملاء عالي الأولوية
         $highPriority = PotentialCustomer::whereJsonContains('customer_classifications', 'difficult_customer')->count();
 
-        // شاتات هذا الموظف
-        $myChats = CustomerChat::where('employee_id', $employee->id)->count();
+        // شاتات هذا الموظف (المتاحة له - سواء كان مسؤول عنها أو متاحة للجميع)
+        $myChats = CustomerChat::where(function($query) use ($employee) {
+            $query->where('employee_id', $employee->id)
+                  ->orWhereNull('employee_id');
+        })->count();
 
-        // الرسائل غير المقروءة من الإدارة
+        // الرسائل غير المقروءة من الإدارة (للشاتات المتاحة لهذا الموظف)
         $unreadFromAdmin = CustomerChatMessage::whereHas('chat', function ($query) use ($employee) {
-            $query->where('employee_id', $employee->id);
+            $query->where(function($subQuery) use ($employee) {
+                $subQuery->where('employee_id', $employee->id)
+                         ->orWhereNull('employee_id');
+            });
         })->where('sender_type', 'admin')
             ->where('is_read', false)
             ->count();
