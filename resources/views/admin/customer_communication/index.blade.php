@@ -318,35 +318,24 @@
                                 
                                 <!-- الإجراءات -->
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2 space-x-reverse">
-                                        @if($chat)
-                                            <!-- زر دخول للشات الموجود -->
-                                            <a href="{{ route('admin.customer-communication.show', $customer->id) }}" 
-                                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
-                                                @if($unreadCount > 0)
-                                                    <i class="fas fa-bell ml-2 animate-pulse"></i>
-                                                    دخول للشات ({{ $unreadCount }})
-                                                @else
-                                                    <i class="fas fa-comments ml-2"></i>
-                                                    دخول للشات
-                                                @endif
-                                            </a>
-                                            
-                                            <!-- زر إعادة تعيين موظف -->
-                                            <a href="{{ route('admin.customer-communication.create-chat', $customer->id) }}" 
-                                               class="inline-flex items-center px-2 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-600 bg-white hover:bg-gray-50 transition-colors"
-                                               title="إعادة تعيين موظف آخر">
-                                                <i class="fas fa-user-edit"></i>
-                                            </a>
-                                        @else
-                                            <!-- زر إنشاء شات جديد -->
-                                            <a href="{{ route('admin.customer-communication.create-chat', $customer->id) }}" 
-                                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md">
-                                                <i class="fas fa-plus ml-2"></i>
-                                                إنشاء شات جديد
-                                            </a>
-                                        @endif
-                                    </div>
+                                    @if($chat)
+                                        <a href="{{ route('admin.customer-communication.show', $customer->id) }}" 
+                                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                            @if($unreadCount > 0)
+                                                <i class="fas fa-bell ml-2 animate-pulse"></i>
+                                                دخول للشات ({{ $unreadCount }})
+                                            @else
+                                                <i class="fas fa-comments ml-2"></i>
+                                                دخول للشات
+                                            @endif
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.customer-communication.show', $customer->id) }}" 
+                                           class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                            <i class="fas fa-plus ml-2"></i>
+                                            إنشاء شات
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
