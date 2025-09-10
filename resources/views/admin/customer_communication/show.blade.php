@@ -201,158 +201,158 @@
                             <p class="text-gray-500">اكتب رسالتك الأولى للموظف بخصوص هذا العميل</p>
                         </div>
                     @else
-                        @foreach($messages as $message)
-                            <div class="flex {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
-                                <div class="max-w-xs lg:max-w-md">
-                                    
-                                    <!-- Message Bubble -->
-                                    <div class="rounded-2xl px-4 py-3 {{ $message->sender_type === 'admin' ? 'bg-red-500 text-white' : 'bg-white text-gray-800 shadow-sm border' }}">
-                                        
-                                        @if($message->message_type === 'text')
-                                            <p class="break-words leading-relaxed">{{ $message->content }}</p>
-                                            
-                                        @elseif($message->message_type === 'file')
-                                            <div class="space-y-3">
-                                                <!-- File Info -->
-                                                <div class="flex items-center space-x-3 space-x-reverse">
-                                                    <div class="flex-shrink-0">
-                                                        @php
-                                                            $extension = pathinfo($message->file_name, PATHINFO_EXTENSION);
-                                                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                                            $isPdf = strtolower($extension) === 'pdf';
-                                                            $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
-                                                        @endphp
-                                                        
-                                                        @if($isImage)
-                                                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-image text-white"></i>
-                                                            </div>
-                                                        @elseif($isPdf)
-                                                            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file-pdf text-white"></i>
-                                                            </div>
-                                                        @elseif($isDoc)
-                                                            <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file-word text-white"></i>
-                                                            </div>
-                                                        @else
-                                                            <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file text-white"></i>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="font-medium truncate">{{ $message->file_name }}</p>
-                                                        <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- File Actions -->
-                                                <div class="flex space-x-2 space-x-reverse text-xs">
-                                                    <button onclick="previewFile('{{ $message->file_url }}', '{{ $message->file_name }}', '{{ $extension }}')" 
-                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-eye ml-1"></i> معاينة
-                                                    </button>
-                                                    <button onclick="copyToClipboard('{{ $message->file_url }}')" 
-                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
-                                                    </button>
-                                                    <a href="{{ $message->file_url }}" target="_blank" 
-                                                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-download ml-1"></i> تحميل
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            
-                                        @elseif($message->message_type === 'voice')
-                                            <div class="space-y-3">
-                                                <!-- Voice Message Header -->
-                                                <div class="flex items-center space-x-2 space-x-reverse">
-                                                    <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500' }} flex items-center justify-center">
-                                                        <i class="fas fa-microphone text-white text-sm"></i>
-                                                    </div>
-                                                    <span class="text-sm opacity-90">رسالة صوتية</span>
-                                                    @if($message->duration)
-                                                        <span class="text-xs opacity-75">
-                                                            {{ $message->duration_formatted }}
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                
-                                                <!-- Custom Audio Player -->
-                                                <div class="bg-black bg-opacity-10 rounded-xl p-3">
-                                                    <div class="flex items-center space-x-3 space-x-reverse">
-                                                        <!-- Play/Pause Button -->
-                                                        <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
-                                                                class="w-10 h-10 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-red-500 hover:bg-red-600' }} flex items-center justify-center transition-colors audio-play-btn">
-                                                            <i class="fas fa-play text-white text-sm"></i>
-                                                        </button>
-                                                        
-                                                        <!-- Waveform/Progress -->
-                                                        <div class="flex-1">
-                                                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
-                                                                @for($i = 0; $i < 20; $i++)
-                                                                    <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
-                                                                         style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
-                                                                @endfor
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <!-- Duration -->
-                                                        <span class="text-xs opacity-75 font-mono duration-display">
-                                                            {{ $message->duration_formatted ?? '0:00' }}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    <!-- Hidden Audio Element -->
-                                                    <audio class="hidden voice-audio" preload="metadata">
-                                                        <source src="{{ $message->file_url }}" type="audio/webm">
-                                                    </audio>
-                                                </div>
-                                            </div>
-                                        @endif
-                                        
-                                        <!-- Message Footer -->
-                                        <div class="flex justify-between items-center mt-3 text-xs opacity-75">
-                                            <div class="flex items-center space-x-2 space-x-reverse">
-                                                <span>{{ $message->created_at->format('H:i') }}</span>
-                                                @if($message->sender_type === 'admin' && $message->created_at->diffInMinutes(now()) <= 30)
-                                                    <button onclick="deleteMessage({{ $message->id }})" 
-                                                            class="text-red-400 hover:text-red-300 transition-colors"
-                                                            title="يمكن الحذف خلال 30 دقيقة من الإرسال">
-                                                        <i class="fas fa-trash text-xs"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                            
-                                            @if($message->sender_type === 'admin')
-                                                <i class="fas {{ $message->is_read ? 'fa-check-double text-red-200' : 'fa-check text-red-300' }}"></i>
-                                            @endif
-                                        </div>
+@foreach($messages as $message)
+    <div class="flex {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
+        <div class="max-w-xs lg:max-w-md">
+            
+            <!-- Message Bubble -->
+            <div class="rounded-2xl px-4 py-3 {{ $message->sender_type === 'admin' ? 'bg-red-500 text-white' : 'bg-white text-gray-800 shadow-sm border' }}">
+                
+                @if($message->message_type === 'text')
+                    <p class="break-words leading-relaxed">{{ $message->content ?? '' }}</p>
+                    
+                @elseif($message->message_type === 'file')
+                    <div class="space-y-3">
+                        <!-- File Info -->
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="flex-shrink-0">
+                                @php
+                                    $extension = $message->file_name ? pathinfo($message->file_name, PATHINFO_EXTENSION) : '';
+                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                    $isPdf = strtolower($extension) === 'pdf';
+                                    $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
+                                @endphp
+                                
+                                @if($isImage)
+                                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-image text-white"></i>
                                     </div>
-                                    
-                                    <!-- Sender Info -->
-                                    <div class="flex items-center mt-2 {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}">
-                                        @if($message->sender_type === 'employee')
-                                            <div class="flex items-center space-x-2 space-x-reverse">
-                                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                                                    <i class="fas fa-user text-white text-xs"></i>
-                                                </div>
-                                                <span class="text-xs text-gray-500">{{ $chat->employee->name }}</span>
-                                            </div>
-                                        @else
-                                            <div class="flex items-center space-x-2 space-x-reverse">
-                                                <span class="text-xs text-gray-500">أنت</span>
-                                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
-                                                    <i class="fas fa-user-tie text-white text-xs"></i>
-                                                </div>
-                                            </div>
-                                        @endif
+                                @elseif($isPdf)
+                                    <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-pdf text-white"></i>
+                                    </div>
+                                @elseif($isDoc)
+                                    <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-word text-white"></i>
+                                    </div>
+                                @else
+                                    <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file text-white"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium truncate">{{ $message->file_name ?? 'ملف مجهول' }}</p>
+                                <p class="text-xs opacity-75">{{ $message->file_size_formatted ?? '0 KB' }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- File Actions -->
+                        <div class="flex space-x-2 space-x-reverse text-xs">
+                            <button onclick="previewFile('{{ $message->file_url ?? '#' }}', '{{ $message->file_name ?? 'ملف' }}', '{{ $extension }}')" 
+                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                <i class="fas fa-eye ml-1"></i> معاينة
+                            </button>
+                            <button onclick="copyToClipboard('{{ $message->file_url ?? '#' }}')" 
+                                    class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                            </button>
+                            <a href="{{ $message->file_url ?? '#' }}" target="_blank" 
+                               class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                                <i class="fas fa-download ml-1"></i> تحميل
+                            </a>
+                        </div>
+                    </div>
+                    
+                @elseif($message->message_type === 'voice')
+                    <div class="space-y-3">
+                        <!-- Voice Message Header -->
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500' }} flex items-center justify-center">
+                                <i class="fas fa-microphone text-white text-sm"></i>
+                            </div>
+                            <span class="text-sm opacity-90">رسالة صوتية</span>
+                            @if($message->duration)
+                                <span class="text-xs opacity-75">
+                                    {{ $message->duration_formatted ?? '0:00' }}
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <!-- Custom Audio Player -->
+                        <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                            <div class="flex items-center space-x-3 space-x-reverse">
+                                <!-- Play/Pause Button -->
+                                <button onclick="toggleAudioPlay(this, '{{ $message->file_url ?? '#' }}')" 
+                                        class="w-10 h-10 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-red-500 hover:bg-red-600' }} flex items-center justify-center transition-colors audio-play-btn">
+                                    <i class="fas fa-play text-white text-sm"></i>
+                                </button>
+                                
+                                <!-- Waveform/Progress -->
+                                <div class="flex-1">
+                                    <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                        @for($i = 0; $i < 20; $i++)
+                                            <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                                 style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
+                                        @endfor
                                     </div>
                                 </div>
+                                
+                                <!-- Duration -->
+                                <span class="text-xs opacity-75 font-mono duration-display">
+                                    {{ $message->duration_formatted ?? '0:00' }}
+                                </span>
                             </div>
-                        @endforeach
+                            
+                            <!-- Hidden Audio Element -->
+                            <audio class="hidden voice-audio" preload="metadata">
+                                <source src="{{ $message->file_url ?? '#' }}" type="audio/webm">
+                            </audio>
+                        </div>
+                    </div>
+                @endif
+                
+                <!-- Message Footer -->
+                <div class="flex justify-between items-center mt-3 text-xs opacity-75">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span>{{ $message->created_at->format('H:i') }}</span>
+                        @if($message->sender_type === 'admin' && $message->created_at->diffInMinutes(now()) <= 30)
+                            <button onclick="deleteMessage({{ $message->id }})" 
+                                    class="text-red-400 hover:text-red-300 transition-colors"
+                                    title="يمكن الحذف خلال 30 دقيقة من الإرسال">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        @endif
+                    </div>
+                    
+                    @if($message->sender_type === 'admin')
+                        <i class="fas {{ $message->is_read ? 'fa-check-double text-red-200' : 'fa-check text-red-300' }}"></i>
+                    @endif
+                </div>
+            </div>
+            
+            <!-- Sender Info -->
+            <div class="flex items-center mt-2 {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}">
+                @if($message->sender_type === 'employee')
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-user text-white text-xs"></i>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ $chat->employee->name ?? 'موظف' }}</span>
+                    </div>
+                @else
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span class="text-xs text-gray-500">أنت</span>
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                            <i class="fas fa-user-tie text-white text-xs"></i>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+@endforeach
                     @endif
                 </div>
             </div>
@@ -822,154 +822,148 @@
         }, 3000);
     }
 
-    function generateMessageHTML(message) {
-        let contentHTML = '';
+function generateMessageHTML(message) {
+    let contentHTML = '';
+    
+    if (message.message_type === 'text') {
+        contentHTML = `<p class="break-words leading-relaxed">${message.content || ''}</p>`;
+    } else if (message.message_type === 'file') {
+        const extension = message.file_name ? message.file_name.split('.').pop().toLowerCase() : '';
+        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+        const isPdf = extension === 'pdf';
+        const isDoc = ['doc', 'docx'].includes(extension);
         
-        if (message.message_type === 'text') {
-            contentHTML = `<p class="break-words leading-relaxed">${message.content}</p>`;
-        } else if (message.message_type === 'file') {
-            contentHTML = `
-                                          <div class="space-y-3">
-                                                <!-- File Info -->
-                                                <div class="flex items-center space-x-3 space-x-reverse">
-                                                    <div class="flex-shrink-0">
-                                                        @php
-                                                            $extension = pathinfo($message->file_name, PATHINFO_EXTENSION);
-                                                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                                            $isPdf = strtolower($extension) === 'pdf';
-                                                            $isDoc = in_array(strtolower($extension), ['doc', 'docx']);
-                                                        @endphp
-                                                        
-                                                        @if($isImage)
-                                                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-image text-white"></i>
-                                                            </div>
-                                                        @elseif($isPdf)
-                                                            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file-pdf text-white"></i>
-                                                            </div>
-                                                        @elseif($isDoc)
-                                                            <div class="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file-word text-white"></i>
-                                                            </div>
-                                                        @else
-                                                            <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-file text-white"></i>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="font-medium truncate">{{ $message->file_name }}</p>
-                                                        <p class="text-xs opacity-75">{{ $message->file_size_formatted }}</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- File Actions -->
-                                                <div class="flex space-x-2 space-x-reverse text-xs">
-                                                    <button onclick="previewFile('{{ $message->file_url }}', '{{ $message->file_name }}', '{{ $extension }}')" 
-                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-eye ml-1"></i> معاينة
-                                                    </button>
-                                                    <button onclick="copyToClipboard('{{ $message->file_url }}')" 
-                                                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
-                                                    </button>
-                                                    <a href="{{ $message->file_url }}" target="_blank" 
-                                                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
-                                                        <i class="fas fa-download ml-1"></i> تحميل
-                                                    </a>
-                                                </div>
-                                            </div>
-            `;
-        } else if (message.message_type === 'voice') {
-            contentHTML = `
-                                            <div class="space-y-3">
-                                                <!-- Voice Message Header -->
-                                                <div class="flex items-center space-x-2 space-x-reverse">
-                                                    <div class="w-8 h-8 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500' }} flex items-center justify-center">
-                                                        <i class="fas fa-microphone text-white text-sm"></i>
-                                                    </div>
-                                                    <span class="text-sm opacity-90">رسالة صوتية</span>
-                                                    @if($message->duration)
-                                                        <span class="text-xs opacity-75">
-                                                            {{ $message->duration_formatted }}
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                
-                                                <!-- Custom Audio Player -->
-                                                <div class="bg-black bg-opacity-10 rounded-xl p-3">
-                                                    <div class="flex items-center space-x-3 space-x-reverse">
-                                                        <!-- Play/Pause Button -->
-                                                        <button onclick="toggleAudioPlay(this, '{{ $message->file_url }}')" 
-                                                                class="w-10 h-10 rounded-full {{ $message->sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-red-500 hover:bg-red-600' }} flex items-center justify-center transition-colors audio-play-btn">
-                                                            <i class="fas fa-play text-white text-sm"></i>
-                                                        </button>
-                                                        
-                                                        <!-- Waveform/Progress -->
-                                                        <div class="flex-1">
-                                                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
-                                                                @for($i = 0; $i < 20; $i++)
-                                                                    <div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
-                                                                         style="height: {{ rand(20, 100) }}%; animation-delay: {{ $i * 0.1 }}s"></div>
-                                                                @endfor
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <!-- Duration -->
-                                                        <span class="text-xs opacity-75 font-mono duration-display">
-                                                            {{ $message->duration_formatted ?? '0:00' }}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    <!-- Hidden Audio Element -->
-                                                    <audio class="hidden voice-audio" preload="metadata">
-                                                        <source src="{{ $message->file_url }}" type="audio/webm">
-                                                    </audio>
-                                                </div>
-                                            </div>
-            `;
+        let iconClass = 'fa-file';
+        let bgColor = 'bg-gray-500';
+        
+        if (isImage) {
+            iconClass = 'fa-image';
+            bgColor = 'bg-green-500';
+        } else if (isPdf) {
+            iconClass = 'fa-file-pdf';
+            bgColor = 'bg-red-500';
+        } else if (isDoc) {
+            iconClass = 'fa-file-word';
+            bgColor = 'bg-blue-400';
         }
         
-        const deleteButton = message.sender_type === 'admin' && message.can_delete ? 
-            `<button onclick="deleteMessage(${message.id})" class="text-red-400 hover:text-red-300 transition-colors" title="يمكن الحذف خلال 30 دقيقة">
-                <i class="fas fa-trash text-xs"></i>
-            </button>` : '';
-        
-        return `
-            <div class="max-w-xs lg:max-w-md">
-                <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'admin' ? 'bg-red-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
-                    ${contentHTML}
-                    <div class="flex justify-between items-center mt-3 text-xs opacity-75">
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <span>${message.created_at}</span>
-                            ${deleteButton}
+        contentHTML = `
+            <div class="space-y-3">
+                <!-- File Info -->
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 ${bgColor} rounded-lg flex items-center justify-center">
+                            <i class="fas ${iconClass} text-white"></i>
                         </div>
-                        ${message.sender_type === 'admin' ? 
-                            `<i class="fas ${message.is_read ? 'fa-check-double text-red-200' : 'fa-check text-red-300'}"></i>` : ''
-                        }
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">${message.file_name || 'ملف مجهول'}</p>
+                        <p class="text-xs opacity-75">${message.file_size_formatted || '0 KB'}</p>
                     </div>
                 </div>
-                <div class="flex items-center mt-2 ${message.sender_type === 'admin' ? 'justify-end' : 'justify-start'}">
-                    ${message.sender_type === 'employee' ? 
-                        `<div class="flex items-center space-x-2 space-x-reverse">
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                                <i class="fas fa-user text-white text-xs"></i>
+                
+                <!-- File Actions -->
+                <div class="flex space-x-2 space-x-reverse text-xs">
+                    <button onclick="previewFile('${message.file_url || '#'}', '${message.file_name || 'ملف'}', '${extension}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-eye ml-1"></i> معاينة
+                    </button>
+                    <button onclick="copyToClipboard('${message.file_url || '#'}')" 
+                            class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-copy ml-1"></i> نسخ الرابط
+                    </button>
+                    <a href="${message.file_url || '#'}" target="_blank" 
+                       class="bg-black bg-opacity-20 px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-colors">
+                        <i class="fas fa-download ml-1"></i> تحميل
+                    </a>
+                </div>
+            </div>
+        `;
+    } else if (message.message_type === 'voice') {
+        contentHTML = `
+            <div class="space-y-3">
+                <!-- Voice Message Header -->
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-8 h-8 rounded-full ${message.sender_type === 'admin' ? 'bg-white bg-opacity-20' : 'bg-red-500'} flex items-center justify-center">
+                        <i class="fas fa-microphone text-white text-sm"></i>
+                    </div>
+                    <span class="text-sm opacity-90">رسالة صوتية</span>
+                    ${message.duration_formatted ? `<span class="text-xs opacity-75">${message.duration_formatted}</span>` : ''}
+                </div>
+                
+                <!-- Custom Audio Player -->
+                <div class="bg-black bg-opacity-10 rounded-xl p-3">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <!-- Play/Pause Button -->
+                        <button onclick="toggleAudioPlay(this, '${message.file_url || '#'}')" 
+                                class="w-10 h-10 rounded-full ${message.sender_type === 'admin' ? 'bg-white bg-opacity-20 hover:bg-opacity-30' : 'bg-red-500 hover:bg-red-600'} flex items-center justify-center transition-colors audio-play-btn">
+                            <i class="fas fa-play text-white text-sm"></i>
+                        </button>
+                        
+                        <!-- Waveform/Progress -->
+                        <div class="flex-1">
+                            <div class="h-8 flex items-center space-x-1 space-x-reverse">
+                                ${Array.from({length: 20}, (_, i) => 
+                                    `<div class="w-1 bg-current opacity-40 rounded-full waveform-bar" 
+                                         style="height: ${Math.floor(Math.random() * 80) + 20}%; animation-delay: ${i * 0.1}s"></div>`
+                                ).join('')}
                             </div>
-                            <span class="text-xs text-gray-500">${message.sender_name || 'موظف'}</span>
-                        </div>` : 
-                        `<div class="flex items-center space-x-2 space-x-reverse">
-                            <span class="text-xs text-gray-500">أنت</span>
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
-                                <i class="fas fa-user-tie text-white text-xs"></i>
-                            </div>
-                        </div>`
-                    }
+                        </div>
+                        
+                        <!-- Duration -->
+                        <span class="text-xs opacity-75 font-mono duration-display">
+                            ${message.duration_formatted || '0:00'}
+                        </span>
+                    </div>
+                    
+                    <!-- Hidden Audio Element -->
+                    <audio class="hidden voice-audio" preload="metadata">
+                        <source src="${message.file_url || '#'}" type="audio/webm">
+                    </audio>
                 </div>
             </div>
         `;
     }
+    
+    const deleteButton = (message.sender_type === 'admin' && message.can_delete) ? 
+        `<button onclick="deleteMessage(${message.id})" class="text-red-400 hover:text-red-300 transition-colors" title="يمكن الحذف خلال 30 دقيقة">
+            <i class="fas fa-trash text-xs"></i>
+        </button>` : '';
+    
+    return `
+        <div class="max-w-xs lg:max-w-md">
+            <div class="rounded-2xl px-4 py-3 ${message.sender_type === 'admin' ? 'bg-red-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}">
+                ${contentHTML}
+                <div class="flex justify-between items-center mt-3 text-xs opacity-75">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span>${message.created_at || 'الآن'}</span>
+                        ${deleteButton}
+                    </div>
+                    ${message.sender_type === 'admin' ? 
+                        `<i class="fas ${message.is_read ? 'fa-check-double text-red-200' : 'fa-check text-red-300'}"></i>` : ''
+                    }
+                </div>
+            </div>
+            <div class="flex items-center mt-2 ${message.sender_type === 'admin' ? 'justify-end' : 'justify-start'}">
+                ${message.sender_type === 'employee' ? 
+                    `<div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-user text-white text-xs"></i>
+                        </div>
+                        <span class="text-xs text-gray-500">${message.sender_name || 'موظف'}</span>
+                    </div>` : 
+                    `<div class="flex items-center space-x-2 space-x-reverse">
+                        <span class="text-xs text-gray-500">أنت</span>
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+                            <i class="fas fa-user-tie text-white text-xs"></i>
+                        </div>
+                    </div>`
+                }
+            </div>
+        </div>
+    `;
+}
 
     // حذف الرسالة
     function deleteMessage(messageId) {
