@@ -125,14 +125,14 @@
             <a href="{{ route('employee.project-tracking.index') }}"
                class="block px-3 py-2 rounded-md text-sm hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.project-tracking.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-tasks ml-2 text-sm"></i>
-                متابعة المشاريع
+            الحضور والستوب ووتش
             </a>
             @endif
             @if(auth('employee')->user()->hasPermission('attendance_tracking'))
             <a href="{{ route('employee.attendance.index') }}"
                class="block px-3 py-2 rounded-md text-sm hover:bg-red-600 hover:text-white transition-colors {{ request()->routeIs('employee.attendance.*') ? 'bg-red-600 text-white' : '' }}">
                 <i class="fas fa-fingerprint ml-2 text-sm"></i>
-                الحضور والانصراف
+             متابعة  الحضور والانصراف  
             </a>
             @endif
             @if(auth('employee')->user()->hasPermission('work_reports'))
@@ -304,13 +304,6 @@
                     </a>
                     @endif
 
-    @if(auth('employee')->user()->hasPermission('general_operations'))
-                    <a href="{{ route('employee.general-operations') }}" 
-                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.general-operations') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-cogs ml-2 text-sm"></i>
-                        التشغيل العام
-                    </a>
-                    @endif
 
    
                     @if(auth('employee')->user()->hasPermission('photography_booking'))

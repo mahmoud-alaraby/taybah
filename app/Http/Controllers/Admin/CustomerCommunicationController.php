@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class CustomerCommunicationController extends Controller
 {
@@ -22,7 +23,7 @@ class CustomerCommunicationController extends Controller
         // الحصول على الموظفين الذين لديهم صلاحية customer_communication
         $employeesWithPermission = Employee::whereHas('roles.permissions', function($query) {
             $query->where('name', 'customer_communication');
-        })->pluck('id');
+        })->get();
 
         // الحصول على العملاء المطلوب التواصل معهم
         $query = PotentialCustomer::where(function($q) {
@@ -38,17 +39,22 @@ class CustomerCommunicationController extends Controller
         } elseif ($filter === 'high_priority') {
             $query->whereJsonContains('customer_classifications', 'difficult_customer');
         } elseif ($filter === 'unread') {
-            // العملاء الذين لديهم رسائل غير مقروءة من الموظفين
             $customerIds = CustomerChat::whereHas('messages', function($msgQuery) {
                 $msgQuery->where('sender_type', 'employee')
                          ->where('is_read', false);
             })->pluck('potential_customer_id')->toArray();
             $query->whereIn('id', $customerIds);
+        } elseif ($filter === 'my_chats') {
+            // إظهار الشاتات التي يديرها هذا الأدمن فقط
+            $customerIds = CustomerChat::where('admin_id', $admin->id)
+                                     ->pluck('potential_customer_id')
+                                     ->toArray();
+            $query->whereIn('id', $customerIds);
         }
 
         $customers = $query->with(['customerChat' => function($q) use ($employeesWithPermission) {
-                        $q->whereIn('employee_id', $employeesWithPermission)
-                          ->with('employee');
+                        $q->whereIn('employee_id', $employeesWithPermission->pluck('id'))
+                          ->with(['employee', 'admin']);
                     }])
                     ->withCount(['customerChat as unread_count' => function($q) {
                         $q->whereHas('messages', function($msgQuery) {
@@ -57,12 +63,12 @@ class CustomerCommunicationController extends Controller
                         });
                     }])
                     ->orderBy('created_at', 'desc')
-                    ->paginate(12);
+                    ->paginate(9); // تقليل العدد للكاردات الكبيرة
 
         // الإحصائيات
         $stats = $this->getAdminStats();
 
-        return view('admin.customer_communication.index', compact('customers', 'filter', 'stats'));
+        return view('admin.customer_communication.index', compact('customers', 'filter', 'stats', 'employeesWithPermission'));
     }
 
     public function show($potentialCustomerId)
@@ -74,7 +80,7 @@ class CustomerCommunicationController extends Controller
         
         // البحث عن الشات الخاص بهذا العميل مع أي موظف
         $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)
-                           ->with('employee')
+                           ->with(['employee', 'admin'])
                            ->first();
         
         // إذا لم يوجد شات، لا يمكن للإدارة بدء شات جديد
@@ -93,6 +99,56 @@ class CustomerCommunicationController extends Controller
         $chat->markAsRead('admin');
 
         return view('admin.customer_communication.show', compact('customer', 'chat', 'messages'));
+    }
+
+    public function assignEmployee(Request $request, $potentialCustomerId)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id'
+        ]);
+
+        $admin = auth('admin')->user();
+        $customer = PotentialCustomer::findOrFail($potentialCustomerId);
+        
+        // التأكد من أن الموظف لديه الصلاحية المطلوبة
+        $employee = Employee::whereHas('roles.permissions', function($query) {
+            $query->where('name', 'customer_communication');
+        })->findOrFail($request->employee_id);
+
+        // البحث عن شات موجود أو إنشاء جديد
+        $chat = CustomerChat::where('potential_customer_id', $potentialCustomerId)->first();
+        
+        if (!$chat) {
+            // إنشاء شات جديد
+            $chat = CustomerChat::create([
+                'potential_customer_id' => $potentialCustomerId,
+                'employee_id' => $request->employee_id,
+                'admin_id' => $admin->id,
+                'status' => 'active',
+                'priority' => 'normal',
+                'customer_type' => in_array('requested_call', $customer->customer_classifications ?? []) ? 'call_request' : 'visit_request'
+            ]);
+
+            // إرسال رسالة تلقائية
+            CustomerChatMessage::create([
+                'chat_id' => $chat->id,
+                'sender_type' => 'admin',
+                'sender_id' => $admin->id,
+                'message_type' => 'text',
+                'content' => 'تم تعيينك للتواصل مع هذا العميل. يرجى المتابعة والرد على استفساراته.'
+            ]);
+        } else {
+            // تحديث الموظف المعين
+            $chat->update([
+                'employee_id' => $request->employee_id,
+                'admin_id' => $admin->id
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تعيين الموظف بنجاح'
+        ]);
     }
 
     public function sendMessage(Request $request, $chatId)
@@ -140,15 +196,12 @@ class CustomerCommunicationController extends Controller
             elseif ($request->message_type === 'voice') {
                 $voiceData = $request->voice;
                 if (is_string($voiceData) && str_starts_with($voiceData, 'data:audio')) {
-                    // فك تشفير الصوت من base64
                     $audio = base64_decode(explode(',', $voiceData)[1]);
                     $fileName = time() . '_' . Str::random(10) . '.webm';
                     
-                    // حفظ الملف
                     $filePath = 'customer-chat/voice/' . $fileName;
                     Storage::disk('public')->put($filePath, $audio);
                     
-                    // التأكد من حفظ الملف
                     if (!Storage::disk('public')->exists($filePath)) {
                         throw new \Exception('فشل في حفظ الملف الصوتي');
                     }
@@ -173,13 +226,6 @@ class CustomerCommunicationController extends Controller
                         'file_size' => strlen($audio),
                         'file_type' => 'audio/webm',
                         'duration' => $duration
-                    ]);
-                    
-                    // تسجيل المسار للتأكد
-                    \Log::info('Admin Voice file saved:', [
-                        'path' => $filePath,
-                        'url' => asset('storage/' . $filePath),
-                        'exists' => Storage::disk('public')->exists($filePath)
                     ]);
                 }
             }
@@ -294,6 +340,48 @@ class CustomerCommunicationController extends Controller
         return response()->json(['success' => true, 'message' => 'تم حذف الرسالة']);
     }
 
+    public function clearChatFiles($chatId)
+    {
+        $admin = auth('admin')->user();
+        $chat = CustomerChat::findOrFail($chatId);
+
+        $fileMessages = $chat->messages()
+            ->whereIn('message_type', ['file', 'voice'])
+            ->get();
+
+        $deletedCount = 0;
+        $freedSpace = 0;
+
+        foreach ($fileMessages as $message) {
+            $freedSpace += $message->file_size ?? 0;
+            
+            // حذف الملف من التخزين
+            if ($message->file_path && Storage::disk('public')->exists('customer-chat/' . $message->file_path)) {
+                Storage::disk('public')->delete('customer-chat/' . $message->file_path);
+            }
+            
+            $message->delete();
+            $deletedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $deletedCount,
+            'freed_space' => $this->formatBytes($freedSpace)
+        ]);
+    }
+
+    public function getStorageInfo()
+    {
+        $totalSize = CustomerChatMessage::whereNotNull('file_size')->sum('file_size');
+        $fileCount = CustomerChatMessage::whereIn('message_type', ['file', 'voice'])->count();
+
+        return response()->json([
+            'total_size' => $this->formatBytes($totalSize),
+            'file_count' => $fileCount
+        ]);
+    }
+
     private function getAdminStats()
     {
         // الموظفين المؤهلين للتواصل مع العملاء
@@ -324,6 +412,9 @@ class CustomerCommunicationController extends Controller
                                                  ->where('is_read', false)
                                                  ->count();
 
+        // الشاتات التي يديرها هذا الأدمن
+        $adminChats = CustomerChat::where('admin_id', auth('admin')->id())->count();
+
         return [
             'qualified_employees' => $qualifiedEmployees,
             'total_customers' => $totalCustomers,
@@ -331,7 +422,17 @@ class CustomerCommunicationController extends Controller
             'visits_requests' => $visitsRequests,
             'high_priority' => $highPriority,
             'active_chats' => $activeChats,
-            'unread_from_employees' => $unreadFromEmployees
+            'unread_from_employees' => $unreadFromEmployees,
+            'admin_chats' => $adminChats
         ];
+    }
+
+    private function formatBytes($bytes)
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 }

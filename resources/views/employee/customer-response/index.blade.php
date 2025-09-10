@@ -214,10 +214,13 @@ function syncPreview(selectId, previewId){
 }
 function copyText(id){
     let text = document.getElementById('text_'+id).innerText;
+    // إزالة الفراغات في البداية والنهاية واستبدال عدة أسطر جديدة أو فراغات بواحد فقط
+    text = text.trim().replace(/\s*\n\s*/g, '\n').replace(/[ \t]+/g, ' ');
     navigator.clipboard.writeText(text).then(()=>{
         showCopyToast();
     });
 }
+
 function showCopyToast(){
     const toast = document.getElementById('copyToast');
     toast.classList.remove('opacity-0');

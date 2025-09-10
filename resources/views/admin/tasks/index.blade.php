@@ -124,10 +124,10 @@
         </select>
     </div>
     {{-- فلترة اليوم --}}
-    <!-- <div>
+    <div>
         <label class="block mb-1 text-gray-700 font-semibold">اليوم</label>
         <input type="date" name="date" value="{{ request('date') }}" class="border border-gray-300 rounded-md p-2 focus:outline-none" />
-    </div> -->
+    </div>
     {{-- الشهر --}}
     <!-- <div>
         <label class="block mb-1 text-gray-700 font-semibold">الشهر</label>

@@ -154,41 +154,46 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $entry->project->name }}</div>
-                                    @if($entry->project->client_name)
-                                        <div class="text-sm text-gray-500">{{ $entry->project->client_name }}</div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $entry->task->name }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $entry->start_time->format('H:i:s') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $entry->end_time ? $entry->end_time->format('H:i:s') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $entry->formatted_duration }}</div>
-                                    <div class="text-sm text-gray-500">{{ number_format($entry->hours, 2) }} ساعة</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($entry->is_active)
-<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
-                                           <i class="fas fa-circle ml-1 text-xs"></i>
-                                           نشط
-                                       </span>
-                                   @else
-                                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                           <i class="fas fa-check ml-1"></i>
-                                           مكتمل
-                                       </span>
-                                   @endif
-                               </td>
-                               <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
-                                   {{ Str::limit($entry->description, 50) }}
-                               </td>
+                             <td class="px-6 py-4 whitespace-nowrap">
+    <div class="text-sm font-medium text-gray-900">
+        {{ $entry->project->name ?? 'بدون مشروع' }}
+    </div>
+
+    @if(isset($entry->project) && $entry->project->client_name)
+        <div class="text-sm text-gray-500">{{ $entry->project->client_name }}</div>
+    @endif
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+ <div class="text-sm text-gray-900">{{ $entry->task?->name ?? 'بدون مهمة' }}</div>
+
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+    {{ $entry->start_time->format('H:i:s') }}
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+    {{ $entry->end_time ? $entry->end_time->format('H:i:s') : '-' }}
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+    <div class="text-sm font-medium text-gray-900">{{ $entry->formatted_duration }}</div>
+    <div class="text-sm text-gray-500">{{ number_format($entry->hours, 2) }} ساعة</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+    @if($entry->is_active)
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
+            <i class="fas fa-circle ml-1 text-xs"></i>
+            نشط
+        </span>
+    @else
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <i class="fas fa-check ml-1"></i>
+            مكتمل
+        </span>
+    @endif
+</td>
+<td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+    {{ Str::limit($entry->description, 50) }}
+</td>
+
                            </tr>
                        @endforeach
                    </tbody>

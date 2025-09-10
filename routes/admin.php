@@ -298,9 +298,14 @@ Route::prefix('photography-costs')->name('admin.photography-costs.')->group(func
 
 // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
+// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+
 Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
     Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
     Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+    
+    // تعيين موظف للعميل
+    Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
     
     // إرسال رسالة في الشات
     Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
@@ -310,6 +315,12 @@ Route::prefix('customer-communication')->name('admin.customer-communication.')->
     
     // حذف رسالة معينة (خلال 5 دقائق من الإرسال)
     Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
+    
+    // مسح ملفات الشات
+    Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
+    
+    // معلومات التخزين
+    Route::get('/storage-info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
     
     // إحصائيات سريعة للتحديث التلقائي
     Route::get('/unread-count', function() {
