@@ -519,7 +519,7 @@ function projectTracking() {
         // Timer state
         isTimerActive: false,
         activeTimer: null,
-        timerSeconds: 0,
+        timerStartTime: null,
         timerDisplay: '00:00:00',
         timerInterval: null,
         currentTime: '',
@@ -556,65 +556,71 @@ function projectTracking() {
             this.checkActiveTimer();
             this.loadTodayEntries();
             
-            // Update time every second
+            // Update current time every minute
             setInterval(() => {
                 this.updateCurrentTime();
-                if (this.isTimerActive) {
-                    this.updateTimerDisplay();
-                }
-            }, 1000);
+            }, 60000);
         },
 
         updateCurrentTime() {
             const now = new Date();
-            this.currentTime = now.toLocaleTimeString('ar-SA');
+            this.currentTime = now.toLocaleTimeString('ar-SA', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
         },
 
-      async checkActiveTimer() {
-    try {
-        const response = await fetch('{{ route("employee.project-tracking.active-timer") }}');
-        const data = await response.json();
-        
-        if (data.active) {
-            this.isTimerActive = true;
-            this.activeTimer = data.timer;
-            
-            // فرض أن current_seconds يمكن أن تكون نص زمني أو رقم غير صحيح
-            if (typeof data.current_seconds === 'string' && data.current_seconds.includes(':')) {
-                const timeParts = data.current_seconds.split('.')[0].split(':');
-                this.timerSeconds = (+timeParts) * 3600 + (+timeParts[1]) * 60 + (+timeParts[2]);
-            } else {
-                this.timerSeconds = Math.floor(Number(data.current_seconds));
+        async checkActiveTimer() {
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.active-timer") }}');
+                const data = await response.json();
+                
+                if (data.active) {
+                    this.isTimerActive = true;
+                    this.activeTimer = data.timer;
+                    
+                    // استخدام التوقيت الفعلي من قاعدة البيانات
+                    this.timerStartTime = new Date(data.timer.start_time);
+                    
+                    // تحديث العداد فوراً ثم كل ثانية
+                    this.updateTimerDisplay();
+                    this.timerInterval = setInterval(() => {
+                        this.updateTimerDisplay();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error checking active timer:', error);
             }
-            
-            this.updateTimerDisplay();
-        }
-    } catch (error) {
-        console.error('Error checking active timer:', error);
-    }
-}
-,
+        },
 
- updateTimerDisplay() {
-    if (this.isTimerActive) {
-        this.timerSeconds++;
-    }
-    
-    const hours = Math.floor(this.timerSeconds / 3600);
-    const minutes = Math.floor((this.timerSeconds % 3600) / 60);
-    const seconds = this.timerSeconds % 60;
-    
-    // اعرض فقط بالشكل "00:00:00" (ساعات:دقائق:ثواني) بدون كسور ولا أية إضافات
-    this.timerDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-},
+        updateTimerDisplay() {
+            if (this.isTimerActive && this.timerStartTime) {
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - this.timerStartTime) / 1000);
+                this.timerDisplay = this.formatSeconds(diffInSeconds);
+            }
+        },
+
+        formatSeconds(totalSeconds) {
+            if (totalSeconds < 0) totalSeconds = 0;
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        },
 
         async loadTodayEntries() {
             try {
                 const response = await fetch('{{ route("employee.project-tracking.today-entries") }}');
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
-                this.todayEntries = data.entries;
+                this.todayEntries = data.entries || [];
             } catch (error) {
                 console.error('Error loading today entries:', error);
+                this.todayEntries = [];
             }
         },
 
@@ -636,11 +642,12 @@ function projectTracking() {
                 
                 if (data.success) {
                     this.showAlert('تم تسجيل الحضور بنجاح', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
                     this.showAlert(data.message, 'error');
                 }
             } catch (error) {
+                console.error('Check-in error:', error);
                 this.showAlert('حدث خطأ أثناء تسجيل الحضور', 'error');
             }
         },
@@ -659,11 +666,12 @@ function projectTracking() {
                 
                 if (data.success) {
                     this.showAlert('تم تسجيل الانصراف بنجاح', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
                     this.showAlert(data.message, 'error');
                 }
             } catch (error) {
+                console.error('Check-out error:', error);
                 this.showAlert('حدث خطأ أثناء تسجيل الانصراف', 'error');
             }
         },
@@ -678,7 +686,7 @@ function projectTracking() {
 
         loadProjectTasks() {
             const project = @json($activeProjects).find(p => p.id == this.selectedProject);
-            if (project) {
+            if (project && project.tasks) {
                 this.projectTasks = project.tasks;
             } else {
                 this.projectTasks = [];
@@ -693,7 +701,7 @@ function projectTracking() {
             
             // تحميل مهام المشروع
             const project = @json($activeProjects).find(p => p.id == projectId);
-            if (project) {
+            if (project && project.tasks) {
                 this.projectTasks = project.tasks;
             }
             
@@ -726,18 +734,31 @@ function projectTracking() {
                 if (data.success) {
                     this.isTimerActive = true;
                     this.activeTimer = data.timer;
-                    this.timerSeconds = 0;
+                    this.timerStartTime = new Date(); // الوقت الحالي
                     this.showStartModal = false;
                     this.showAlert('تم بدء العداد بنجاح', 'success');
+                    
+                    // بدء العداد
+                    this.updateTimerDisplay();
+                    this.timerInterval = setInterval(() => {
+                        this.updateTimerDisplay();
+                    }, 1000);
                 } else {
                     this.showAlert(data.message, 'error');
                 }
             } catch (error) {
+                console.error('Start timer error:', error);
                 this.showAlert('حدث خطأ أثناء بدء العداد', 'error');
             }
         },
 
         async stopTimer() {
+            // إيقاف العداد
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+
             try {
                 const response = await fetch('{{ route("employee.project-tracking.stop-timer") }}', {
                     method: 'POST',
@@ -752,7 +773,7 @@ function projectTracking() {
                 if (data.success) {
                     this.isTimerActive = false;
                     this.activeTimer = null;
-                    this.timerSeconds = 0;
+                    this.timerStartTime = null;
                     this.timerDisplay = '00:00:00';
                     this.loadTodayEntries();
                     this.showAlert(`تم إيقاف العداد - المدة: ${data.duration}`, 'success');
@@ -760,17 +781,53 @@ function projectTracking() {
                     this.showAlert(data.message, 'error');
                 }
             } catch (error) {
+                console.error('Stop timer error:', error);
+                this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
+            }
+        },
+
+        async pauseTimer() {
+            // إيقاف العداد مؤقتاً
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.pause-timer") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.isTimerActive = false;
+                    this.activeTimer = null;
+                    this.timerStartTime = null;
+                    this.timerDisplay = '00:00:00';
+                    this.loadTodayEntries();
+                    this.showAlert(`تم إيقاف العداد مؤقتاً - المدة: ${data.duration}`, 'success');
+                } else {
+                    this.showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Pause timer error:', error);
                 this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
             }
         },
 
         showCreateProjectModal() {
             this.showCreateModal = true;
+            const today = new Date();
             this.newProject = {
                 name: '',
                 client_name: '',
                 description: '',
-                start_date: new Date().toISOString().split('T')[0],
+                start_date: today.toISOString().split('T')[0],
                 end_date: ''
             };
         },
@@ -786,83 +843,93 @@ function projectTracking() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                   },
-                   body: JSON.stringify(this.newProject)
-               });
-               
-               const data = await response.json();
-               
-               if (data.success) {
-                   this.showCreateModal = false;
-                   this.showAlert('تم إنشاء المشروع بنجاح', 'success');
-                   setTimeout(() => location.reload(), 1000);
-               } else {
-                   this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
-               }
-           } catch (error) {
-               this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
-           }
-       },
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(this.newProject)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showCreateModal = false;
+                    this.showAlert('تم إنشاء المشروع بنجاح', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
+                }
+            } catch (error) {
+                console.error('Create project error:', error);
+                this.showAlert('حدث خطأ أثناء إنشاء المشروع', 'error');
+            }
+        },
 
-       showAddTaskModal() {
-           this.showTaskModal = true;
-           this.newTask = {
-               project_id: '',
-               name: '',
-               description: '',
-               estimated_hours: 1
-           };
-       },
+        showAddTaskModal() {
+            this.showTaskModal = true;
+            this.newTask = {
+                project_id: '',
+                name: '',
+                description: '',
+                estimated_hours: 1
+            };
+        },
 
-       async addTask() {
-           if (!this.newTask.project_id || !this.newTask.name || !this.newTask.estimated_hours) {
-               this.showAlert('يرجى ملء الحقول المطلوبة', 'error');
-               return;
-           }
+        async addTask() {
+            if (!this.newTask.project_id || !this.newTask.name || !this.newTask.estimated_hours) {
+                this.showAlert('يرجى ملء الحقول المطلوبة', 'error');
+                return;
+            }
 
-           try {
-               const response = await fetch('{{ route("employee.project-tracking.add-task") }}', {
-                   method: 'POST',
-                   headers: {
-                       'Content-Type': 'application/json',
-                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                   },
-                   body: JSON.stringify(this.newTask)
-               });
-               
-               const data = await response.json();
-               
-               if (data.success) {
-                   this.showTaskModal = false;
-                   this.showAlert('تم إضافة المهمة بنجاح', 'success');
-                   setTimeout(() => location.reload(), 1000);
-               } else {
-                   this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
-               }
-           } catch (error) {
-               this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
-           }
-       },
+            try {
+                const response = await fetch('{{ route("employee.project-tracking.add-task") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(this.newTask)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showTaskModal = false;
+                    this.showAlert('تم إضافة المهمة بنجاح', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
+                }
+            } catch (error) {
+                console.error('Add task error:', error);
+                this.showAlert('حدث خطأ أثناء إضافة المهمة', 'error');
+            }
+        },
 
-       showAlert(message, type) {
-           if (type === 'success') {
-               Swal.fire({
-                   title: 'نجح!',
-                   text: message,
-                   icon: 'success',
-                   timer: 2000,
-                   showConfirmButton: false
-               });
-           } else {
-               Swal.fire({
-                   title: 'خطأ!',
-                   text: message,
-                   icon: 'error'
-               });
-           }
-       }
-   }
+        showAlert(message, type) {
+            if (typeof Swal !== 'undefined') {
+                if (type === 'success') {
+                    Swal.fire({
+                        title: 'نجح!',
+                        text: message,
+                        icon: 'success',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: message,
+                        icon: 'error',
+                        confirmButtonText: 'حسناً',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            } else {
+                alert(message);
+            }
+        }
+    }
 }
 </script>
 @endpush

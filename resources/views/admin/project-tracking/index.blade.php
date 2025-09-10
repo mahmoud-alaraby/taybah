@@ -633,13 +633,13 @@ if (!function_exists('formatTime12h')) {
 function adminProjectTracking() {
     return {
         // Timer state
-        activeTimerDisplay: '00:00',
+        activeTimerDisplay: '00:00:00',
         @if($activeTimer)
             myActiveTimer: @json($activeTimer),
-            myTimerStartSeconds: {{ floor($activeTimer->start_time->diffInSeconds(now()) / 60) }},
+            myTimerStartTime: new Date('{{ $activeTimer->start_time->toISOString() }}'),
         @else
             myActiveTimer: null,
-            myTimerStartSeconds: 0,
+            myTimerStartTime: null,
         @endif
         timerInterval: null,
         currentTime: '',
@@ -675,17 +675,17 @@ function adminProjectTracking() {
             this.updateCurrentTime();
             this.loadTodayEntries();
             
-            // Update time every minute (not every second for performance)
+            // Update current time every minute
             setInterval(() => {
                 this.updateCurrentTime();
-                this.updateMyTimerDisplay();
-            }, 60000); // Every minute
+            }, 60000);
             
-            // Update timer display every minute
-            if (this.myActiveTimer) {
-                setInterval(() => {
+            // Update timer display every second for accuracy
+            if (this.myActiveTimer && this.myTimerStartTime) {
+                this.updateMyTimerDisplay(); // Initial update
+                this.timerInterval = setInterval(() => {
                     this.updateMyTimerDisplay();
-                }, 60000);
+                }, 1000); // Every second
             }
         },
 
@@ -699,9 +699,10 @@ function adminProjectTracking() {
         },
 
         updateMyTimerDisplay() {
-            if (this.myActiveTimer) {
-                this.myTimerStartSeconds++;
-                this.activeTimerDisplay = this.formatMinutes(this.myTimerStartSeconds);
+            if (this.myActiveTimer && this.myTimerStartTime) {
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - this.myTimerStartTime) / 1000);
+                this.activeTimerDisplay = this.formatSeconds(diffInSeconds);
             }
         },
 
@@ -823,6 +824,12 @@ function adminProjectTracking() {
         },
 
         async stopMyTimer() {
+            // Clear the timer interval
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+
             try {
                 const response = await fetch('{{ route("admin.project-tracking.stop-timer") }}', {
                     method: 'POST',
@@ -847,6 +854,12 @@ function adminProjectTracking() {
         },
 
         async pauseMyTimer() {
+            // Clear the timer interval
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+
             try {
                 const response = await fetch('{{ route("admin.project-tracking.pause-timer") }}', {
                     method: 'POST',
@@ -954,6 +967,18 @@ function adminProjectTracking() {
             }
         },
 
+        // Format seconds to HH:MM:SS
+        formatSeconds(totalSeconds) {
+            if (totalSeconds < 0) totalSeconds = 0;
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        },
+
+        // Format seconds to HH:MM (for backward compatibility)
         formatMinutes(totalMinutes) {
             if (totalMinutes < 0) totalMinutes = 0;
             
