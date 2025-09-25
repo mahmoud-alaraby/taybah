@@ -19,7 +19,7 @@ class AdminProjectTrackingController extends Controller
         $adminId = auth('admin')->id();
         $today = Carbon::today();
 
-        // المشاريع التي يعمل عليها الأدمن (له مهام فيها أو أنشأها)
+        // المشاريع التي يعمل عليها الأدمن
         $activeProjects = Project::active()
             ->where(function ($query) use ($adminId) {
                 $query->whereHas('tasks', function ($q) use ($adminId) {
@@ -54,20 +54,20 @@ class AdminProjectTrackingController extends Controller
                 ->get();
         }
 
-        // حالة البصمة اليوم للأدمن
+        // حالة البصمة اليوم
         $todayAttendance = EmployeeAttendance::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
             ->where('date', $today)
             ->first();
 
-        // الـ Timer النشط للأدمن
+        // الـ Timer النشط
         $activeTimer = TimeTracking::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
             ->where('is_active', true)
             ->with(['project', 'task'])
             ->first();
 
-        // إحصائيات اليوم للأدمن الشخصي
+        // إحصائيات اليوم
         $personalStats = [
             'total_hours' => TimeTracking::where('employee_id', $adminId)
                 ->where('employee_type', 'admin')
@@ -87,16 +87,391 @@ class AdminProjectTrackingController extends Controller
 
         $todayStats = $personalStats;
 
-        // قائمة الموظفين للإدارة
-        $employees = \App\Models\Employee::where('status', 'active')->get(['id', 'name']);
-
         return view('admin.project-tracking.index', compact(
             'activeProjects',
             'todayAttendance',
             'activeTimer',
-            'todayStats',
-            'employees'
+            'todayStats'
         ));
+    }
+
+    public function startTimer(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'task_id' => 'required|exists:project_tasks,id',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $adminId = auth('admin')->id();
+
+        // التأكد من أن المهمة مخصصة للأدمن أو متاحة له
+        $task = ProjectTask::where('id', $request->task_id)
+            ->where(function ($q) use ($adminId) {
+                $q->where(function ($query) use ($adminId) {
+                    $query->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
+                })->orWhereNull('assigned_to')
+                    ->orWhereHas('project', function ($q2) use ($adminId) {
+                        $q2->where('created_by', $adminId)->where('created_by_type', 'admin');
+                    });
+            })
+            ->first();
+
+        if (!$task) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه المهمة غير متاحة لك'
+            ], 403);
+        }
+
+        // إيقاف أي timer نشط
+        TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('is_active', true)
+            ->each(function ($timer) {
+                $timer->stopTimer();
+            });
+
+        // تحديد session number
+        $sessionNumber = TimeTracking::where('task_id', $request->task_id)->max('session_number') + 1;
+
+        // تحديث حالة المهمة إلى "قيد التنفيذ"
+        $task->update(['status' => 'in_progress']);
+
+        $timer = TimeTracking::create([
+            'employee_id' => $adminId,
+            'employee_type' => 'admin',
+            'project_id' => $request->project_id,
+            'task_id' => $request->task_id,
+            'start_time' => now(),
+            'description' => $request->description,
+            'date' => Carbon::today(),
+            'is_active' => true,
+            'is_paused' => false,
+            'pause_count' => 0,
+            'resume_count' => 0,
+            'session_number' => $sessionNumber,
+            'pause_resume_log' => [],
+            'total_seconds' => 0,
+            'is_editable' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم بدء العداد بنجاح',
+            'timer' => $timer->load(['project', 'task']),
+        ]);
+    }
+
+
+    public function resumeTimer(Request $request)
+    {
+        $adminId = auth('admin')->id();
+
+        $activeTimer = TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$activeTimer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يوجد عداد نشط'
+            ], 400);
+        }
+
+        if (!$activeTimer->is_paused) {
+            return response()->json([
+                'success' => false,
+                'message' => 'العداد غير متوقف'
+            ], 400);
+        }
+
+        $resumeTime = now();
+
+        // Log resume
+        $pauseLog = $activeTimer->pause_resume_log ?? [];
+        $pauseLog[] = [
+            'action' => 'resume',
+            'time' => $resumeTime->toISOString()
+        ];
+
+        // الحل: تحديث start_time بحيث يعكس الوقت المحفوظ
+        // نحسب كم الوقت المفروض يكون منقضي لو بدأنا من الآن
+        $savedSeconds = $activeTimer->total_seconds; // الوقت المحفوظ عند الإيقاف
+        $newStartTime = $resumeTime->copy()->subSeconds($savedSeconds);
+
+        $activeTimer->update([
+            'start_time' => $newStartTime, // هنا الحل الأساسي
+            'is_paused' => false,
+            'resume_count' => $activeTimer->resume_count + 1,
+            'pause_resume_log' => $pauseLog
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم استئناف العداد بنجاح',
+            'timer' => $activeTimer->fresh(),
+            'resume_count' => $activeTimer->resume_count,
+            'is_paused' => $activeTimer->is_paused
+        ]);
+    }
+    public function stopTimer(Request $request)
+    {
+        $adminId = auth('admin')->id();
+
+        $activeTimer = TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$activeTimer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يوجد عداد نشط'
+            ], 400);
+        }
+
+        $activeTimer->stopTimer();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إنهاء العداد بنجاح',
+            'timer' => $activeTimer->fresh(),
+            'duration' => $activeTimer->formatted_duration,
+            'hours' => round($activeTimer->total_seconds / 3600, 2),
+            'session_summary' => $activeTimer->session_summary
+        ]);
+    }
+
+    public function restartTimer(Request $request)
+    {
+        $request->validate([
+            'timer_id' => 'required|exists:time_trackings,id',
+            'description' => 'nullable|string|max:500'
+        ]);
+
+        $adminId = auth('admin')->id();
+
+        $timer = TimeTracking::where('id', $request->timer_id)
+            ->where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->first();
+
+        if (!$timer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Timer غير موجود'
+            ], 404);
+        }
+
+        if ($timer->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'العداد نشط بالفعل'
+            ], 400);
+        }
+
+        // إيقاف أي timer نشط آخر
+        TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('is_active', true)
+            ->each(function ($activeTimer) {
+                $activeTimer->stopTimer();
+            });
+
+        // حساب start_time الجديد بحيث يكمل من الوقت المحفوظ
+        $now = now();
+        $savedSeconds = $timer->total_seconds; // الوقت المحفوظ
+        $newStartTime = $now->copy()->subSeconds($savedSeconds);
+
+        // Log restart في pause_resume_log
+        $pauseLog = $timer->pause_resume_log ?? [];
+        $pauseLog[] = [
+            'action' => 'restart_continue',
+            'time' => $now->toISOString(),
+            'continued_from_seconds' => $savedSeconds
+        ];
+
+        // تحديث نفس الـ timer بدلاً من إنشاء واحد جديد
+        $timer->update([
+            'start_time' => $newStartTime, // البداية محسوبة بحيث تعكس الوقت المحفوظ
+            'end_time' => null,
+            'is_active' => true,
+            'is_paused' => false,
+            'pause_resume_log' => $pauseLog,
+            'description' => $request->description ?? $timer->description . ' - استكمال',
+            // نحتفظ بـ session_number نفسه (مش +1)
+            // نحتفظ بـ total_seconds المحفوظ
+        ]);
+
+        // تحديث حالة المهمة إلى "قيد التنفيذ"
+        if ($timer->task) {
+            $timer->task->update(['status' => 'in_progress']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم استكمال العداد من حيث توقف',
+            'timer' => $timer->fresh()->load(['project', 'task']),
+            'session_number' => $timer->session_number, // نفس الجلسة
+            'continued_from' => $this->formatHoursMinutes($savedSeconds / 3600),
+            'total_duration' => $timer->formatted_duration
+        ]);
+    }
+
+    public function editTimer(Request $request)
+    {
+        $request->validate([
+            'timer_id' => 'required|exists:time_trackings,id',
+            'hours' => 'required|numeric|min:0|max:24',
+            'minutes' => 'required|integer|min:0|max:59'
+        ]);
+
+        $adminId = auth('admin')->id();
+
+        $timer = TimeTracking::where('id', $request->timer_id)
+            ->where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->first();
+
+        if (!$timer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Timer غير موجود'
+            ], 404);
+        }
+
+        $newSeconds = ($request->hours * 3600) + ($request->minutes * 60);
+        $success = $timer->editTime($newSeconds, $adminId, 'admin');
+
+        if (!$success) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن تعديل هذا Timer'
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تعديل الوقت بنجاح',
+            'timer' => $timer->fresh(),
+            'new_duration' => $timer->formatted_duration,
+            'original_duration' => $this->formatHoursMinutes(($timer->original_seconds ?? 0) / 3600)
+        ]);
+    }
+
+    public function getTimerDetails(Request $request)
+    {
+        $request->validate([
+            'timer_id' => 'required|exists:time_trackings,id'
+        ]);
+
+        $adminId = auth('admin')->id();
+
+        $timer = TimeTracking::where('id', $request->timer_id)
+            ->where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->with(['project', 'task'])
+            ->first();
+
+        if (!$timer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Timer غير موجود'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'timer' => $timer,
+            'session_summary' => $timer->session_summary,
+            'pause_resume_log' => $timer->pause_resume_log,
+            'total_pause_time' => $this->formatHoursMinutes($timer->total_pause_time / 3600),
+            'is_edited' => $timer->is_edited,
+            'original_duration' => $timer->original_seconds ?
+                $this->formatHoursMinutes($timer->original_seconds / 3600) : null
+        ]);
+    }
+
+    public function getActiveTimer()
+    {
+        $adminId = auth('admin')->id();
+
+        $activeTimer = TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('is_active', true)
+            ->with(['project', 'task'])
+            ->first();
+
+        if ($activeTimer) {
+            $currentSeconds = 0;
+
+            if ($activeTimer->is_paused) {
+                $currentSeconds = $activeTimer->total_seconds;
+            } else {
+                $currentSeconds = $activeTimer->calculateTotalSeconds(now());
+            }
+
+            return response()->json([
+                'active' => true,
+                'timer' => $activeTimer,
+                'current_seconds' => $currentSeconds,
+                'formatted_time' => $this->formatHoursMinutes($currentSeconds / 3600),
+                'is_paused' => $activeTimer->is_paused,
+                'pause_count' => $activeTimer->pause_count,
+                'resume_count' => $activeTimer->resume_count,
+                'session_number' => $activeTimer->session_number
+            ]);
+        }
+
+        return response()->json(['active' => false]);
+    }
+
+    public function todayTimeEntries()
+    {
+        $adminId = auth('admin')->id();
+        $today = Carbon::today();
+
+        $entries = TimeTracking::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('date', $today)
+            ->with(['project', 'task'])
+            ->orderBy('start_time', 'desc')
+            ->get()
+            ->map(function ($entry) {
+                return [
+                    'id' => $entry->id,
+                    'project' => [
+                        'name' => $entry->project->name ?? 'مشروع محذوف',
+                    ],
+                    'task' => [
+                        'name' => $entry->task->name ?? 'مهمة محذوفة',
+                    ],
+                    'start_time' => $entry->start_time->format('H:i'),
+                    'end_time' => $entry->end_time ? $entry->end_time->format('H:i') : 'جاري',
+                    'formatted_duration' => $entry->formatted_duration,
+                    'hours' => round($entry->total_seconds / 3600, 2),
+                    'is_active' => $entry->is_active,
+                    'is_paused' => $entry->is_paused,
+                    'pause_count' => $entry->pause_count,
+                    'resume_count' => $entry->resume_count,
+                    'session_number' => $entry->session_number,
+                    'is_editable' => $entry->is_editable,
+                    'is_edited' => $entry->is_edited,
+                    'can_restart' => !$entry->is_active
+                ];
+            });
+
+        $totalHours = $entries->sum('hours');
+        $targetPercentage = $totalHours > 0 ? min(100, ($totalHours / 7) * 100) : 0;
+
+        return response()->json([
+            'entries' => $entries,
+            'total_hours' => round($totalHours, 2),
+            'target_percentage' => round($targetPercentage, 2),
+            'formatted_total' => $this->formatHoursMinutes($totalHours),
+        ]);
     }
 
     public function checkIn(Request $request)
@@ -104,7 +479,6 @@ class AdminProjectTrackingController extends Controller
         $adminId = auth('admin')->id();
         $today = Carbon::today();
 
-        // التحقق من عدم وجود بصمة حضور لليوم
         $existingAttendance = EmployeeAttendance::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
             ->where('date', $today)
@@ -118,9 +492,8 @@ class AdminProjectTrackingController extends Controller
         }
 
         $checkInTime = now();
-        $workStartTime = Carbon::today()->setHour(10)->setMinute(0); // 10:00 صباحاً
+        $workStartTime = Carbon::today()->setHour(10)->setMinute(0);
 
-        // حساب التأخير بالدقائق فقط
         $isLate = $checkInTime->gt($workStartTime);
         $lateMinutes = $isLate ? $checkInTime->diffInMinutes($workStartTime) : 0;
 
@@ -153,7 +526,6 @@ class AdminProjectTrackingController extends Controller
             'attendance' => $attendance,
             'is_late' => $attendance->is_late,
             'late_minutes' => $attendance->late_minutes,
-            'late_time_formatted' => $attendance->late_time_formatted,
         ]);
     }
 
@@ -186,19 +558,14 @@ class AdminProjectTrackingController extends Controller
             ], 400);
         }
 
-        // إذا كان انصراف مؤقت
         if ($checkoutType === 'temporary') {
             $result = $attendance->tempCheckOut();
             return response()->json($result);
         }
 
-        // انصراف نهائي
         $attendance->checkOut('final');
-
-        // إنشاء ملخص اليوم
         DailyWorkSummary::generateForEmployee($adminId, $today, 'admin');
 
-        // تنسيق الساعات والدقائق للعرض
         $totalHoursFormatted = $this->formatHoursMinutes($attendance->total_hours);
         $overtimeFormatted = $this->formatHoursMinutes($attendance->overtime_hours);
 
@@ -213,221 +580,46 @@ class AdminProjectTrackingController extends Controller
         ]);
     }
 
-    public function startTimer(Request $request)
-    {
-        $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'task_id' => 'required|exists:project_tasks,id',
-            'description' => 'nullable|string|max:500',
-        ]);
-
-        $adminId = auth('admin')->id();
-
-        // التأكد من أن المهمة مخصصة للأدمن أو متاحة له
-        $task = ProjectTask::where('id', $request->task_id)
-            ->where(function ($q) use ($adminId) {
-                $q->where(function ($query) use ($adminId) {
-                    $query->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
-                })->orWhereNull('assigned_to')
-                    ->orWhereHas('project', function ($q2) use ($adminId) {
-                        $q2->where('created_by', $adminId)->where('created_by_type', 'admin');
-                    });
-            })
-            ->first();
-
-        if (!$task) {
-            return response()->json([
-                'success' => false,
-                'message' => 'هذه المهمة غير متاحة لك'
-            ], 403);
-        }
-
-        // إيقاف أي timer نشط للأدمن
-        TimeTracking::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('is_active', true)
-            ->each(function ($timer) {
-                $endTime = now();
-                $totalSeconds = $timer->start_time->diffInSeconds($endTime);
-
-                $timer->update([
-                    'end_time' => $endTime,
-                    'total_seconds' => $totalSeconds,
-                    'is_active' => false,
-                ]);
-
-                // تحديث actual_hours في المهمة
-                if ($timer->task) {
-                    $timer->task->increment('actual_hours', $totalSeconds / 3600);
-                }
-            });
-
-        // تحديث حالة المهمة إلى "قيد التنفيذ"
-        $task->update(['status' => 'in_progress']);
-
-        $timer = TimeTracking::create([
-            'employee_id' => $adminId,
-            'employee_type' => 'admin',
-            'project_id' => $request->project_id,
-            'task_id' => $request->task_id,
-            'start_time' => now(),
-            'description' => $request->description,
-            'date' => Carbon::today(),
-            'is_active' => true,
-            'total_seconds' => 0,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم بدء العداد بنجاح',
-            'timer' => $timer->load(['project', 'task']),
-        ]);
-    }
-
-    public function stopTimer(Request $request)
-    {
-        $adminId = auth('admin')->id();
-
-        $activeTimer = TimeTracking::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('is_active', true)
-            ->first();
-
-        if (!$activeTimer) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يوجد عداد نشط'
-            ], 400);
-        }
-
-        // حساب الوقت المنقضي
-        $endTime = now();
-        $totalSeconds = $activeTimer->start_time->diffInSeconds($endTime);
-
-        // تحديث البيانات
-        $activeTimer->update([
-            'end_time' => $endTime,
-            'total_seconds' => $totalSeconds,
-            'is_active' => false,
-        ]);
-
-        // تحديث actual_hours في المهمة
-        if ($activeTimer->task) {
-            $activeTimer->task->increment('actual_hours', $totalSeconds / 3600);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إيقاف العداد بنجاح',
-            'timer' => $activeTimer,
-            'duration' => $this->formatHoursMinutes($totalSeconds / 3600),
-            'hours' => round($totalSeconds / 3600, 2),
-        ]);
-    }
-
-    public function pauseTimer(Request $request)
-    {
-        $adminId = auth('admin')->id();
-
-        $activeTimer = TimeTracking::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('is_active', true)
-            ->first();
-
-        if (!$activeTimer) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يوجد عداد نشط'
-            ], 400);
-        }
-
-        // حساب الوقت المنقضي حتى الآن
-        $pauseTime = now();
-        $totalSeconds = $activeTimer->start_time->diffInSeconds($pauseTime);
-
-        // إيقاف مؤقت - حفظ الوقت المنقضي
-        $activeTimer->update([
-            'end_time' => $pauseTime,
-            'total_seconds' => $totalSeconds,
-            'is_active' => false,
-        ]);
-
-        // تحديث actual_hours في المهمة
-        if ($activeTimer->task) {
-            $activeTimer->task->increment('actual_hours', $totalSeconds / 3600);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إيقاف العداد مؤقتاً',
-            'timer' => $activeTimer,
-            'duration' => $this->formatHoursMinutes($totalSeconds / 3600),
-            'hours' => round($totalSeconds / 3600, 2),
-        ]);
-    }
-
-    public function getActiveTimer()
-    {
-        $adminId = auth('admin')->id();
-
-        $activeTimer = TimeTracking::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('is_active', true)
-            ->with(['project', 'task'])
-            ->first();
-
-        if ($activeTimer) {
-            // حساب الوقت الحالي
-            $currentSeconds = $activeTimer->start_time->diffInSeconds(now());
-
-            return response()->json([
-                'active' => true,
-                'timer' => $activeTimer,
-                'current_seconds' => $currentSeconds,
-                'formatted_time' => $this->formatHoursMinutes($currentSeconds / 3600),
-            ]);
-        }
-
-        return response()->json(['active' => false]);
-    }
-
-    public function todayTimeEntries()
+    public function tempCheckOut(Request $request)
     {
         $adminId = auth('admin')->id();
         $today = Carbon::today();
 
-        $entries = TimeTracking::where('employee_id', $adminId)
+        $attendance = EmployeeAttendance::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
             ->where('date', $today)
-            ->with(['project', 'task'])
-            ->orderBy('start_time', 'desc')
-            ->get()
-            ->map(function ($entry) {
-                return [
-                    'id' => $entry->id,
-                    'project' => [
-                        'name' => $entry->project->name ?? 'مشروع محذوف',
-                    ],
-                    'task' => [
-                        'name' => $entry->task->name ?? 'مهمة محذوفة',
-                    ],
-                    'start_time' => $entry->start_time->format('H:i'),
-                    'end_time' => $entry->end_time ? $entry->end_time->format('H:i') : 'جاري',
-                    'formatted_duration' => $this->formatHoursMinutes($entry->total_seconds / 3600),
-                    'hours' => round($entry->total_seconds / 3600, 2),
-                    'is_active' => $entry->is_active,
-                ];
-            });
+            ->first();
 
-        $totalHours = $entries->sum('hours');
-        $targetPercentage = $totalHours > 0 ? min(100, ($totalHours / 7) * 100) : 0;
+        if (!$attendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
+            ], 400);
+        }
 
-        return response()->json([
-            'entries' => $entries,
-            'total_hours' => round($totalHours, 2),
-            'target_percentage' => round($targetPercentage, 2),
-            'formatted_total' => $this->formatHoursMinutes($totalHours),
-        ]);
+        $result = $attendance->tempCheckOut();
+        return response()->json($result);
+    }
+
+    public function tempCheckIn(Request $request)
+    {
+        $adminId = auth('admin')->id();
+        $today = Carbon::today();
+
+        $attendance = EmployeeAttendance::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('date', $today)
+            ->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
+            ], 400);
+        }
+
+        $result = $attendance->tempCheckIn();
+        return response()->json($result);
     }
 
     public function createProject(Request $request)
@@ -471,7 +663,6 @@ class AdminProjectTrackingController extends Controller
 
         $adminId = auth('admin')->id();
 
-        // التأكد من أن المشروع متاح للأدمن
         $project = Project::where('id', $request->project_id)
             ->where(function ($q) use ($adminId) {
                 $q->where('created_by', $adminId)
@@ -494,7 +685,7 @@ class AdminProjectTrackingController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'estimated_hours' => $request->estimated_hours,
-            'assigned_to' => $adminId, // تلقائياً يخصص للأدمن الحالي
+            'assigned_to' => $adminId,
             'assigned_to_type' => 'admin',
             'created_by' => $adminId,
             'created_by_type' => 'admin',
@@ -508,9 +699,6 @@ class AdminProjectTrackingController extends Controller
         ]);
     }
 
-    /**
-     * تنسيق الوقت بالساعات والدقائق فقط
-     */
     private function formatHoursMinutes($hours)
     {
         if ($hours < 0) $hours = 0;
@@ -522,51 +710,47 @@ class AdminProjectTrackingController extends Controller
         return sprintf('%02d:%02d', $displayHours, $minutes);
     }
 
-
-
-    public function tempCheckOut(Request $request)
+    public function pauseTimer(Request $request)
     {
         $adminId = auth('admin')->id();
-        $today = Carbon::today();
 
-        $attendance = EmployeeAttendance::where('employee_id', $adminId)
+        $activeTimer = TimeTracking::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
-            ->where('date', $today)
+            ->where('is_active', true)
             ->first();
 
-        if (!$attendance) {
+        if (!$activeTimer) {
             return response()->json([
                 'success' => false,
-                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
+                'message' => 'لا يوجد عداد نشط'
             ], 400);
         }
 
-        $result = $attendance->tempCheckOut();
+        // حساب الوقت المنقضي حتى الآن وحفظه
+        $pauseTime = now();
+        $totalSeconds = $activeTimer->start_time->diffInSeconds($pauseTime);
 
-        return response()->json($result);
+        // Log pause
+        $pauseLog = $activeTimer->pause_resume_log ?? [];
+        $pauseLog[] = [
+            'action' => 'pause',
+            'time' => $pauseTime->toISOString(),
+            'total_seconds_at_pause' => $totalSeconds
+        ];
+
+        $activeTimer->update([
+            'is_paused' => true,
+            'pause_count' => $activeTimer->pause_count + 1,
+            'pause_resume_log' => $pauseLog,
+            'total_seconds' => $totalSeconds
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إيقاف العداد مؤقتاً',
+            'timer' => $activeTimer->fresh(),
+            'pause_count' => $activeTimer->pause_count,
+            'is_paused' => $activeTimer->is_paused
+        ]);
     }
-
-    public function tempCheckIn(Request $request)
-    {
-        $adminId = auth('admin')->id();
-        $today = Carbon::today();
-
-        $attendance = EmployeeAttendance::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('date', $today)
-            ->first();
-
-        if (!$attendance) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
-            ], 400);
-        }
-
-        $result = $attendance->tempCheckIn();
-
-        return response()->json($result);
-    }
-
-
 }

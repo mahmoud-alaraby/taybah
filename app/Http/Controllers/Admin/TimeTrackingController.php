@@ -12,61 +12,138 @@ use Carbon\Carbon;
 
 class TimeTrackingController extends Controller
 {
-  public function index(Request $request)
-{
-    $date = $request->get('date', Carbon::today()->format('Y-m-d'));
-    $employeeId = $request->get('employee_id');
-    $projectId = $request->get('project_id');
+    public function index(Request $request)
+    {
+        $date = $request->get('date', Carbon::today()->format('Y-m-d'));
+        $employeeId = $request->get('employee_id');
+        $projectId = $request->get('project_id');
 
-    $query = TimeTracking::with(['employee', 'admin', 'project', 'task'])
-        ->where('date', $date);
+        $query = TimeTracking::with(['employee', 'admin', 'project', 'task'])
+            ->where('date', $date);
 
-    if ($employeeId) {
-        $query->where('employee_id', $employeeId);
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
+
+        $timeEntries = $query->orderBy('start_time', 'desc')->get();
+
+        // تجميع البيانات حسب الموظف والمشروع والمهمة
+        $groupedEntries = $timeEntries->groupBy(function ($item) {
+            $userId = $item->employee_id;
+            $userType = $item->employee_type;
+            $projectId = $item->project_id;
+            $taskId = $item->task_id;
+            
+            return "{$userId}_{$userType}_{$projectId}_{$taskId}";
+        })->map(function ($entries) {
+            $firstEntry = $entries->first();
+            $sessions = $entries->sortBy('start_time');
+            
+            // حساب الإحصائيات
+            $totalHours = $entries->sum('hours');
+            $totalSeconds = $entries->sum('total_seconds');
+            $activeSessions = $entries->where('is_active', true)->count();
+            
+            return [
+                'user' => $firstEntry->user,
+                'project' => $firstEntry->project,
+                'task' => $firstEntry->task,
+                'sessions' => $sessions->map(function ($session) {
+                    return [
+                        'id' => $session->id,
+                        'start_time' => $session->start_time,
+                        'end_time' => $session->end_time,
+                        'formatted_duration' => $session->formatted_duration,
+                        'hours' => $session->hours,
+                        'is_active' => $session->is_active,
+                        'is_paused' => $session->is_paused,
+                        'session_number' => $session->session_number,
+                        'pause_count' => $session->pause_count,
+                        'resume_count' => $session->resume_count,
+                        'description' => $session->description,
+                        'pause_resume_log' => $session->pause_resume_log ?? [],
+                        // معلومات إضافية
+                        'total_seconds' => $session->total_seconds,
+                        'session_summary' => $this->getSessionSummary($session),
+                    ];
+                }),
+                'summary' => [
+                    'total_hours' => $totalHours,
+                    'total_seconds' => $totalSeconds,
+                    'formatted_total_duration' => $this->formatDuration($totalSeconds),
+                    'sessions_count' => $entries->count(),
+                    'active_sessions' => $activeSessions,
+                    'completed_sessions' => $entries->count() - $activeSessions,
+                    'total_pauses' => $entries->sum('pause_count'),
+                    'total_resumes' => $entries->sum('resume_count'),
+                ]
+            ];
+        })->values();
+
+        // جلب جميع المستخدمين (موظفين + أدمن)
+        $employees = Employee::active()->get();
+        $admins = \App\Models\Admin::where('status', 'active')->get();
+        $users = $employees->map(function ($item) {
+            $item->type = 'employee';
+            return $item;
+        })->merge($admins->map(function ($item) {
+            $item->type = 'admin';
+            return $item;
+        }));
+
+        $projects = Project::where('status', 'active')->get();
+
+        // إحصائيات اليوم
+        $dailyStats = [
+            'total_hours' => $timeEntries->sum('hours') ?: 0,
+            'active_sessions' => $timeEntries->where('is_active', true)->count(),
+            'employees_working' => $timeEntries->pluck('employee_id')->unique()->count(),
+            'projects_active' => $timeEntries->pluck('project_id')->unique()->count(),
+        ];
+
+        return view('admin.time-tracking.index', compact(
+            'groupedEntries',
+            'users',
+            'projects',
+            'date',
+            'employeeId',
+            'projectId',
+            'dailyStats'
+        ));
     }
 
-    if ($projectId) {
-        $query->where('project_id', $projectId);
+    private function getSessionSummary($session)
+    {
+        $summary = [];
+        
+        if ($session->pause_resume_log && is_array($session->pause_resume_log)) {
+            foreach ($session->pause_resume_log as $log) {
+                $time = Carbon::parse($log['time'])->format('H:i:s');
+                $action = $log['action'] === 'pause' ? 'توقف' : 
+                         ($log['action'] === 'resume' ? 'استئناف' : 
+                         ($log['action'] === 'restart_continue' ? 'إعادة تشغيل' : $log['action']));
+                
+                $summary[] = "{$action} في {$time}";
+            }
+        }
+        
+        return $summary;
     }
 
-    $timeEntries = $query->orderBy('start_time', 'desc')->get();
-
-    // جلب جميع الموظفين والنشطاء فقط
-    $employees = Employee::active()->get();
-
-    // جلب جميع الـ admins النشطين
-    $admins = \App\Models\Admin::where('status', 'active')->get();
-
-    // دمج المجموعتين (يمكنك دمجهم في مجموعة واحدة)
-    $users = $employees->map(function ($item) {
-        $item->type = 'employee';
-        return $item;
-    })->merge($admins->map(function ($item) {
-        $item->type = 'admin';
-        return $item;
-    }));
-
-    $projects = Project::where('status', 'active')->get();
-
-    // إحصائيات اليوم - مع التحقق من وجود البيانات
-    $dailyStats = [
-        'total_hours' => $timeEntries->sum('hours') ?: 0,
-        'active_sessions' => $timeEntries->where('is_active', true)->count(),
-        'employees_working' => $timeEntries->pluck('employee_id')->unique()->count(),
-        'projects_active' => $timeEntries->pluck('project_id')->unique()->count(),
-    ];
-
-    return view('admin.time-tracking.index', compact(
-        'timeEntries',
-        'users',
-        'projects',
-        'date',
-        'employeeId',
-        'projectId',
-        'dailyStats'
-    ));
-}
-
+    private function formatDuration($totalSeconds)
+    {
+        if ($totalSeconds <= 0) return '00:00:00';
+        
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $seconds = $totalSeconds % 60;
+        
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+    }
 
     public function reports(Request $request)
     {

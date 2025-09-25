@@ -682,19 +682,32 @@
                                 this.isTimerActive = true;
                                 this.activeTimer = data.timer;
 
-                                // استخدام التوقيت الفعلي من قاعدة البيانات
-                                this.timerStartTime = new Date(data.timer.start_time);
+                                if (data.timer.is_paused) {
+                                    // إذا كان متوقف، اعرض الوقت المحفوظ فقط
+                                    this.timerDisplay = this.formatSeconds(data.current_seconds || 0);
+                                    // لا تبدأ العداد
+                                    if (this.timerInterval) {
+                                        clearInterval(this.timerInterval);
+                                        this.timerInterval = null;
+                                    }
+                                } else {
+                                    // إذا كان يعمل، احسب من start_time
+                                    this.timerStartTime = new Date(data.timer.start_time);
 
-                                // تحديث العداد فوراً ثم كل ثانية
-                                this.updateTimerDisplay();
-                                this.timerInterval = setInterval(() => {
+                                    // تحديث العداد فوراً ثم كل ثانية
                                     this.updateTimerDisplay();
-                                }, 1000);
+                                    if (this.timerInterval) {
+                                        clearInterval(this.timerInterval);
+                                    }
+                                    this.timerInterval = setInterval(() => {
+                                        this.updateTimerDisplay();
+                                    }, 1000);
+                                }
                             }
                         } catch (error) {
                             console.error('Error checking active timer:', error);
                         }
-                    },
+                    }
                     async tempCheckOut() {
                         try {
                             const response = await fetch('{{ route('employee.project-tracking.temp-check-out') }}', {
