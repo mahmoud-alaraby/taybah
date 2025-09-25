@@ -21,20 +21,20 @@ class AdminProjectTrackingController extends Controller
 
         // المشاريع التي يعمل عليها الأدمن (له مهام فيها أو أنشأها)
         $activeProjects = Project::active()
-            ->where(function($query) use ($adminId) {
-                $query->whereHas('tasks', function($q) use ($adminId) {
+            ->where(function ($query) use ($adminId) {
+                $query->whereHas('tasks', function ($q) use ($adminId) {
                     $q->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
-                })->orWhere(function($q) use ($adminId) {
+                })->orWhere(function ($q) use ($adminId) {
                     $q->where('created_by', $adminId)->where('created_by_type', 'admin');
                 });
             })
-            ->with(['tasks' => function($q) use ($adminId) {
-                $q->where(function($query) use ($adminId) {
+            ->with(['tasks' => function ($q) use ($adminId) {
+                $q->where(function ($query) use ($adminId) {
                     $query->where('assigned_to', $adminId)->where('assigned_to_type', 'admin')
-                          ->orWhereNull('assigned_to');
+                        ->orWhereNull('assigned_to');
                 })
-                ->orderBy('status')
-                ->orderBy('created_at', 'desc');
+                    ->orderBy('status')
+                    ->orderBy('created_at', 'desc');
             }])
             ->get();
 
@@ -43,13 +43,13 @@ class AdminProjectTrackingController extends Controller
             $activeProjects = Project::active()
                 ->where('created_by', $adminId)
                 ->where('created_by_type', 'admin')
-                ->with(['tasks' => function($q) use ($adminId) {
-                    $q->where(function($query) use ($adminId) {
+                ->with(['tasks' => function ($q) use ($adminId) {
+                    $q->where(function ($query) use ($adminId) {
                         $query->where('assigned_to', $adminId)->where('assigned_to_type', 'admin')
-                              ->orWhereNull('assigned_to');
+                            ->orWhereNull('assigned_to');
                     })
-                    ->orderBy('status')
-                    ->orderBy('created_at', 'desc');
+                        ->orderBy('status')
+                        ->orderBy('created_at', 'desc');
                 }])
                 ->get();
         }
@@ -91,9 +91,9 @@ class AdminProjectTrackingController extends Controller
         $employees = \App\Models\Employee::where('status', 'active')->get(['id', 'name']);
 
         return view('admin.project-tracking.index', compact(
-            'activeProjects', 
-            'todayAttendance', 
-            'activeTimer', 
+            'activeProjects',
+            'todayAttendance',
+            'activeTimer',
             'todayStats',
             'employees'
         ));
@@ -103,7 +103,7 @@ class AdminProjectTrackingController extends Controller
     {
         $adminId = auth('admin')->id();
         $today = Carbon::today();
-        
+
         // التحقق من عدم وجود بصمة حضور لليوم
         $existingAttendance = EmployeeAttendance::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
@@ -119,7 +119,7 @@ class AdminProjectTrackingController extends Controller
 
         $checkInTime = now();
         $workStartTime = Carbon::today()->setHour(10)->setMinute(0); // 10:00 صباحاً
-        
+
         // حساب التأخير بالدقائق فقط
         $isLate = $checkInTime->gt($workStartTime);
         $lateMinutes = $isLate ? $checkInTime->diffInMinutes($workStartTime) : 0;
@@ -137,13 +137,13 @@ class AdminProjectTrackingController extends Controller
         if ($isLate) {
             $hours = floor($lateMinutes / 60);
             $minutes = $lateMinutes % 60;
-            
+
             if ($hours > 0) {
                 $lateText = "تأخير: {$hours} ساعة و {$minutes} دقيقة";
             } else {
                 $lateText = "تأخير: {$minutes} دقيقة";
             }
-            
+
             $message .= " - {$lateText}";
         }
 
@@ -159,8 +159,13 @@ class AdminProjectTrackingController extends Controller
 
     public function checkOut(Request $request)
     {
+        $request->validate([
+            'type' => 'nullable|in:temporary,final'
+        ]);
+
         $adminId = auth('admin')->id();
         $today = Carbon::today();
+        $checkoutType = $request->input('type', 'final');
 
         $attendance = EmployeeAttendance::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
@@ -174,57 +179,33 @@ class AdminProjectTrackingController extends Controller
             ], 400);
         }
 
-        if ($attendance->check_out_time) {
+        if ($attendance->check_out_time && $attendance->checkout_type === 'final') {
             return response()->json([
                 'success' => false,
-                'message' => 'تم تسجيل انصرافك مسبقاً'
+                'message' => 'تم الانصراف النهائي مسبقاً'
             ], 400);
         }
 
-        // إيقاف أي timer نشط للأدمن
-        TimeTracking::where('employee_id', $adminId)
-            ->where('employee_type', 'admin')
-            ->where('is_active', true)
-            ->each(function($timer) {
-                $endTime = now();
-                $totalSeconds = $timer->start_time->diffInSeconds($endTime);
-                
-                $timer->update([
-                    'end_time' => $endTime,
-                    'total_seconds' => $totalSeconds,
-                    'is_active' => false,
-                ]);
+        // إذا كان انصراف مؤقت
+        if ($checkoutType === 'temporary') {
+            $result = $attendance->tempCheckOut();
+            return response()->json($result);
+        }
 
-                // تحديث actual_hours في المهمة
-                if ($timer->task) {
-                    $timer->task->increment('actual_hours', $totalSeconds / 3600);
-                }
-            });
-
-        // تسجيل الانصراف
-        $checkOutTime = now();
-        $totalMinutes = $attendance->check_in_time->diffInMinutes($checkOutTime);
-        $totalHours = round($totalMinutes / 60, 2);
-        $standardWorkHours = 7;
-        $overtimeHours = max(0, $totalHours - $standardWorkHours);
-
-        $attendance->update([
-            'check_out_time' => $checkOutTime,
-            'total_hours' => $totalHours,
-            'overtime_hours' => round($overtimeHours, 2),
-        ]);
+        // انصراف نهائي
+        $attendance->checkOut('final');
 
         // إنشاء ملخص اليوم
         DailyWorkSummary::generateForEmployee($adminId, $today, 'admin');
 
         // تنسيق الساعات والدقائق للعرض
-        $totalHoursFormatted = $this->formatHoursMinutes($totalHours);
-        $overtimeFormatted = $this->formatHoursMinutes($overtimeHours);
+        $totalHoursFormatted = $this->formatHoursMinutes($attendance->total_hours);
+        $overtimeFormatted = $this->formatHoursMinutes($attendance->overtime_hours);
 
         return response()->json([
             'success' => true,
-            'message' => "تم تسجيل الانصراف بنجاح - إجمالي العمل: {$totalHoursFormatted}",
-            'attendance' => $attendance,
+            'message' => "تم الانصراف النهائي بنجاح - إجمالي العمل: {$totalHoursFormatted}",
+            'attendance' => $attendance->fresh(),
             'total_hours' => $attendance->total_hours,
             'total_hours_formatted' => $totalHoursFormatted,
             'overtime_hours' => $attendance->overtime_hours,
@@ -244,13 +225,13 @@ class AdminProjectTrackingController extends Controller
 
         // التأكد من أن المهمة مخصصة للأدمن أو متاحة له
         $task = ProjectTask::where('id', $request->task_id)
-            ->where(function($q) use ($adminId) {
-                $q->where(function($query) use ($adminId) {
+            ->where(function ($q) use ($adminId) {
+                $q->where(function ($query) use ($adminId) {
                     $query->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
                 })->orWhereNull('assigned_to')
-                  ->orWhereHas('project', function($q2) use ($adminId) {
-                      $q2->where('created_by', $adminId)->where('created_by_type', 'admin');
-                  });
+                    ->orWhereHas('project', function ($q2) use ($adminId) {
+                        $q2->where('created_by', $adminId)->where('created_by_type', 'admin');
+                    });
             })
             ->first();
 
@@ -265,10 +246,10 @@ class AdminProjectTrackingController extends Controller
         TimeTracking::where('employee_id', $adminId)
             ->where('employee_type', 'admin')
             ->where('is_active', true)
-            ->each(function($timer) {
+            ->each(function ($timer) {
                 $endTime = now();
                 $totalSeconds = $timer->start_time->diffInSeconds($endTime);
-                
+
                 $timer->update([
                     'end_time' => $endTime,
                     'total_seconds' => $totalSeconds,
@@ -322,7 +303,7 @@ class AdminProjectTrackingController extends Controller
         // حساب الوقت المنقضي
         $endTime = now();
         $totalSeconds = $activeTimer->start_time->diffInSeconds($endTime);
-        
+
         // تحديث البيانات
         $activeTimer->update([
             'end_time' => $endTime,
@@ -363,7 +344,7 @@ class AdminProjectTrackingController extends Controller
         // حساب الوقت المنقضي حتى الآن
         $pauseTime = now();
         $totalSeconds = $activeTimer->start_time->diffInSeconds($pauseTime);
-        
+
         // إيقاف مؤقت - حفظ الوقت المنقضي
         $activeTimer->update([
             'end_time' => $pauseTime,
@@ -398,7 +379,7 @@ class AdminProjectTrackingController extends Controller
         if ($activeTimer) {
             // حساب الوقت الحالي
             $currentSeconds = $activeTimer->start_time->diffInSeconds(now());
-            
+
             return response()->json([
                 'active' => true,
                 'timer' => $activeTimer,
@@ -421,7 +402,7 @@ class AdminProjectTrackingController extends Controller
             ->with(['project', 'task'])
             ->orderBy('start_time', 'desc')
             ->get()
-            ->map(function($entry) {
+            ->map(function ($entry) {
                 return [
                     'id' => $entry->id,
                     'project' => [
@@ -489,15 +470,15 @@ class AdminProjectTrackingController extends Controller
         ]);
 
         $adminId = auth('admin')->id();
-        
+
         // التأكد من أن المشروع متاح للأدمن
         $project = Project::where('id', $request->project_id)
-            ->where(function($q) use ($adminId) {
+            ->where(function ($q) use ($adminId) {
                 $q->where('created_by', $adminId)
-                  ->where('created_by_type', 'admin')
-                  ->orWhereHas('tasks', function($q2) use ($adminId) {
-                      $q2->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
-                  });
+                    ->where('created_by_type', 'admin')
+                    ->orWhereHas('tasks', function ($q2) use ($adminId) {
+                        $q2->where('assigned_to', $adminId)->where('assigned_to_type', 'admin');
+                    });
             })
             ->first();
 
@@ -533,11 +514,59 @@ class AdminProjectTrackingController extends Controller
     private function formatHoursMinutes($hours)
     {
         if ($hours < 0) $hours = 0;
-        
+
         $totalMinutes = round($hours * 60);
         $displayHours = floor($totalMinutes / 60);
         $minutes = $totalMinutes % 60;
-        
+
         return sprintf('%02d:%02d', $displayHours, $minutes);
     }
+
+
+
+    public function tempCheckOut(Request $request)
+    {
+        $adminId = auth('admin')->id();
+        $today = Carbon::today();
+
+        $attendance = EmployeeAttendance::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('date', $today)
+            ->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
+            ], 400);
+        }
+
+        $result = $attendance->tempCheckOut();
+
+        return response()->json($result);
+    }
+
+    public function tempCheckIn(Request $request)
+    {
+        $adminId = auth('admin')->id();
+        $today = Carbon::today();
+
+        $attendance = EmployeeAttendance::where('employee_id', $adminId)
+            ->where('employee_type', 'admin')
+            ->where('date', $today)
+            ->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على تسجيل حضور لهذا اليوم'
+            ], 400);
+        }
+
+        $result = $attendance->tempCheckIn();
+
+        return response()->json($result);
+    }
+
+
 }

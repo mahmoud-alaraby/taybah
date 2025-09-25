@@ -5,6 +5,8 @@
 @section('page-subtitle', 'متابعة سجل الحضور والانصراف الشهري')
 
 @section('content')
+
+
 <div class="space-y-6">
     <!-- فلاتر الشهر والسنة -->
     <div class="bg-white shadow rounded-lg p-6">
@@ -124,6 +126,15 @@
         $ampm = $hour < 12 ? 'AM' : 'PM'; // AM أو PM بالإنجليزية
         return sprintf('%02d:%s %s', $hour12, $minute, $ampm);
     }
+
+        function formatHoursToHoursMinutes($hoursFloat) {
+        $totalMinutes = round($hoursFloat * 60);
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+
+
 @endphp
 
 <!-- جدول سجل الحضور -->
@@ -135,91 +146,145 @@
         
         @if($attendances->count() > 0)
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">يوم</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($attendances as $attendance)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $attendance->date->format('Y-m-d') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $attendance->date->translatedFormat('l') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div class="flex items-center">
-                                        <span class="text-gray-900" style="direction: ltr; display: inline-block;">
-                                            {!! formatTimeTo12HourWithAmPm($attendance->check_in_time) !!}
-                                        </span>
-                                        @if($attendance->is_late)
-                                            <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                متأخر {{ formatLateTime($attendance->late_minutes) }}
-                                            </span>
-                                        @endif
+ <!-- الجدول المحدث كاملاً -->
+<table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">يوم</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الانصراف</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">انصراف مؤقت</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الساعات</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ساعات إضافية</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+        @foreach($attendances as $attendance)
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $attendance->date->format('Y-m-d') }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $attendance->date->translatedFormat('l') }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <div class="flex items-center">
+                        <span class="text-gray-900" style="direction: ltr; display: inline-block;">
+                            {!! formatTimeTo12HourWithAmPm($attendance->check_in_time) !!}
+                        </span>
+                        @if($attendance->is_late)
+                            <span class="mr-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                متأخر {{ formatLateTime($attendance->late_minutes) }}
+                            </span>
+                        @endif
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if($attendance->check_out_time)
+                        <div class="text-gray-900" style="direction: ltr; display: inline-block;">
+                            {!! formatTimeTo12HourWithAmPm($attendance->check_out_time) !!}
+                        </div>
+                        @if($attendance->checkout_type)
+                            <div class="text-xs {{ $attendance->checkout_type === 'final' ? 'text-red-600' : 'text-orange-600' }}">
+                                {{ $attendance->checkout_type === 'final' ? 'نهائي' : 'مؤقت' }}
+                            </div>
+                        @endif
+                    @else
+                        @if($attendance->is_temp_out)
+                            <span class="text-orange-600 font-medium">في انصراف مؤقت</span>
+                        @else
+                            <span class="text-green-600">لم ينصرف</span>
+                        @endif
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if($attendance->temp_checkout_time)
+                        <div class="space-y-1">
+                            @if($attendance->is_temp_out)
+                                <!-- في انصراف مؤقت حالياً -->
+                                <div class="text-orange-600 font-medium text-xs">
+                                    منذ {{ $attendance->temp_checkout_time->format('H:i') }}
+                                </div>
+                                <div class="text-xs text-orange-500">
+                                    المدة: {{ $attendance->temp_out_duration }}
+                                </div>
+                            @else
+                                <!-- عاد من الانصراف المؤقت -->
+                                <div class="text-gray-600 text-xs">
+                                    {{ $attendance->temp_checkout_time->format('H:i') }} - 
+                                    {{ $attendance->temp_checkin_time ? $attendance->temp_checkin_time->format('H:i') : 'غير محدد' }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    مدة: {{ $attendance->temp_out_duration }}
+                                </div>
+                                @if($attendance->temp_checkout_count > 1)
+                                    <div class="text-xs text-blue-600">
+                                        ({{ $attendance->temp_checkout_count }} مرات)
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    @if($attendance->check_out_time)
-                                        <span style="direction: ltr; display: inline-block;">
-                                            {!! formatTimeTo12HourWithAmPm($attendance->check_out_time) !!}
-                                        </span>
-                                    @else
-                                        لم ينصرف
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ formatHoursMinutes($attendance->total_hours) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($attendance->overtime_hours > 0)
-                                        <span class="text-purple-600 font-medium">{{ formatHoursMinutes($attendance->overtime_hours) }}</span>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($attendance->is_late)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <i class="fas fa-exclamation-triangle ml-1"></i>
-                                            متأخر
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-check ml-1"></i>
-                                            في الموعد
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr>
-                            <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-900">
-                                الإجماليات لساعات عمل الموظف
-                            </td>
-                            <td class="px-6 py-3 text-sm font-medium text-gray-900">
-                                {{ formatHoursMinutes($monthlyStats['total_work_hours']) }}
-                            </td>
-                            <td class="px-6 py-3 text-sm font-medium text-purple-600">
-                                {{ formatHoursMinutes($monthlyStats['total_overtime_hours'] ?? 0) }}
-                            </td>
-                            <td class="px-6 py-3 text-sm font-medium text-gray-900">
-                                متوسط: {{ formatHoursMinutes($monthlyStats['average_daily_hours']) }}/يوم
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                                @endif
+                            @endif
+                        </div>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    @if($attendance->total_hours)
+                        {{ formatHoursToHoursMinutes($attendance->total_hours) }}
+                        @if($attendance->temp_checkout_time && !$attendance->check_out_time)
+                            <div class="text-xs text-orange-500">
+                                (يتم الحساب عند الانصراف النهائي)
+                            </div>
+                        @endif
+                    @else
+                        @if($attendance->check_out_time)
+                            غير محسوب
+                        @else
+                            جاري العمل
+                        @endif
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if($attendance->overtime_hours > 0)
+                        <span class="text-purple-600 font-medium">{{ formatHoursToHoursMinutes($attendance->overtime_hours) }}</span>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="space-y-1">
+                        @if($attendance->is_temp_out)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <i class="fas fa-pause ml-1"></i>
+                                انصراف مؤقت
+                            </span>
+                        @elseif($attendance->check_out_time)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                {{ $attendance->checkout_type === 'final' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
+                                <i class="fas fa-sign-out-alt ml-1"></i>
+                                {{ $attendance->checkout_type === 'final' ? 'انصراف نهائي' : 'منصرف' }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-user-check ml-1"></i>
+                                حاضر
+                            </span>
+                        @endif
+
+                        @if($attendance->is_late)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-exclamation-triangle ml-1"></i>
+                                متأخر
+                            </span>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
             </div>
         @else
             <div class="text-center py-12">

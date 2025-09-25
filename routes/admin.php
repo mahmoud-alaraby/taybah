@@ -70,28 +70,30 @@ Route::middleware('admin.auth')->group(function () {
 
 
     // نظام متابعة المشاريع والمهام للأدمن الشخصي
-  // نظام متابعة المشاريع والمهام للأدمن الشخصي
-Route::prefix('project-tracking')->name('admin.project-tracking.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'index'])->name('index');
-    
-    // البصمة الشخصية للأدمن
-    Route::post('/check-in', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkIn'])->name('check-in');
-    Route::post('/check-out', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkOut'])->name('check-out');
-    
-    // الاستوب ووتش الشخصي للأدمن
-    Route::post('/start-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'startTimer'])->name('start-timer');
-    Route::post('/stop-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
-    Route::post('/pause-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
-    Route::get('/active-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
-    Route::get('/today-entries', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
-    
-    // إنشاء مشاريع ومهام شخصية للأدمن
-    Route::post('/create-project', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'createProject'])->name('create-project');
-    Route::post('/add-task', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
-    
-    // التقارير الشخصية للأدمن
-    Route::get('/reports', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'reports'])->name('reports');
-});
+    // نظام متابعة المشاريع والمهام للأدمن الشخصي
+    Route::prefix('project-tracking')->name('admin.project-tracking.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'index'])->name('index');
+
+        // البصمة الشخصية للأدمن
+        Route::post('/check-in', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkIn'])->name('check-in');
+        Route::post('/check-out', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'checkOut'])->name('check-out');
+
+        // الاستوب ووتش الشخصي للأدمن
+        Route::post('/start-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'startTimer'])->name('start-timer');
+        Route::post('/stop-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
+        Route::post('/pause-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
+        Route::get('/active-timer', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
+        Route::get('/today-entries', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
+
+        // إنشاء مشاريع ومهام شخصية للأدمن
+        Route::post('/create-project', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'createProject'])->name('create-project');
+        Route::post('/add-task', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
+        Route::post('/temp-check-out', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'tempCheckOut'])->name('temp-check-out');
+        Route::post('/temp-check-in', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'tempCheckIn'])->name('temp-check-in');
+
+        // التقارير الشخصية للأدمن
+        Route::get('/reports', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'reports'])->name('reports');
+    });
     // إدارة المقبوضات والمدفوعات
     Route::prefix('receipts-payments')->name('admin.receipts-payments.')->group(function () {
         Route::get('/', [ReceiptsPaymentsController::class, 'index'])->name('index');
@@ -156,7 +158,7 @@ Route::prefix('project-tracking')->name('admin.project-tracking.')->group(functi
 
     // مسارات نظام التشغيل العام
 
-  // مسارات نظام التشغيل العام
+    // مسارات نظام التشغيل العام
     // مسارات نظام التشغيل العام
     Route::prefix('operation-system')->name('admin.operation-system.')->group(function () {
         Route::get('/', [OperationSystemController::class, 'index'])->name('index');
@@ -202,8 +204,8 @@ Route::prefix('project-tracking')->name('admin.project-tracking.')->group(functi
         Route::patch('/tasks/{task}', [AdminTaskController::class, 'update'])->name('tasks.update');
         Route::delete('/tasks/{task}', [AdminTaskController::class, 'destroy'])->name('tasks.destroy');
         // إضافة راوت خاص بطباعة المهام المفلترة أو الحالية
-Route::get('/tasks/print', [AdminTaskController::class, 'print'])->name('tasks.print');
-// الراوت الأساسي مهمش، لن يتغير (وهو لمسار index الحالي)
+        Route::get('/tasks/print', [AdminTaskController::class, 'print'])->name('tasks.print');
+        // الراوت الأساسي مهمش، لن يتغير (وهو لمسار index الحالي)
 
     });
 
@@ -233,24 +235,24 @@ Route::get('/tasks/print', [AdminTaskController::class, 'print'])->name('tasks.p
     //     Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
     //     Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
     // });
-// استبدل routes photography-costs الحالية بهذه
-Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
-    Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
-    Route::post('/receipt', [PhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
-    Route::post('/payment', [PhotographyCostController::class, 'storePayment'])->name('payment.store');
-    Route::post('/target', [PhotographyCostController::class, 'updateTarget'])->name('target');
-    Route::delete('/receipt/{id}', [PhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
-    Route::delete('/payment/{id}', [PhotographyCostController::class, 'deletePayment'])->name('payment.delete');
-    Route::get('/print', [PhotographyCostController::class, 'printReport'])->name('print');
-    
-    // Routes القديمة للتوافق
-    Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
-    Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
-    Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
-    Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
-    Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
-    Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
-});
+    // استبدل routes photography-costs الحالية بهذه
+    Route::prefix('photography-costs')->name('admin.photography-costs.')->group(function () {
+        Route::get('/', [PhotographyCostController::class, 'index'])->name('index');
+        Route::post('/receipt', [PhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
+        Route::post('/payment', [PhotographyCostController::class, 'storePayment'])->name('payment.store');
+        Route::post('/target', [PhotographyCostController::class, 'updateTarget'])->name('target');
+        Route::delete('/receipt/{id}', [PhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
+        Route::delete('/payment/{id}', [PhotographyCostController::class, 'deletePayment'])->name('payment.delete');
+        Route::get('/print', [PhotographyCostController::class, 'printReport'])->name('print');
+
+        // Routes القديمة للتوافق
+        Route::get('/create', [PhotographyCostController::class, 'create'])->name('create');
+        Route::post('/', [PhotographyCostController::class, 'store'])->name('store');
+        Route::get('/{photographyCost}', [PhotographyCostController::class, 'show'])->name('show');
+        Route::get('/{photographyCost}/edit', [PhotographyCostController::class, 'edit'])->name('edit');
+        Route::put('/{photographyCost}', [PhotographyCostController::class, 'update'])->name('update');
+        Route::delete('/{photographyCost}', [PhotographyCostController::class, 'destroy'])->name('destroy');
+    });
     // سيستم الرد على العملاء 
     Route::prefix('customer-response')->name('admin.customer-response.')->group(function () {
         // الردود
@@ -296,55 +298,55 @@ Route::prefix('photography-costs')->name('admin.photography-costs.')->group(func
     });
 
 
-// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
-// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
-// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
-// في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
+    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
 
-// في ملف routes/admin.php - إضافة route جديد لصفحة إنشاء الشات
+    // في ملف routes/admin.php - إضافة route جديد لصفحة إنشاء الشات
 
-Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
-    // الصفحة الرئيسية
-    Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
-    
-    // صفحة إنشاء شات جديد (اختيار الموظف) - Route جديد
-    Route::get('/{potentialCustomerId}/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('create-chat');
-    
-    // عرض العميل - الشات المباشر (فقط إذا كان الشات موجود)
-    Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
-    
-    // تعيين موظف للعميل
-    Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
-    
-    // إرسال رسالة في الشات
-    Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
-    
-    // تحميل الرسائل (للتحديث التلقائي)
-    Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
-    Route::get('/{chatId}/new-messages', [AdminCustomerCommunicationController::class, 'getNewMessages'])->name('get-new-messages');
-    
-    // حذف رسالة معينة (خلال 30 دقيقة من الإرسال للإدارة)
-    Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
-    
-    // إدارة الشات
-    Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
-    Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
-    
-    // معلومات التخزين
-    Route::get('/storage/info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
-    
-    // إحصائيات سريعة للتحديث التلقائي
-    Route::get('/stats/unread-count', function() {
-        $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
-                                                     ->where('is_read', false)
-                                                     ->count();
-        
-        return response()->json(['count' => $unreadCount]);
-    })->name('unread-count');
-});
+    Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
+        // الصفحة الرئيسية
+        Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
+
+        // صفحة إنشاء شات جديد (اختيار الموظف) - Route جديد
+        Route::get('/{potentialCustomerId}/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('create-chat');
+
+        // عرض العميل - الشات المباشر (فقط إذا كان الشات موجود)
+        Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+
+        // تعيين موظف للعميل
+        Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
+
+        // إرسال رسالة في الشات
+        Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
+
+        // تحميل الرسائل (للتحديث التلقائي)
+        Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
+        Route::get('/{chatId}/new-messages', [AdminCustomerCommunicationController::class, 'getNewMessages'])->name('get-new-messages');
+
+        // حذف رسالة معينة (خلال 30 دقيقة من الإرسال للإدارة)
+        Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
+
+        // إدارة الشات
+        Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
+        Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
+
+        // معلومات التخزين
+        Route::get('/storage/info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
+
+        // إحصائيات سريعة للتحديث التلقائي
+        Route::get('/stats/unread-count', function () {
+            $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
+                ->where('is_read', false)
+                ->count();
+
+            return response()->json(['count' => $unreadCount]);
+        })->name('unread-count');
+    });
 
 
 
@@ -408,5 +410,4 @@ Route::prefix('customer-communication')->name('admin.customer-communication.')->
         // تحميل ملفات شات محدد - Route جديد
         Route::get('/{workChat}/backup-files', [App\Http\Controllers\Admin\WorkChatController::class, 'backupChatFiles'])->name('backup-chat-files');
     });
-    
 });

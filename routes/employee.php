@@ -178,13 +178,13 @@ Route::middleware('employee.auth')->group(function () {
     Route::middleware('employee.permission:photography_costs')->group(function () {
         Route::prefix('photography-costs')->name('employee.photography-costs.')->group(function () {
             Route::get('/', [EmployeePhotographyCostController::class, 'index'])->name('index');
-            
+
             Route::post('/receipt', [EmployeePhotographyCostController::class, 'storeReceipt'])->name('receipt.store');
             Route::post('/payment', [EmployeePhotographyCostController::class, 'storePayment'])->name('payment.store');
             Route::delete('/receipt/{id}', [EmployeePhotographyCostController::class, 'deleteReceipt'])->name('receipt.delete');
             Route::delete('/payment/{id}', [EmployeePhotographyCostController::class, 'deletePayment'])->name('payment.delete');
             Route::get('/print', [EmployeePhotographyCostController::class, 'printReport'])->name('print');
-            
+
             Route::get('/create', [EmployeePhotographyCostController::class, 'create'])->name('create');
             Route::post('/', [EmployeePhotographyCostController::class, 'store'])->name('store');
             Route::get('/{photographyCost}', [EmployeePhotographyCostController::class, 'show'])->name('show');
@@ -195,41 +195,41 @@ Route::middleware('employee.auth')->group(function () {
     });
 
     // ============== النظام الجديد للتواصل مع العملاء ==============
- // ============== النظام الجديد للتواصل مع العملاء ==============
+    // ============== النظام الجديد للتواصل مع العملاء ==============
     Route::middleware(['employee.permission:customer_communication'])
         ->prefix('customer-communication')
         ->name('employee.customer-communication.')
         ->group(function () {
             // الصفحة الرئيسية - قائمة العملاء
             Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
-            
+
             // صفحة الشات مع الإدارة بخصوص عميل معين
             Route::get('/{potentialCustomerId}', [CustomerCommunicationController::class, 'show'])->name('show');
-            
+
             // إرسال رسالة في الشات
             Route::post('/{chatId}/send', [CustomerCommunicationController::class, 'sendMessage'])->name('send-message');
-            
+
             // تحميل الرسائل الجديدة فقط (محسن)
             Route::get('/{chatId}/new-messages', [CustomerCommunicationController::class, 'getNewMessages'])->name('new-messages');
-            
+
             // تحميل جميع الرسائل
             Route::get('/{chatId}/messages', [CustomerCommunicationController::class, 'getMessages'])->name('get-messages');
-            
+
             // تحديد حالة العميل كـ "تم التواصل"
             Route::post('/{chatId}/completed', [CustomerCommunicationController::class, 'markAsCompleted'])->name('completed');
-            
+
             // حذف رسالة معينة (خلال 5 دقائق من الإرسال)
             Route::delete('/message/{messageId}', [CustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
-            
+
             // إحصائيات سريعة للتحديث التلقائي
-            Route::get('/unread-count', function() {
+            Route::get('/unread-count', function () {
                 $employee = auth('employee')->user();
-                $unreadCount = \App\Models\CustomerChatMessage::whereHas('chat', function($query) use ($employee) {
+                $unreadCount = \App\Models\CustomerChatMessage::whereHas('chat', function ($query) use ($employee) {
                     $query->where('employee_id', $employee->id);
                 })->where('sender_type', 'admin')
-                  ->where('is_read', false)
-                  ->count();
-                
+                    ->where('is_read', false)
+                    ->count();
+
                 return response()->json(['count' => $unreadCount]);
             })->name('unread-count');
         });
@@ -264,7 +264,8 @@ Route::middleware('employee.auth')->group(function () {
             Route::post('/pause-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
             Route::get('/active-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
             Route::get('/today-entries', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
-
+            Route::post('/temp-check-out', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckOut'])->name('temp-check-out');
+            Route::post('/temp-check-in', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckIn'])->name('temp-check-in');
             // إنشاء مشاريع ومهام
             Route::post('/create-project', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'createProject'])->name('create-project');
             Route::post('/add-task', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'addTaskToProject'])->name('add-task');
@@ -313,15 +314,15 @@ Route::middleware('employee.auth')->group(function () {
     });
 
     // في routes/employee.php - أضف هذا للاختبار
-Route::get('/test-file/{path}', function($path) {
-    $fullPath = 'customer-chat/' . $path;
-    if (Storage::disk('public')->exists($fullPath)) {
-        return response()->json([
-            'exists' => true,
-            'url' => asset('storage/' . $fullPath),
-            'size' => Storage::disk('public')->size($fullPath)
-        ]);
-    }
-    return response()->json(['exists' => false]);
-})->where('path', '.*');
+    Route::get('/test-file/{path}', function ($path) {
+        $fullPath = 'customer-chat/' . $path;
+        if (Storage::disk('public')->exists($fullPath)) {
+            return response()->json([
+                'exists' => true,
+                'url' => asset('storage/' . $fullPath),
+                'size' => Storage::disk('public')->size($fullPath)
+            ]);
+        }
+        return response()->json(['exists' => false]);
+    })->where('path', '.*');
 });

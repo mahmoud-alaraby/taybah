@@ -17,6 +17,7 @@ class AttendanceController extends Controller
         $month = $request->get('month', date('n'));
 
         $attendances = EmployeeAttendance::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee') // إضافة نوع الموظف
             ->forMonth($year, $month)
             ->orderBy('date', 'desc')
             ->get();
@@ -41,10 +42,12 @@ class AttendanceController extends Controller
         $today = Carbon::today();
 
         $attendance = EmployeeAttendance::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->where('date', $today)
             ->first();
 
         $workSummary = DailyWorkSummary::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->where('date', $today)
             ->first();
 
@@ -53,6 +56,7 @@ class AttendanceController extends Controller
             'work_summary' => $workSummary,
             'can_check_in' => !$attendance,
             'can_check_out' => $attendance && !$attendance->check_out_time,
+            'is_temp_out' => $attendance ? $attendance->is_temp_out : false,
         ]);
     }
 
@@ -64,11 +68,13 @@ class AttendanceController extends Controller
 
         $employee = auth('employee')->user();
         $attendances = EmployeeAttendance::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->forMonth($year, $month)
             ->orderBy('date', 'asc')
             ->get();
 
         $workSummaries = DailyWorkSummary::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->forMonth($year, $month)
             ->orderBy('date', 'asc')
             ->get();
@@ -89,20 +95,26 @@ class AttendanceController extends Controller
     private function getMonthlyStats($employeeId, $year, $month)
     {
         $attendances = EmployeeAttendance::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->forMonth($year, $month)
             ->get();
 
         $workSummaries = DailyWorkSummary::where('employee_id', $employeeId)
+            ->where('employee_type', 'employee')
             ->forMonth($year, $month)
             ->get();
 
         $workingDays = $this->getWorkingDaysInMonth($year, $month);
+
+        // إضافة إحصائيات الانصراف المؤقت
+        $tempCheckoutDays = $attendances->where('temp_checkout_time', '!=', null)->count();
 
         return [
             'working_days' => $workingDays,
             'attended_days' => $attendances->count(),
             'on_time_days' => $attendances->where('is_late', false)->count(),
             'late_days' => $attendances->where('is_late', true)->count(),
+            'temp_checkout_days' => $tempCheckoutDays, // جديد
             'total_work_hours' => $workSummaries->sum('total_work_hours'),
             'total_overtime_hours' => $workSummaries->sum('overtime_hours'),
             'average_daily_hours' => $workSummaries->avg('total_work_hours'),

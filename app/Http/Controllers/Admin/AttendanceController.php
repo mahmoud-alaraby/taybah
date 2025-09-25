@@ -11,39 +11,66 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-
     public function index(Request $request)
     {
         $year = $request->get('year', date('Y'));
         $month = $request->get('month', date('n'));
         $employeeId = $request->get('employee_id');
 
+        // بناء الاستعلام الأساسي
         $query = EmployeeAttendance::with(['employee', 'admin'])
             ->whereYear('date', $year)
             ->whereMonth('date', $month);
 
+        // فلترة حسب الموظف/الأدمن المحدد
         if ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            // التعامل مع النوع المدمج في المعرف
+            if (strpos($employeeId, 'employee_') === 0) {
+                $realEmployeeId = str_replace('employee_', '', $employeeId);
+                $query->where('employee_id', $realEmployeeId)->where('employee_type', 'employee');
+            } elseif (strpos($employeeId, 'admin_') === 0) {
+                $realAdminId = str_replace('admin_', '', $employeeId);
+                $query->where('employee_id', $realAdminId)->where('employee_type', 'admin');
+            } else {
+                // للتوافق مع النظام القديم - تجربة كموظف أولاً
+                $query->where(function($q) use ($employeeId) {
+                    $q->where(function($q2) use ($employeeId) {
+                        $q2->where('employee_id', $employeeId)->where('employee_type', 'employee');
+                    })->orWhere(function($q2) use ($employeeId) {
+                        $q2->where('employee_id', $employeeId)->where('employee_type', 'admin');
+                    });
+                });
+            }
         }
 
         $attendances = $query->orderBy('date', 'desc')->paginate(15);
 
-        // جلب الموظفين النشطين
+        // جلب الموظفين والأدمن النشطين
         $employees = Employee::where('status', 'active')->get();
-
-        // جلب الادمنز النشطين
         $admins = Admin::where('status', 'active')->get();
 
-        // دمج الـ employees والـ admins مع تمييز النوع وإضافة معرف لفلترة الاختيار
-        $users = $employees->map(function ($item) {
-            $item->type = 'employee';
-            return $item;
-        })->merge(
-            $admins->map(function ($item) {
-                $item->type = 'admin';
-                return $item;
-            })
-        )->sortBy('name')->values();
+        // دمج القوائم مع تمييز النوع
+        $users = collect();
+        
+        foreach ($employees as $employee) {
+            $users->push((object)[
+                'id' => 'employee_' . $employee->id,
+                'name' => $employee->name,
+                'employee_id' => $employee->employee_id,
+                'type' => 'employee'
+            ]);
+        }
+
+        foreach ($admins as $admin) {
+            $users->push((object)[
+                'id' => 'admin_' . $admin->id,
+                'name' => $admin->name . ' (إدارة)',
+                'employee_id' => 'ADM-' . $admin->id,
+                'type' => 'admin'
+            ]);
+        }
+
+        $users = $users->sortBy('name')->values();
 
         $monthlyStats = [
             'total_days' => $this->getWorkingDaysInMonth($year, $month),
@@ -62,39 +89,77 @@ class AttendanceController extends Controller
         ));
     }
 
-
-
-
     public function reports(Request $request)
     {
         $year = $request->get('year', date('Y'));
         $month = $request->get('month', date('n'));
 
-        $employees = Employee::active()->get()->map(function ($employee) use ($year, $month) {
-            $attendances = EmployeeAttendance::where('employee_id', $employee->id)
-                ->forMonth($year, $month)
-                ->get();
+        $employeeReports = collect();
 
-            $workingDays = $this->getWorkingDaysInMonth($year, $month);
-            $attendedDays = $attendances->count();
-            $onTimeDays = $attendances->where('is_late', false)->count();
-            $totalHours = $attendances->sum('total_hours');
-            $overtimeHours = $attendances->sum('overtime_hours');
+        // تقارير الموظفين
+        $employees = Employee::where('status', 'active')->get();
+        foreach ($employees as $employee) {
+            $attendanceData = $this->getEmployeeAttendanceData($employee->id, 'employee', $year, $month);
+            if ($attendanceData['attended_days'] > 0) {
+                $attendanceData['employee'] = $employee;
+                $employeeReports->push($attendanceData);
+            }
+        }
 
-            return [
-                'employee' => $employee,
-                'working_days' => $workingDays,
-                'attended_days' => $attendedDays,
-                'on_time_days' => $onTimeDays,
-                'attendance_percentage' => $workingDays > 0 ? round(($attendedDays / $workingDays) * 100, 2) : 0,
-                'punctuality_percentage' => $attendedDays > 0 ? round(($onTimeDays / $attendedDays) * 100, 2) : 0,
-                'total_hours' => $totalHours,
-                'overtime_hours' => $overtimeHours,
-                'average_daily_hours' => $attendedDays > 0 ? round($totalHours / $attendedDays, 2) : 0,
-            ];
-        });
+        // تقارير الأدمن
+        $admins = Admin::where('status', 'active')->get();
+        foreach ($admins as $admin) {
+            $attendanceData = $this->getEmployeeAttendanceData($admin->id, 'admin', $year, $month);
+            if ($attendanceData['attended_days'] > 0) {
+                // إضافة خصائص للأدمن للتوافق مع العرض
+                $admin->employee_id = 'ADM-' . $admin->id;
+                $admin->position = 'مدير';
+                $admin->department_name = 'الإدارة';
+                $attendanceData['employee'] = $admin;
+                $employeeReports->push($attendanceData);
+            }
+        }
 
-        return view('admin.attendance.reports', compact('employees', 'year', 'month'));
+        // ترتيب التقارير حسب نسبة الحضور
+        $employeeReports = $employeeReports->sortByDesc('attendance_percentage');
+
+        $employees = $employeeReports; // تعيين المتغير بالاسم الصحيح
+        
+        return view('admin.attendance.reports', compact(
+            'employees',
+            'year',
+            'month'
+        ));
+    }
+
+    private function getEmployeeAttendanceData($employeeId, $employeeType, $year, $month)
+    {
+        $attendances = EmployeeAttendance::where('employee_id', $employeeId)
+            ->where('employee_type', $employeeType)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->get();
+
+        $workingDays = $this->getWorkingDaysInMonth($year, $month);
+        $attendedDays = $attendances->count();
+        $onTimeDays = $attendances->where('is_late', false)->count();
+        $totalHours = $attendances->sum('total_hours');
+        $overtimeHours = $attendances->sum('overtime_hours');
+        
+        $attendancePercentage = $workingDays > 0 ? round(($attendedDays / $workingDays) * 100, 2) : 0;
+        $punctualityPercentage = $attendedDays > 0 ? round(($onTimeDays / $attendedDays) * 100, 2) : 0;
+        $averageDailyHours = $attendedDays > 0 ? round($totalHours / $attendedDays, 2) : 0;
+
+        return [
+            'working_days' => $workingDays,
+            'attended_days' => $attendedDays,
+            'on_time_days' => $onTimeDays,
+            'attendance_percentage' => $attendancePercentage,
+            'punctuality_percentage' => $punctualityPercentage,
+            'total_hours' => $totalHours,
+            'overtime_hours' => $overtimeHours,
+            'average_daily_hours' => $averageDailyHours,
+        ];
     }
 
     private function getWorkingDaysInMonth($year, $month)
@@ -130,13 +195,13 @@ class AttendanceController extends Controller
         $query = EmployeeAttendance::whereYear('date', $year)->whereMonth('date', $month);
 
         if ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $this->applyEmployeeFilter($query, $employeeId);
         }
 
         $totalDays = $query->count();
 
         if ($totalDays == 0) {
-            return 0; // إرجاع 0 إذا مفيش بيانات
+            return 0;
         }
 
         $onTimeDays = $query->where('is_late', false)->count();
@@ -144,13 +209,12 @@ class AttendanceController extends Controller
         return round(($onTimeDays / $totalDays) * 100, 2);
     }
 
-
     private function getAverageWorkingHours($year, $month, $employeeId = null)
     {
         $query = EmployeeAttendance::whereYear('date', $year)->whereMonth('date', $month);
 
         if ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $this->applyEmployeeFilter($query, $employeeId);
         }
 
         $avgHours = $query->avg('total_hours');
@@ -158,18 +222,39 @@ class AttendanceController extends Controller
         return $avgHours ? round($avgHours, 2) : 0;
     }
 
-
     private function getTotalOvertime($year, $month, $employeeId = null)
     {
         $query = EmployeeAttendance::whereYear('date', $year)->whereMonth('date', $month);
 
         if ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $this->applyEmployeeFilter($query, $employeeId);
         }
 
         $totalOvertime = $query->sum('overtime_hours');
 
         return $totalOvertime ? round($totalOvertime, 2) : 0;
     }
-    
+
+    /**
+     * تطبيق فلتر الموظف/الأدمن على الاستعلام
+     */
+    private function applyEmployeeFilter($query, $employeeId)
+    {
+        if (strpos($employeeId, 'employee_') === 0) {
+            $realEmployeeId = str_replace('employee_', '', $employeeId);
+            $query->where('employee_id', $realEmployeeId)->where('employee_type', 'employee');
+        } elseif (strpos($employeeId, 'admin_') === 0) {
+            $realAdminId = str_replace('admin_', '', $employeeId);
+            $query->where('employee_id', $realAdminId)->where('employee_type', 'admin');
+        } else {
+            // للتوافق مع النظام القديم
+            $query->where(function($q) use ($employeeId) {
+                $q->where(function($q2) use ($employeeId) {
+                    $q2->where('employee_id', $employeeId)->where('employee_type', 'employee');
+                })->orWhere(function($q2) use ($employeeId) {
+                    $q2->where('employee_id', $employeeId)->where('employee_type', 'admin');
+                });
+            });
+        }
+    }
 }
