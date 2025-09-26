@@ -254,18 +254,25 @@ Route::middleware('employee.auth')->group(function () {
         Route::prefix('project-tracking')->name('employee.project-tracking.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'index'])->name('index');
 
-            // البصمة
+            // البصمة المحسنة
             Route::post('/check-in', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'checkIn'])->name('check-in');
             Route::post('/check-out', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'checkOut'])->name('check-out');
+            Route::post('/temp-check-out', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckOut'])->name('temp-check-out');
+            Route::post('/temp-check-in', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckIn'])->name('temp-check-in');
 
-            // الاستوب ووتش
+            // الاستوب ووتش المحسن - نفس الأدمن بالضبط
             Route::post('/start-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'startTimer'])->name('start-timer');
             Route::post('/stop-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'stopTimer'])->name('stop-timer');
             Route::post('/pause-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'pauseTimer'])->name('pause-timer');
+            Route::post('/resume-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'resumeTimer'])->name('resume-timer');
+            Route::post('/restart-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'restartTimer'])->name('restart-timer');
+            Route::post('/edit-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'editTimer'])->name('edit-timer');
+
+            // معلومات التايمر المحسنة
             Route::get('/active-timer', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'getActiveTimer'])->name('active-timer');
+            Route::post('/timer-details', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'getTimerDetails'])->name('timer-details');
             Route::get('/today-entries', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'todayTimeEntries'])->name('today-entries');
-            Route::post('/temp-check-out', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckOut'])->name('temp-check-out');
-            Route::post('/temp-check-in', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'tempCheckIn'])->name('temp-check-in');
+
             // إنشاء مشاريع ومهام
             Route::post('/create-project', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'createProject'])->name('create-project');
             Route::post('/add-task', [App\Http\Controllers\Employee\ProjectTrackingController::class, 'addTaskToProject'])->name('add-task');

@@ -4,9 +4,79 @@
 @section('page-title', 'متابعة المشاريع والمهام')
 @section('page-subtitle', 'نظام متابعة المشاريع مع الاستوب ووتش والبصمة')
 
-@section('content')
-    <div class="space-y-6" x-data="projectTracking()" x-init="init()">
+@push('styles')
+    <style>
+        /* Custom animations */
+        .pulse-border {
+            animation: pulse-border 2s infinite;
+        }
 
+        @keyframes pulse-border {
+            0%, 100% {
+                border-color: rgba(234, 179, 8, 0.5);
+                box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+            }
+            50% {
+                border-color: rgba(234, 179, 8, 1);
+                box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
+            }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% {
+                transform: translate(0, 0px);
+            }
+            50% {
+                transform: translate(0, -10px);
+            }
+            100% {
+                transform: translate(0, 0px);
+            }
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100" x-data="employeeProjectTracking()"
+        x-init="init()">
+
+        {{-- Helper Functions --}}
         @php
             if (!function_exists('formatHoursToHoursMinutes')) {
                 function formatHoursToHoursMinutes($hoursFloat)
@@ -28,7 +98,6 @@
                 }
             }
 
-            // دالة الوقت بنظام 12 مع AM/PM كابيتال بعد الوقت
             if (!function_exists('formatTime12h')) {
                 function formatTime12h($carbonTime)
                 {
@@ -37,597 +106,118 @@
                     }
                     $hour = $carbonTime->hour;
                     $minute = $carbonTime->minute;
-                    $suffix = $hour >= 12 ? 'PM' : 'AM';
+                    $suffix = $hour >= 12 ? 'م' : 'ص';
                     $hour12 = $hour % 12;
                     if ($hour12 == 0) {
                         $hour12 = 12;
                     }
-                    // لاحظ أن AM/PM تأتي بعد الوقت مباشرة
                     return sprintf('%02d:%02d %s', $hour12, $minute, $suffix);
                 }
             }
         @endphp
 
-        <!-- شريط الحالة العلوي -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- بصمة الحضور - محدثة -->
-            <div
-                class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-blue-600 to-blue-400 bg-blue-50">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-base font-semibold text-blue-900 flex items-center space-x-2 rtl:space-x-reverse">
-                            <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2a9 9 0 0 1 9 9c0 4.837-5 11-9 11S3 15.837 3 11a9 9 0 0 1 9-9z"></path>
-                                <path d="M12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
-                            </svg>
-                            <span>البصمة</span>
-                        </p>
-                        <p class="text-xs text-blue-600 mt-1" x-text="currentTime"></p>
-                    </div>
-                    <div class="text-right">
-                        @if ($todayAttendance)
-                            @if ($todayAttendance->check_out_time && $todayAttendance->checkout_type === 'final')
-                                <!-- انصراف نهائي -->
-                                <span
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-200 text-red-800">
-                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    انصراف نهائي
-                                </span>
-                            @elseif($todayAttendance->is_temp_out)
-                                <!-- في انصراف مؤقت -->
-                                <div class="space-y-2">
-                                    <span
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-200 text-orange-800">
-                                        <i class="fas fa-pause ml-2"></i>
-                                        انصراف مؤقت
-                                    </span>
-                                    <div class="flex space-x-2 rtl:space-x-reverse">
-                                        <button @click="tempCheckIn()"
-                                            class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
-                                            <i class="fas fa-sign-in-alt ml-1"></i>
-                                            عودة
-                                        </button>
-                                        <button @click="checkOut('final')"
-                                            class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
-                                            <i class="fas fa-times ml-1"></i>
-                                            انصراف نهائي
-                                        </button>
-                                    </div>
-                                </div>
-                            @else
-                                <!-- حاضر - يمكن الانصراف -->
-                                <div class="flex space-x-2 rtl:space-x-reverse">
-                                    <button @click="tempCheckOut()"
-                                        class="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
-                                        <i class="fas fa-pause ml-1"></i>
-                                        انصراف مؤقت
-                                    </button>
-                                    <button @click="checkOut('final')"
-                                        class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
-                                        <i class="fas fa-sign-out-alt ml-1"></i>
-                                        انصراف نهائي
-                                    </button>
-                                </div>
-                            @endif
-                        @else
-                            <button @click="checkIn()"
-                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700">
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 24 24">
-                                    <path d="M12 11c0-3.314-3-6-7-6s-7 2.686-7 6 3 6 7 6 7-2.686 7-6z" />
-                                    <path d="M12 11v6" />
-                                    <path d="M16 10v5" />
-                                </svg>
-                                حضور
-                            </button>
-                        @endif
-                    </div>
+        {{-- Header Section --}}
+        <div class="mb-8 p-6 glass-effect rounded-2xl shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold gradient-text mb-2">مركز التحكم الشخصي</h1>
+                    <p class="text-gray-600">إدارة المشاريع والمهام مع نظام التتبع المتقدم</p>
                 </div>
-                @if ($todayAttendance)
-                    <div class="mt-4 text-xs font-semibold text-blue-800">
-                        <div class="flex justify-between mb-2">
-                            <span>وقت الحضور:</span>
-                            <span>{{ formatTime12h($todayAttendance->check_in_time->timezone('Asia/Riyadh')) }}</span>
-                        </div>
-                        @if ($todayAttendance->is_late)
-                            <div class="flex justify-between text-red-700 font-semibold">
-                                <span>تأخير:</span>
-                                <span>{{ formatLateTime($todayAttendance->late_minutes) }}</span>
-                            </div>
-                        @else
-                            <div class="flex justify-between text-red-700 font-semibold">
-                                <span>تأخير:</span>
-                                <span>00:00</span>
-                            </div>
-                        @endif
-
-                        <!-- معلومات الانصراف المؤقت -->
-                        @if ($todayAttendance->temp_checkout_time)
-                            <div class="mt-2 pt-2 border-t border-blue-200">
-                                @if ($todayAttendance->is_temp_out)
-                                    <div class="flex justify-between text-orange-700">
-                                        <span>انصراف مؤقت منذ:</span>
-                                        <span>{{ formatTime12h($todayAttendance->temp_checkout_time) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-orange-600 text-xs">
-                                        <span>المدة:</span>
-                                        <span>{{ $todayAttendance->temp_out_duration }}</span>
-                                    </div>
-                                @else
-                                    <div class="text-xs text-gray-600">
-                                        آخر انصراف مؤقت: {{ formatTime12h($todayAttendance->temp_checkout_time) }} -
-                                        {{ formatTime12h($todayAttendance->temp_checkin_time) }}
-                                        @if ($todayAttendance->temp_checkout_count > 1)
-                                            ({{ $todayAttendance->temp_checkout_count }} مرات)
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                @endif
-            </div>
-
-
-            <!-- الاستوب ووتش -->
-            <div
-                class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-yellow-500 to-yellow-300  text-center">
-                <p
-                    class="text-base font-semibold text-yellow-800  mb-4 flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                    <!-- أيقونة ساعة توقيت -->
-                    <svg class="w-6 h-6 text-yellow-700 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                        focusable="false">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    الاستوب ووتش
-                </p>
-                <div class="text-3xl font-mono font-semibold text-yellow-900" x-text="timerDisplay">00:00:00</div>
-                <div class="mt-4 space-x-2 space-x-reverse">
-                    <button x-show="!isTimerActive" @click="showStartTimerModal()"
-                        class="px-3 py-1 bg-green-600 text-white rounded text-sm font-semibold hover:bg-green-700 transition-colors duration-200">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button x-show="isTimerActive" @click="stopTimer()"
-                        class="px-3 py-1 bg-red-600 text-white rounded text-sm font-semibold hover:bg-red-700 transition-colors duration-200">
-                        <i class="fas fa-stop"></i>
-                    </button>
-                    <button x-show="isTimerActive" @click="pauseTimer()"
-                        class="px-3 py-1 bg-yellow-600 text-white rounded text-sm font-semibold hover:bg-yellow-700 transition-colors duration-200">
-                        <i class="fas fa-pause"></i>
-                    </button>
-                </div>
-                <div x-show="activeTimer" class="mt-3 text-sm font-semibold text-yellow-800">
-                    <p x-text="activeTimer?.project?.name"></p>
-                    <p x-text="activeTimer?.task?.name"></p>
-                </div>
-            </div>
-
-            <!-- إحصائيات اليوم -->
-            <div
-                class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-blue-600 to-blue-400 bg-blue-50 text-center">
-                <p
-                    class="text-base font-semibold text-blue-900 mb-3 flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                    <!-- أيقونة السهم الصاعد -->
-                    <svg class="w-6 h-6 text-blue-700 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                        focusable="false">
-                        <polyline points="5 15 12 8 19 15"></polyline>
-                        <line x1="12" y1="8" x2="12" y2="20"></line>
-                    </svg>
-                    ساعات اليوم
-                </p>
-                <div class="text-2xl font-bold text-blue-900">{{ formatHoursToHoursMinutes($todayStats['total_hours']) }}
-                </div>
-                <div class="w-full bg-blue-300 rounded-full h-2 mt-3">
-                    <div class="bg-blue-700 h-2 rounded-full"
-                        style="width: {{ min(100, $todayStats['target_percentage']) }}%"></div>
-                </div>
-                <p class="text-xs text-blue-700 mt-2 font-semibold">
-                    {{ number_format($todayStats['target_percentage'], 1) }}% من التارجت</p>
-            </div>
-
-            <!-- المشاريع النشطة -->
-            <div
-                class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-gradient-to-b from-purple-600 to-purple-400 bg-purple-50 text-center">
-                <p
-                    class="text-base font-semibold text-purple-900 mb-3 flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                    <!-- أيقونة المشاريع -->
-                    <svg class="w-6 h-6 text-purple-700 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                        focusable="false">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                    المشاريع النشطة
-                </p>
-                <div class="text-2xl font-bold text-purple-900">{{ $activeProjects->count() }}</div>
-                <div class="text-xs text-purple-700 mt-2 font-semibold">{{ $todayStats['projects_worked'] }} مشاريع اليوم
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-gray-800" x-text="currentTime"></p>
+                    <p class="text-sm text-gray-600">{{ now()->format('Y-m-d') }}</p>
                 </div>
             </div>
         </div>
 
+        {{-- Main Dashboard Cards --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {{-- Attendance Card --}}
+            @include('employee.project-tracking.components.attendance-card')
 
-        <!-- أزرار الإجراءات السريعة -->
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex flex-wrap gap-2">
+            {{-- Timer Card --}}
+            @include('employee.project-tracking.components.timer-card')
+        </div>
+
+        {{-- Stats Cards --}}
+        <div class="mb-8">
+            @include('employee.project-tracking.components.stats-cards')
+        </div>
+
+        {{-- Quick Actions --}}
+        <div class="mb-8 p-6 glass-effect rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-bolt text-yellow-500 ml-2"></i>
+                الإجراءات السريعة
+            </h3>
+            <div class="flex flex-wrap gap-3">
                 <button @click="showCreateProjectModal()"
-                    class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700">
-                    <i class="fas fa-plus ml-2"></i>
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-plus-circle ml-2 text-lg"></i>
                     مشروع جديد
                 </button>
+
                 <button @click="showAddTaskModal()"
-                    class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">
-                    <i class="fas fa-tasks ml-2"></i>
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-tasks ml-2 text-lg"></i>
                     مهمة جديدة
                 </button>
-                <a href="{{ route('employee.work-reports.index') }}"
-                    class="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700">
-                    <i class="fas fa-chart-line ml-2"></i>
-                    التقارير
-                </a>
 
+                @if (!$activeTimer)
+                    <button @click="showStartModal = true"
+                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                        <i class="fas fa-play-circle ml-2 text-lg"></i>
+                        بدء عداد جديد
+                    </button>
+                @endif
+
+                <button @click="loadTodayEntries()"
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-sync-alt ml-2 text-lg"></i>
+                    تحديث البيانات
+                </button>
             </div>
         </div>
 
-        @php
-            // دالة لتحويل القيمة العشرية للساعات إلى صيغة ساعات:دقائق "hh:mm" بأصفار بادئة صحيحة
-            function formatHoursToHoursMinutes($hoursFloat)
-            {
-                $totalMinutes = round($hoursFloat * 60);
-                $hours = floor($totalMinutes / 60);
-                $minutes = $totalMinutes % 60;
-                return sprintf('%02d:%02d', $hours, $minutes);
-            }
-        @endphp
-
-        <!-- قائمة المشاريع والمهام -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 rtl">
-
-            <!-- المشاريع -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b border-gray-200">
-                    <h3 class="text-xl font-semibold text-gray-900 flex items-center space-x-2 rtl:space-x-reverse">
-                        <i class="fas fa-folder-open text-green-600 text-lg"></i>
-                        <span>مشاريعي النشطة</span>
-                    </h3>
-                </div>
-                <div class="p-4">
-                    @if ($activeProjects->count() > 0)
-                        <div class="space-y-5">
-                            @foreach ($activeProjects as $project)
-                                <div class="border border-gray-200 rounded-lg p-4">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <div>
-                                            <h4
-                                                class="font-semibold text-gray-900 text-lg flex items-center space-x-2 rtl:space-x-reverse">
-                                                <i class="fas fa-project-diagram text-blue-600"></i>
-                                                <span>{{ $project->name }}</span>
-                                            </h4>
-                                            @if ($project->client_name)
-                                                <p
-                                                    class="text-sm text-gray-600 mt-1 flex items-center space-x-1 rtl:space-x-reverse">
-                                                    <i class="fas fa-user text-gray-400"></i>
-                                                    <span>العميل: {{ $project->client_name }}</span>
-                                                </p>
-                                            @endif
-                                        </div>
-                                        <span
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                            {{ $project->completion_percentage }}%
-                                        </span>
-                                    </div>
-
-                                    <!-- مهام المشروع -->
-                                    <div class="space-y-3">
-                                        @foreach ($project->tasks as $task)
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                                                <div class="flex-1">
-                                                    <p
-                                                        class="text-base font-medium text-gray-900 flex items-center space-x-2 rtl:space-x-reverse">
-                                                        <i class="fas fa-tasks text-yellow-600"></i>
-                                                        <span>{{ $task->name }}</span>
-                                                    </p>
-                                                    <div
-                                                        class="flex items-center space-x-4 rtl:space-x-reverse text-sm text-gray-600 mt-1">
-                                                        <span class="flex items-center space-x-1 rtl:space-x-reverse">
-                                                            <i class="fas fa-hourglass-start text-blue-400"></i>
-                                                            <span>مقدر:
-                                                                {{ formatHoursToHoursMinutes($task->estimated_hours) }}
-                                                                ساعة:دقيقة</span>
-                                                        </span>
-                                                        <span class="flex items-center space-x-1 rtl:space-x-reverse">
-                                                            <i class="fas fa-clock text-green-400"></i>
-                                                            <span>فعلي:
-                                                                {{ formatHoursToHoursMinutes($task->total_tracked_hours) }}
-                                                                ساعة:دقيقة</span>
-                                                        </span>
-                                                        <span
-                                                            class="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-semibold
-                                                    {{ $task->status === 'completed'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : ($task->status === 'in_progress'
-                                                            ? 'bg-blue-100 text-blue-800'
-                                                            : 'bg-gray-100 text-gray-800') }}">
-                                                            {{ $task->status === 'completed' ? 'مكتملة' : ($task->status === 'in_progress' ? 'قيد التنفيذ' : 'معلقة') }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                @if ($task->status !== 'completed')
-                                                    <button
-                                                        @click="startTimerForTask({{ $project->id }}, {{ $task->id }})"
-                                                        class=" px-3 py-1 rounded-md bg-green-600 text-white  text-sm hover:bg-green-700 flex items-center space-x-1 rtl:space-x-reverse">
-                                                        <i class="fas fa-play"></i>
-                                                        <span>ابدأ</span>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-10 text-gray-500 flex flex-col items-center space-y-4">
-                            <i class="fas fa-folder-open text-5xl"></i>
-                            <p class="text-lg">لا توجد مشاريع نشطة</p>
-                            <button @click="showCreateProjectModal()"
-                                class="mt-2 text-blue-600 hover:text-blue-800 text-base font-medium">
-                                إنشاء مشروع جديد
-                            </button>
-                        </div>
-                    @endif
-                </div>
+        {{-- Main Content --}}
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {{-- Projects Section --}}
+            <div class="xl:col-span-2 space-y-6">
+                {{-- Active Projects --}}
+                @include('employee.project-tracking.components.projects-list')
             </div>
 
-
-            <!-- سجل اليوم -->
-            <div class="bg-white rounded-lg shadow-lg">
-                <div
-                    class="p-4 border-b border-gray-300 bg-gradient-to-r from-green-50 via-green-100 to-green-50 relative">
-                    <h3 class="text-xl font-semibold text-green-900 flex items-center space-x-2 rtl:space-x-reverse">
-                        <!-- أيقونة ساعة محسنة مع خلفية نصف شفافة دائرية -->
-                        <span
-                            class="inline-flex items-center justify-center w-8 h-8 bg-green-200 bg-opacity-30 rounded-full">
-                            <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                                focusable="false">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                        </span>
-                        <span>سجل العمل اليوم</span>
-                        <span
-                            class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-600 to-green-300 rounded-l-md"></span>
-                    </h3>
-                </div>
-                <div class="">
-                    <div class=" p-4 m-4 border rounded-md border-gray-200" x-show="todayEntries.length > 0">
-                        <template x-for="entry in todayEntries" :key="entry.id">
-                            <div
-                                class="flex mb-3 items-center justify-between p-3 bg-gray-50 rounded shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-green-400">
-                                <div>
-                                    <p
-                                        class="text-base font-semibold text-green-900 mb-4 flex items-center space-x-2 rtl:space-x-reverse">
-                                        <i class="fas fa-tasks text-yellow-700"></i>
-                                        <span x-text="entry.task.name"></span>
-                                    </p>
-                                    <p class="text-sm text-green-700 flex items-center space-x-1 rtl:space-x-reverse">
-                                        <i class="fas fa-project-diagram"></i>
-                                        <span x-text="entry.project.name"></span>
-                                    </p>
-                                    <p class="text-sm text-green-600 flex mb-4 items-center space-x-1 rtl:space-x-reverse">
-                                        <i class="fas fa-clock text-red-600"></i>
-                                        <span x-text="entry.start_time + ' - ' + (entry.end_time || 'جاري')"></span>
-                                    </p>
-                                </div>
-                                <div
-                                    class="text-right flex flex-col items-end justify-center space-y-1 rtl:space-y-reverse">
-                                    <p class="text-base font-semibold text-green-700" x-text="entry.formatted_duration">
-                                    </p>
-                                    <p class="text-sm text-green-500" x-text="entry.hours + ' ساعة:دقيقة'"></p>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                    <div x-show="todayEntries.length === 0" class="text-center py-14 text-green-400">
-                        <!-- أيقونة ساعة توقف محسنة -->
-                        <svg class="mx-auto w-20 h-20 mb-5" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-                            focusable="false">
-                            <circle cx="12" cy="12" r="10" class="text-green-300" stroke="currentColor">
-                            </circle>
-                            <line x1="12" y1="8" x2="12" y2="12" class="text-green-400"
-                                stroke="currentColor"></line>
-                            <line x1="12" y1="16" x2="12" y2="16" class="text-green-400"
-                                stroke="currentColor"></line>
-                        </svg>
-                        <p class="text-lg">لم تبدأ العمل بعد اليوم</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-
-
-        <!-- مودال بدء العداد -->
-        <div x-show="showStartModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-            @click="showStartModal = false">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl bg-white" @click.stop>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">بدء العداد</h3>
-                <div class="space-y-4">
-                    <!-- اختيار المشروع -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">المشروع</label>
-                        <select x-model="selectedProject" @change="loadProjectTasks()"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                            <option value="">اختر المشروع</option>
-                            @foreach ($activeProjects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- اختيار المهمة -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">المهمة</label>
-                        <select x-model="selectedTask"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                            <option value="">اختر المهمة</option>
-                            <template x-for="task in projectTasks" :key="task.id">
-                                <option :value="task.id" x-text="task.name"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <!-- الوصف -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">وصف (اختياري)</label>
-                        <textarea x-model="timerDescription" rows="2"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition"></textarea>
-                    </div>
-
-                    <!-- الأزرار -->
-                    <div class="flex justify-end space-x-2 space-x-reverse">
-                        <button @click="showStartModal = false"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                            إلغاء
-                        </button>
-                        <button @click="startTimer()"
-                            class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow">
-                            بدء العداد
-                        </button>
-                    </div>
-                </div>
+            {{-- Today's Work Log --}}
+            <div class="xl:col-span-1">
+                @include('employee.project-tracking.components.today-entries')
             </div>
         </div>
 
-
-        <!-- مودال إنشاء مشروع -->
-        <div x-show="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-            @click="showCreateModal = false">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl bg-white" @click.stop>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">مشروع جديد</h3>
-                <div class="space-y-4">
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">اسم المشروع *</label>
-                        <input type="text" x-model="newProject.name"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">اسم العميل</label>
-                        <input type="text" x-model="newProject.client_name"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">الوصف</label>
-                        <textarea x-model="newProject.description" rows="3"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">تاريخ البداية *</label>
-                            <input type="date" x-model="newProject.start_date"
-                                class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">تاريخ النهاية</label>
-                            <input type="date" x-model="newProject.end_date"
-                                class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end space-x-2 space-x-reverse">
-                        <button @click="showCreateModal = false"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                            إلغاء
-                        </button>
-                        <button @click="createProject()"
-                            class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow">
-                            إنشاء المشروع
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- مودال إضافة مهمة -->
-        <div x-show="showTaskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-            @click="showTaskModal = false">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl bg-white" @click.stop>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">مهمة جديدة</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">المشروع *</label>
-                        <select x-model="newTask.project_id"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                            <option value="">اختر المشروع</option>
-                            @foreach ($activeProjects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">اسم المهمة *</label>
-                        <input type="text" x-model="newTask.name"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">الوصف</label>
-                        <textarea x-model="newTask.description" rows="3"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">الساعات المقدرة *</label>
-                        <input type="number" step="0.5" min="0" x-model="newTask.estimated_hours"
-                            class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 transition">
-                    </div>
-
-                    <div class="flex justify-end space-x-2 space-x-reverse">
-                        <button @click="showTaskModal = false"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                            إلغاء
-                        </button>
-                        <button @click="addTask()"
-                            class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow">
-                            إضافة المهمة
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        {{-- Modals --}}
+        @include('employee.project-tracking.components.modals')
+        @include('employee.project-tracking.components.project-task-modals')
     </div>
 
     @push('scripts')
         <script>
-            function projectTracking() {
+            function employeeProjectTracking() {
                 return {
                     // Timer state
-                    isTimerActive: false,
-                    activeTimer: null,
-                    timerStartTime: null,
-                    timerDisplay: '00:00:00',
+                    activeTimerDisplay: '00:00:00',
+                    @if ($activeTimer)
+                        myActiveTimer: @json($activeTimer),
+                        myTimerStartTime: new Date('{{ $activeTimer->start_time->toISOString() }}'),
+                    @else
+                        myActiveTimer: null,
+                        myTimerStartTime: null,
+                    @endif
                     timerInterval: null,
                     currentTime: '',
 
                     // Modal states
                     showStartModal: false,
+                    showEditModal: false,
+                    showDetailsModal: false,
                     showCreateModal: false,
                     showTaskModal: false,
 
@@ -638,7 +228,15 @@
                     projectTasks: [],
                     todayEntries: [],
 
-                    // New project/task data
+                    // Edit modal data
+                    currentEditTimer: null,
+                    editHours: 0,
+                    editMinutes: 0,
+
+                    // Details modal data
+                    currentTimerDetails: null,
+
+                    // Project/Task creation
                     newProject: {
                         name: '',
                         client_name: '',
@@ -653,15 +251,26 @@
                         estimated_hours: 1
                     },
 
+                    // Stats
+                    total_hours: 0,
+                    target_percentage: 0,
+
                     init() {
                         this.updateCurrentTime();
-                        this.checkActiveTimer();
                         this.loadTodayEntries();
 
                         // Update current time every minute
                         setInterval(() => {
                             this.updateCurrentTime();
                         }, 60000);
+
+                        // Update timer display
+                        if (this.myActiveTimer && this.myTimerStartTime) {
+                            this.updateMyTimerDisplay();
+                            this.timerInterval = setInterval(() => {
+                                this.updateMyTimerDisplay();
+                            }, 1000);
+                        }
                     },
 
                     updateCurrentTime() {
@@ -673,41 +282,341 @@
                         });
                     },
 
-                    async checkActiveTimer() {
+                    updateMyTimerDisplay() {
+                        if (this.myActiveTimer && this.myTimerStartTime) {
+                            if (this.myActiveTimer.is_paused) {
+                                // إذا كان متوقف، اعرض الوقت المحفوظ فقط
+                                this.activeTimerDisplay = this.formatSeconds(this.myActiveTimer.total_seconds || 0);
+                            } else {
+                                // إذا كان يعمل، احسب من start_time الحالي
+                                const now = new Date();
+                                const diffInSeconds = Math.floor((now - this.myTimerStartTime) / 1000);
+                                this.activeTimerDisplay = this.formatSeconds(diffInSeconds);
+                            }
+                        }
+                    },
+
+                    async loadTodayEntries() {
                         try {
-                            const response = await fetch('{{ route('employee.project-tracking.active-timer') }}');
+                            const response = await fetch('{{ route('employee.project-tracking.today-entries') }}');
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            const data = await response.json();
+                            this.todayEntries = data.entries || [];
+                            this.total_hours = data.total_hours || 0;
+                            this.target_percentage = data.target_percentage || 0;
+                        } catch (error) {
+                            console.error('Error loading today entries:', error);
+                            this.todayEntries = [];
+                        }
+                    },
+
+                    loadProjectTasks() {
+                        const project = @json($activeProjects).find(p => p.id == this.selectedProject);
+                        if (project && project.tasks) {
+                            this.projectTasks = project.tasks;
+                        } else {
+                            this.projectTasks = [];
+                        }
+                        this.selectedTask = '';
+                    },
+
+                    // Timer functions
+                    async startTimer() {
+                        if (!this.selectedProject || !this.selectedTask) {
+                            this.showAlert('يرجى اختيار المشروع والمهمة', 'error');
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.start-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                },
+                                body: JSON.stringify({
+                                    project_id: this.selectedProject,
+                                    task_id: this.selectedTask,
+                                    description: this.timerDescription
+                                })
+                            });
+
                             const data = await response.json();
 
-                            if (data.active) {
-                                this.isTimerActive = true;
-                                this.activeTimer = data.timer;
-
-                                if (data.timer.is_paused) {
-                                    // إذا كان متوقف، اعرض الوقت المحفوظ فقط
-                                    this.timerDisplay = this.formatSeconds(data.current_seconds || 0);
-                                    // لا تبدأ العداد
-                                    if (this.timerInterval) {
-                                        clearInterval(this.timerInterval);
-                                        this.timerInterval = null;
-                                    }
-                                } else {
-                                    // إذا كان يعمل، احسب من start_time
-                                    this.timerStartTime = new Date(data.timer.start_time);
-
-                                    // تحديث العداد فوراً ثم كل ثانية
-                                    this.updateTimerDisplay();
-                                    if (this.timerInterval) {
-                                        clearInterval(this.timerInterval);
-                                    }
-                                    this.timerInterval = setInterval(() => {
-                                        this.updateTimerDisplay();
-                                    }, 1000);
-                                }
+                            if (data.success) {
+                                this.showStartModal = false;
+                                this.showAlert('تم بدء العداد بنجاح', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                this.showAlert(data.message, 'error');
                             }
                         } catch (error) {
-                            console.error('Error checking active timer:', error);
+                            console.error('Start timer error:', error);
+                            this.showAlert('حدث خطأ أثناء بدء العداد', 'error');
                         }
-                    }
+                    },
+
+                    async pauseTimer() {
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.pause-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                if (this.timerInterval) {
+                                    clearInterval(this.timerInterval);
+                                    this.timerInterval = null;
+                                }
+
+                                await this.showAlert('تم إيقاف العداد مؤقتاً', 'success');
+                                location.reload();
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Pause timer error:', error);
+                            this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
+                        }
+                    },
+
+                    async resumeTimer() {
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.resume-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                await this.showAlert('تم استئناف العداد بنجاح', 'success');
+                                location.reload();
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Resume timer error:', error);
+                            this.showAlert('حدث خطأ أثناء استئناف العداد', 'error');
+                        }
+                    },
+
+                    async stopTimer() {
+                        if (this.timerInterval) {
+                            clearInterval(this.timerInterval);
+                            this.timerInterval = null;
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.stop-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.showAlert(`تم إنهاء العداد - المدة: ${data.duration}`, 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Stop timer error:', error);
+                            this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
+                        }
+                    },
+
+                    async restartTimer(timerId) {
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.restart-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                },
+                                body: JSON.stringify({
+                                    timer_id: timerId,
+                                    description: 'استكمال العمل'
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                const message = `تم استكمال الجلسة #${data.session_number} من ${data.continued_from}`;
+                                await this.showAlert(message, 'success');
+                                location.reload();
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Restart timer error:', error);
+                            this.showAlert('حدث خطأ أثناء استكمال العداد', 'error');
+                        }
+                    },
+
+                    // Edit timer functions
+                    showEditModal(timerId) {
+                        const entry = this.todayEntries.find(e => e.id === timerId);
+                        if (entry) {
+                            this.currentEditTimer = entry;
+                            this.editHours = Math.floor(entry.hours);
+                            this.editMinutes = Math.round((entry.hours % 1) * 60);
+                            this.showEditModal = true;
+                        }
+                    },
+
+                    async editTimer() {
+                        if (!this.currentEditTimer) return;
+
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.edit-timer') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                },
+                                body: JSON.stringify({
+                                    timer_id: this.currentEditTimer.id,
+                                    hours: this.editHours,
+                                    minutes: this.editMinutes
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.showEditModal = false;
+                                this.showAlert('تم تعديل الوقت بنجاح', 'success');
+                                this.loadTodayEntries();
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Edit timer error:', error);
+                            this.showAlert('حدث خطأ أثناء تعديل الوقت', 'error');
+                        }
+                    },
+
+                    // Timer details functions
+                    async showTimerDetails(timerId) {
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.timer-details') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                },
+                                body: JSON.stringify({
+                                    timer_id: timerId
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.currentTimerDetails = data;
+                                this.showDetailsModal = true;
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Get timer details error:', error);
+                            this.showAlert('حدث خطأ أثناء تحميل التفاصيل', 'error');
+                        }
+                    },
+
+                    // Attendance functions
+                    async checkIn() {
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.check-in') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.showAlert('تم تسجيل الحضور بنجاح', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Check-in error:', error);
+                            this.showAlert('حدث خطأ أثناء تسجيل الحضور', 'error');
+                        }
+                    },
+
+                    async checkOut(type = 'final') {
+                        if (type === 'final') {
+                            const confirmed = await Swal.fire({
+                                title: 'تأكيد الانصراف النهائي',
+                                text: 'هل أنت متأكد من الانصراف النهائي؟ لن تتمكن من العودة اليوم',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ef4444',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'نعم، انصراف نهائي',
+                                cancelButtonText: 'إلغاء',
+                                reverseButtons: true
+                            });
+
+                            if (!confirmed.isConfirmed) {
+                                return;
+                            }
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('employee.project-tracking.check-out') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content')
+                                },
+                                body: JSON.stringify({
+                                    type: type
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                this.showAlert(data.message, 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                this.showAlert(data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error('Check-out error:', error);
+                            this.showAlert('حدث خطأ أثناء تسجيل الانصراف', 'error');
+                        }
+                    },
+
                     async tempCheckOut() {
                         try {
                             const response = await fetch('{{ route('employee.project-tracking.temp-check-out') }}', {
@@ -758,284 +667,7 @@
                         }
                     },
 
-                    async checkOut(type = 'final') {
-                        // تأكيد للانصراف النهائي
-                        if (type === 'final') {
-                            const confirmed = await Swal.fire({
-                                title: 'تأكيد الانصراف النهائي',
-                                text: 'هل أنت متأكد من الانصراف النهائي؟ لن تتمكن من العودة اليوم',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#ef4444',
-                                cancelButtonColor: '#6b7280',
-                                confirmButtonText: 'نعم، انصراف نهائي',
-                                cancelButtonText: 'إلغاء',
-                                reverseButtons: true
-                            });
-
-                            if (!confirmed.isConfirmed) {
-                                return;
-                            }
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.check-out') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                },
-                                body: JSON.stringify({
-                                    type: type
-                                })
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.showAlert(data.message || 'تم تسجيل الانصراف بنجاح', 'success');
-                                setTimeout(() => location.reload(), 1500);
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Check-out error:', error);
-                            this.showAlert('حدث خطأ أثناء تسجيل الانصراف', 'error');
-                        }
-                    },
-
-                    updateTimerDisplay() {
-                        if (this.isTimerActive && this.timerStartTime) {
-                            const now = new Date();
-                            const diffInSeconds = Math.floor((now - this.timerStartTime) / 1000);
-                            this.timerDisplay = this.formatSeconds(diffInSeconds);
-                        }
-                    },
-
-                    formatSeconds(totalSeconds) {
-                        if (totalSeconds < 0) totalSeconds = 0;
-
-                        const hours = Math.floor(totalSeconds / 3600);
-                        const minutes = Math.floor((totalSeconds % 3600) / 60);
-                        const seconds = totalSeconds % 60;
-
-                        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                    },
-
-                    async loadTodayEntries() {
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.today-entries') }}');
-                            if (!response.ok) throw new Error('Network response was not ok');
-                            const data = await response.json();
-                            this.todayEntries = data.entries || [];
-                        } catch (error) {
-                            console.error('Error loading today entries:', error);
-                            this.todayEntries = [];
-                        }
-                    },
-
-                    refreshTodayEntries() {
-                        this.loadTodayEntries();
-                    },
-
-                    async checkIn() {
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.check-in') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                }
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.showAlert('تم تسجيل الحضور بنجاح', 'success');
-                                setTimeout(() => location.reload(), 1500);
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Check-in error:', error);
-                            this.showAlert('حدث خطأ أثناء تسجيل الحضور', 'error');
-                        }
-                    },
-
-                    async checkOut() {
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.check-out') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                }
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.showAlert('تم تسجيل الانصراف بنجاح', 'success');
-                                setTimeout(() => location.reload(), 1500);
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Check-out error:', error);
-                            this.showAlert('حدث خطأ أثناء تسجيل الانصراف', 'error');
-                        }
-                    },
-
-                    showStartTimerModal() {
-                        this.showStartModal = true;
-                        this.selectedProject = '';
-                        this.selectedTask = '';
-                        this.timerDescription = '';
-                        this.projectTasks = [];
-                    },
-
-                    loadProjectTasks() {
-                        const project = @json($activeProjects).find(p => p.id == this.selectedProject);
-                        if (project && project.tasks) {
-                            this.projectTasks = project.tasks;
-                        } else {
-                            this.projectTasks = [];
-                        }
-                        this.selectedTask = '';
-                    },
-
-                    startTimerForTask(projectId, taskId) {
-                        this.selectedProject = projectId.toString();
-                        this.selectedTask = taskId.toString();
-                        this.timerDescription = '';
-
-                        // تحميل مهام المشروع
-                        const project = @json($activeProjects).find(p => p.id == projectId);
-                        if (project && project.tasks) {
-                            this.projectTasks = project.tasks;
-                        }
-
-                        // بدء العداد مباشرة
-                        this.startTimer();
-                    },
-
-                    async startTimer() {
-                        if (!this.selectedProject || !this.selectedTask) {
-                            this.showAlert('يرجى اختيار المشروع والمهمة', 'error');
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.start-timer') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                },
-                                body: JSON.stringify({
-                                    project_id: this.selectedProject,
-                                    task_id: this.selectedTask,
-                                    description: this.timerDescription
-                                })
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.isTimerActive = true;
-                                this.activeTimer = data.timer;
-                                this.timerStartTime = new Date(); // الوقت الحالي
-                                this.showStartModal = false;
-                                this.showAlert('تم بدء العداد بنجاح', 'success');
-
-                                // بدء العداد
-                                this.updateTimerDisplay();
-                                this.timerInterval = setInterval(() => {
-                                    this.updateTimerDisplay();
-                                }, 1000);
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Start timer error:', error);
-                            this.showAlert('حدث خطأ أثناء بدء العداد', 'error');
-                        }
-                    },
-
-                    async stopTimer() {
-                        // إيقاف العداد
-                        if (this.timerInterval) {
-                            clearInterval(this.timerInterval);
-                            this.timerInterval = null;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.stop-timer') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                }
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.isTimerActive = false;
-                                this.activeTimer = null;
-                                this.timerStartTime = null;
-                                this.timerDisplay = '00:00:00';
-                                this.loadTodayEntries();
-                                this.showAlert(`تم إيقاف العداد - المدة: ${data.duration}`, 'success');
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Stop timer error:', error);
-                            this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
-                        }
-                    },
-
-                    async pauseTimer() {
-                        // إيقاف العداد مؤقتاً
-                        if (this.timerInterval) {
-                            clearInterval(this.timerInterval);
-                            this.timerInterval = null;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('employee.project-tracking.pause-timer') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content')
-                                }
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                this.isTimerActive = false;
-                                this.activeTimer = null;
-                                this.timerStartTime = null;
-                                this.timerDisplay = '00:00:00';
-                                this.loadTodayEntries();
-                                this.showAlert(`تم إيقاف العداد مؤقتاً - المدة: ${data.duration}`, 'success');
-                            } else {
-                                this.showAlert(data.message, 'error');
-                            }
-                        } catch (error) {
-                            console.error('Pause timer error:', error);
-                            this.showAlert('حدث خطأ أثناء إيقاف العداد', 'error');
-                        }
-                    },
-
+                    // Project/Task creation functions
                     showCreateProjectModal() {
                         this.showCreateModal = true;
                         const today = new Date();
@@ -1122,6 +754,33 @@
                         }
                     },
 
+                    startTaskTimer(projectId, taskId) {
+                        this.selectedProject = projectId;
+                        this.selectedTask = taskId;
+                        this.loadProjectTasks();
+                        this.timerDescription = '';
+                        this.startTimer();
+                    },
+
+                    // Utility functions
+                    formatSeconds(totalSeconds) {
+                        if (totalSeconds < 0) totalSeconds = 0;
+
+                        const hours = Math.floor(totalSeconds / 3600);
+                        const minutes = Math.floor((totalSeconds % 3600) / 60);
+                        const seconds = totalSeconds % 60;
+
+                        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    },
+
+                    formatHours(hours) {
+                        if (hours < 0) hours = 0;
+                        const totalMinutes = Math.round(hours * 60);
+                        const displayHours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
+                        return `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                    },
+
                     showAlert(message, type) {
                         if (typeof Swal !== 'undefined') {
                             if (type === 'success') {
@@ -1132,7 +791,9 @@
                                     timer: 2500,
                                     showConfirmButton: false,
                                     position: 'top-end',
-                                    toast: true
+                                    toast: true,
+                                    background: '#f0fdf4',
+                                    color: '#15803d'
                                 });
                             } else {
                                 Swal.fire({
@@ -1140,7 +801,9 @@
                                     text: message,
                                     icon: 'error',
                                     confirmButtonText: 'حسناً',
-                                    confirmButtonColor: '#ef4444'
+                                    confirmButtonColor: '#ef4444',
+                                    background: '#fef2f2',
+                                    color: '#dc2626'
                                 });
                             }
                         } else {
