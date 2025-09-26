@@ -1,5 +1,7 @@
 @extends('admin.layouts.app')
 @section('title', 'قاموس الردود الجاهزة')
+@section('page-title', 'قاموس الردود علي العملاء')
+@section('page-subtitle', 'اداره الردود الجاهزه علي العملاء')
 
 @section('content')
 <div class="p-6 space-y-8">

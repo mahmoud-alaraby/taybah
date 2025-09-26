@@ -2,6 +2,8 @@
 @extends('admin.layouts.app')
 
 @section('title', 'قائمة المهام اليومية')
+@section('page-title', 'قائمه المهام اليومية')
+@section('page-subtitle', 'اداره المهام اليومية' )
 
 @section('content')
 <div class="max-w-6xl mx-auto p-3 lg:p-4">
