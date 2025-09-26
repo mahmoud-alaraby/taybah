@@ -146,6 +146,27 @@ Route::middleware('employee.auth')->group(function () {
             Route::get('/{id}', [EmployeeDesignerTaskAccountEmployeeController::class, 'show'])->name('show');
         });
 
+        // / تكاليف الطباعة للموظفين
+Route::middleware('employee.permission:print_costs')->group(function () {
+    Route::prefix('print-costs')->name('employee.print-costs.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Employee\PrintCostsController::class, 'index'])->name('index');
+        Route::post('/receipt', [App\Http\Controllers\Employee\PrintCostsController::class, 'storeReceipt'])->name('receipt.store');
+        Route::post('/payment', [App\Http\Controllers\Employee\PrintCostsController::class, 'storePayment'])->name('payment.store');
+        
+        // Routes للتعديل
+        Route::get('/receipt/{receipt}/edit', [App\Http\Controllers\Employee\PrintCostsController::class, 'editReceipt'])->name('receipt.edit');
+        Route::put('/receipt/{receipt}', [App\Http\Controllers\Employee\PrintCostsController::class, 'updateReceipt'])->name('receipt.update');
+        
+        Route::get('/payment/{payment}/edit', [App\Http\Controllers\Employee\PrintCostsController::class, 'editPayment'])->name('payment.edit');
+        Route::put('/payment/{payment}', [App\Http\Controllers\Employee\PrintCostsController::class, 'updatePayment'])->name('payment.update');
+        
+        Route::delete('/receipt/{receipt}', [App\Http\Controllers\Employee\PrintCostsController::class, 'deleteReceipt'])->name('receipt.delete');
+        Route::delete('/payment/{payment}', [App\Http\Controllers\Employee\PrintCostsController::class, 'deletePayment'])->name('payment.delete');
+        
+        Route::get('/print', [App\Http\Controllers\Employee\PrintCostsController::class, 'printReport'])->name('print');
+    });
+});
+
     Route::middleware('employee.permission:customer_response')->group(function () {
         Route::prefix('customer-response')->name('employee.customer-response.')->group(function () {
             // الردود
