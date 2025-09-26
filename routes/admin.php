@@ -99,7 +99,7 @@ Route::middleware('admin.auth')->group(function () {
         // التقارير الشخصية للأدمن
         Route::get('/reports', [App\Http\Controllers\Admin\AdminProjectTrackingController::class, 'reports'])->name('reports');
     });
-    
+
     // إدارة المقبوضات والمدفوعات
     Route::prefix('receipts-payments')->name('admin.receipts-payments.')->group(function () {
         Route::get('/', [ReceiptsPaymentsController::class, 'index'])->name('index');
@@ -109,6 +109,13 @@ Route::middleware('admin.auth')->group(function () {
         Route::post('/payment', [ReceiptsPaymentsController::class, 'storePayment'])->name('payment.store');
 
         Route::post('/target', [ReceiptsPaymentsController::class, 'updateTarget'])->name('target');
+
+        // Routes جديدة للتعديل
+        Route::get('/receipt/{receipt}/edit', [ReceiptsPaymentsController::class, 'editReceipt'])->name('receipt.edit');
+        Route::put('/receipt/{receipt}', [ReceiptsPaymentsController::class, 'updateReceipt'])->name('receipt.update');
+
+        Route::get('/payment/{payment}/edit', [ReceiptsPaymentsController::class, 'editPayment'])->name('payment.edit');
+        Route::put('/payment/{payment}', [ReceiptsPaymentsController::class, 'updatePayment'])->name('payment.update');
 
         Route::delete('/receipt/{receipt}', [ReceiptsPaymentsController::class, 'deleteReceipt'])->name('receipt.delete');
 
@@ -304,44 +311,15 @@ Route::middleware('admin.auth')->group(function () {
     });
 
 
-    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
-
-    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
-
-    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
-
-    // في ملف routes/admin.php - استبدل routes customer-communication الموجودة بهذه:
-
-    // في ملف routes/admin.php - إضافة route جديد لصفحة إنشاء الشات
 
     Route::prefix('customer-communication')->name('admin.customer-communication.')->group(function () {
         // الصفحة الرئيسية
         Route::get('/', [AdminCustomerCommunicationController::class, 'index'])->name('index');
 
-        // صفحة إنشاء شات جديد (اختيار الموظف) - Route جديد
-        Route::get('/{potentialCustomerId}/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('create-chat');
-
-        // عرض العميل - الشات المباشر (فقط إذا كان الشات موجود)
-        Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
-
-        // تعيين موظف للعميل
-        Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
-
-        // إرسال رسالة في الشات
-        Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
-
-        // تحميل الرسائل (للتحديث التلقائي)
-        Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
-        Route::get('/{chatId}/new-messages', [AdminCustomerCommunicationController::class, 'getNewMessages'])->name('get-new-messages');
-
-        // حذف رسالة معينة (خلال 30 دقيقة من الإرسال للإدارة)
-        Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
-
-        // إدارة الشات
-        Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
-        Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
-
-        // معلومات التخزين
+        // Routes إدارة المساحة - يجب أن تكون قبل الـ parameters
+        Route::get('/storage-management', [AdminCustomerCommunicationController::class, 'storageManagement'])->name('storage-management');
+        Route::post('/clear-old-files', [AdminCustomerCommunicationController::class, 'clearOldFiles'])->name('clear-old-files');
+        Route::get('/backup-files', [AdminCustomerCommunicationController::class, 'backupFiles'])->name('backup-files');
         Route::get('/storage/info', [AdminCustomerCommunicationController::class, 'getStorageInfo'])->name('storage-info');
 
         // إحصائيات سريعة للتحديث التلقائي
@@ -349,9 +327,24 @@ Route::middleware('admin.auth')->group(function () {
             $unreadCount = \App\Models\CustomerChatMessage::where('sender_type', 'employee')
                 ->where('is_read', false)
                 ->count();
-
             return response()->json(['count' => $unreadCount]);
         })->name('unread-count');
+
+        // Routes مع parameters - يجب أن تكون في النهاية
+        Route::get('/{potentialCustomerId}/create-chat', [AdminCustomerCommunicationController::class, 'createChat'])->name('create-chat');
+        Route::get('/{potentialCustomerId}', [AdminCustomerCommunicationController::class, 'show'])->name('show');
+        Route::post('/{potentialCustomerId}/assign-employee', [AdminCustomerCommunicationController::class, 'assignEmployee'])->name('assign-employee');
+
+        // Chat functionality routes
+        Route::post('/{chatId}/send', [AdminCustomerCommunicationController::class, 'sendMessage'])->name('send-message');
+        Route::get('/{chatId}/messages', [AdminCustomerCommunicationController::class, 'getMessages'])->name('get-messages');
+        Route::get('/{chatId}/new-messages', [AdminCustomerCommunicationController::class, 'getNewMessages'])->name('get-new-messages');
+        Route::post('/{chatId}/clear-files', [AdminCustomerCommunicationController::class, 'clearChatFiles'])->name('clear-files');
+        Route::delete('/{chatId}/clear-entire-chat', [AdminCustomerCommunicationController::class, 'clearEntireChat'])->name('clear-entire-chat');
+        Route::get('/{chatId}/backup-files', [AdminCustomerCommunicationController::class, 'backupChatFiles'])->name('backup-chat-files');
+
+        // Message management
+        Route::delete('/message/{messageId}', [AdminCustomerCommunicationController::class, 'deleteMessage'])->name('delete-message');
     });
 
 

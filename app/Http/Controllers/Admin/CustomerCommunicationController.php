@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use ZipArchive;
 
 class CustomerCommunicationController extends Controller
 {
@@ -601,5 +602,235 @@ class CustomerCommunicationController extends Controller
             $bytes /= 1024;
         }
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+
+
+    public function storageManagement()
+    {
+        $adminId = auth('admin')->id();
+
+        $totalSize = CustomerChatMessage::whereNotNull('file_size')->sum('file_size');
+        $fileCount = CustomerChatMessage::whereIn('message_type', ['file', 'voice'])->count();
+
+        // إحصائيات تفصيلية
+        $fileStats = CustomerChatMessage::selectRaw('
+        message_type,
+        COUNT(*) as count,
+        SUM(file_size) as total_size
+    ')
+            ->whereIn('message_type', ['file', 'voice'])
+            ->groupBy('message_type')
+            ->get();
+
+        $oldFiles = CustomerChatMessage::whereIn('message_type', ['file', 'voice'])
+            ->where('created_at', '<', now()->subMonths(3))
+            ->selectRaw('COUNT(*) as count, SUM(file_size) as size')
+            ->first();
+
+        // قائمة الشاتات للمدير الحالي
+        $userChats = CustomerChat::where('admin_id', $adminId)
+            ->with(['potentialCustomer', 'employee'])
+            ->withCount(['messages as file_count' => function ($q) {
+                $q->whereIn('message_type', ['file', 'voice']);
+            }])
+            ->having('file_count', '>', 0)
+            ->get();
+
+        return view('admin.customer_communication.storage', compact('totalSize', 'fileCount', 'fileStats', 'oldFiles', 'userChats'));
+    }
+
+    public function clearOldFiles()
+    {
+        $oldMessages = CustomerChatMessage::whereIn('message_type', ['file', 'voice'])
+            ->where('created_at', '<', now()->subMonths(3))
+            ->get();
+
+        $deletedCount = 0;
+        $freedSpace = 0;
+
+        foreach ($oldMessages as $message) {
+            $freedSpace += $message->file_size ?? 0;
+
+            // حذف الملف من التخزين
+            if ($message->file_path && Storage::disk('public')->exists('customer-chat/' . $message->file_path)) {
+                Storage::disk('public')->delete('customer-chat/' . $message->file_path);
+            }
+
+            $message->delete();
+            $deletedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $deletedCount,
+            'freed_space' => $this->formatBytes($freedSpace)
+        ]);
+    }
+
+    // تحميل جميع ملفات التواصل مع العملاء
+    public function backupFiles()
+    {
+        return $this->createBackup();
+    }
+
+    // تحميل ملفات شات محدد مع عميل
+    public function backupChatFiles($chatId)
+    {
+        $chat = CustomerChat::where('id', $chatId)
+            ->where('admin_id', auth('admin')->id())
+            ->with(['potentialCustomer', 'employee'])
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['error' => 'الشات غير موجود'], 404);
+        }
+
+        return $this->createBackup($chatId);
+    }
+
+    // دالة إنشاء النسخة الاحتياطية للتواصل مع العملاء
+    private function createBackup($specificChatId = null)
+    {
+        $zip = new ZipArchive();
+
+        // تحديد اسم الملف
+        if ($specificChatId) {
+            $chat = CustomerChat::with('potentialCustomer')->find($specificChatId);
+            $customerName = $chat->potentialCustomer->customer_name ?? 'عميل_محذوف';
+            $backupName = 'customer_chat_backup_' . $chat->id . '_' . Str::slug($customerName) . '_' . date('Y_m_d_H_i_s') . '.zip';
+        } else {
+            $backupName = 'all_customer_chats_backup_' . date('Y_m_d_H_i_s') . '.zip';
+        }
+
+        $backupPath = storage_path('app/backups/' . $backupName);
+
+        // إنشاء مجلد البكاب إذا لم يكن موجود
+        if (!file_exists(storage_path('app/backups'))) {
+            mkdir(storage_path('app/backups'), 0755, true);
+        }
+
+        if ($zip->open($backupPath, ZipArchive::CREATE) === TRUE) {
+
+            // استعلام الرسائل
+            $query = CustomerChatMessage::whereIn('message_type', ['file', 'voice'])
+                ->whereNotNull('file_path')
+                ->with(['chat.potentialCustomer', 'chat.employee', 'chat.admin']);
+
+            // إضافة فلتر للشات المحدد إذا لزم الأمر
+            if ($specificChatId) {
+                $query->where('chat_id', $specificChatId);
+            } else {
+                // فقط الشاتات التي يملكها المدير الحالي
+                $query->whereHas('chat', function ($q) {
+                    $q->where('admin_id', auth('admin')->id());
+                });
+            }
+
+            $messages = $query->get();
+
+            // إنشاء ملف معلومات الشاتات
+            $chatInfo = [];
+            $processedChats = [];
+
+            foreach ($messages as $message) {
+                $chat = $message->chat;
+                $filePath = storage_path('app/public/customer-chat/' . $message->file_path);
+
+                if (file_exists($filePath)) {
+                    // تنظيم الملفات حسب الشات
+                    $customerName = Str::slug($chat->potentialCustomer->customer_name ?? 'عميل_محذوف');
+                    $chatFolder = "Customer_Chat_{$chat->id}_{$customerName}";
+
+                    // تحديد نوع المجلد (files أو voices)
+                    $typeFolder = $message->message_type === 'voice' ? 'voices' : 'files';
+
+                    // مسار الملف في الـ ZIP
+                    $zipFilePath = $chatFolder . '/' . $typeFolder . '/' . $message->file_name;
+
+                    // إضافة الملف للـ ZIP
+                    $zip->addFile($filePath, $zipFilePath);
+
+                    // جمع معلومات الشات
+                    if (!isset($processedChats[$chat->id])) {
+                        $chatInfo[] = [
+                            'chat_id' => $chat->id,
+                            'customer_name' => $chat->potentialCustomer->customer_name ?? 'عميل محذوف',
+                            'customer_phone' => $chat->potentialCustomer->phone ?? 'غير محدد',
+                            'work_description' => $chat->potentialCustomer->work_description ?? 'غير محدد',
+                            'admin' => $chat->admin->name ?? 'غير محدد',
+                            'employee' => $chat->employee->name ?? 'غير محدد',
+                            'status' => $chat->status,
+                            'priority' => $chat->priority,
+                            'created_at' => $chat->created_at->format('Y-m-d H:i:s'),
+                            'messages_count' => $chat->messages()->count(),
+                            'files_count' => $chat->messages()->whereIn('message_type', ['file', 'voice'])->count()
+                        ];
+                        $processedChats[$chat->id] = true;
+                    }
+                }
+            }
+
+            // إنشاء ملف README مع معلومات الشاتات
+            $readmeContent = $this->generateCustomerChatReadmeContent($chatInfo, $specificChatId);
+            $zip->addFromString('README.txt', $readmeContent);
+
+            // إنشاء ملف JSON مع التفاصيل الكاملة
+            $detailsContent = json_encode([
+                'backup_date' => date('Y-m-d H:i:s'),
+                'backup_type' => $specificChatId ? 'single_customer_chat' : 'all_customer_chats',
+                'admin_id' => auth('admin')->id(),
+                'admin_name' => auth('admin')->user()->name,
+                'chats' => $chatInfo,
+                'total_files' => $messages->count()
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+            $zip->addFromString('backup_details.json', $detailsContent);
+
+            $zip->close();
+
+            return response()->download($backupPath)->deleteFileAfterSend();
+        }
+
+        return response()->json(['error' => 'فشل في إنشاء النسخة الاحتياطية'], 500);
+    }
+
+    // إنشاء محتوى ملف README للتواصل مع العملاء
+    private function generateCustomerChatReadmeContent($chatInfo, $specificChatId = null)
+    {
+        $content = "=== نسخة احتياطية من ملفات شاتات التواصل مع العملاء ===\n\n";
+        $content .= "تاريخ النسخة الاحتياطية: " . date('Y-m-d H:i:s') . "\n";
+        $content .= "نوع النسخة: " . ($specificChatId ? 'شات عميل واحد' : 'جميع شاتات العملاء') . "\n";
+        $content .= "المدير: " . auth('admin')->user()->name . "\n\n";
+
+        $content .= "=== هيكل المجلدات ===\n";
+        $content .= "Customer_Chat_{ID}_{CUSTOMER_NAME}/\n";
+        $content .= "  ├── files/          (الملفات المرفقة)\n";
+        $content .= "  └── voices/         (التسجيلات الصوتية)\n\n";
+
+        $content .= "=== معلومات شاتات العملاء ===\n\n";
+
+        foreach ($chatInfo as $chat) {
+            $content .= "شات رقم: {$chat['chat_id']}\n";
+            $content .= "اسم العميل: {$chat['customer_name']}\n";
+            $content .= "رقم الهاتف: {$chat['customer_phone']}\n";
+            $content .= "وصف العمل: " . substr($chat['work_description'], 0, 100) . "...\n";
+            $content .= "المدير: {$chat['admin']}\n";
+            $content .= "الموظف المسؤول: {$chat['employee']}\n";
+            $content .= "الحالة: {$chat['status']}\n";
+            $content .= "الأولوية: {$chat['priority']}\n";
+            $content .= "تاريخ الإنشاء: {$chat['created_at']}\n";
+            $content .= "عدد الرسائل: {$chat['messages_count']}\n";
+            $content .= "عدد الملفات: {$chat['files_count']}\n";
+            $content .= str_repeat('-', 60) . "\n\n";
+        }
+
+        $content .= "=== ملاحظات ===\n";
+        $content .= "- جميع الملفات محفوظة بأسمائها الأصلية\n";
+        $content .= "- التسجيلات الصوتية بصيغة WebM\n";
+        $content .= "- الملفات منظمة حسب اسم العميل ورقم الشات\n";
+        $content .= "- تفاصيل إضافية متوفرة في ملف backup_details.json\n";
+
+        return $content;
     }
 }

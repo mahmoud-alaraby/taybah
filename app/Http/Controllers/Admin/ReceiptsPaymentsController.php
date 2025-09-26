@@ -67,17 +67,26 @@ class ReceiptsPaymentsController extends Controller
         }
 
         // التعديل هنا: جلب الموظفين النشطين الديناميكي عبر البيرمشن
-        $employees = Employee::whereHas('roles.permissions', function($q){
-                $q->where('name', 'receipts_payments');
-            })
+        $employees = Employee::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'receipts_payments');
+        })
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
         $months = [
-            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
-            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
-            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
+            1 => 'يناير',
+            2 => 'فبراير',
+            3 => 'مارس',
+            4 => 'أبريل',
+            5 => 'مايو',
+            6 => 'يونيو',
+            7 => 'يوليو',
+            8 => 'أغسطس',
+            9 => 'سبتمبر',
+            10 => 'أكتوبر',
+            11 => 'نوفمبر',
+            12 => 'ديسمبر'
         ];
 
         return view('admin.receipts-payments.index', compact(
@@ -232,15 +241,24 @@ class ReceiptsPaymentsController extends Controller
         $achievementPercentage = $targetAmount > 0 ? round(($totalReceipts / $targetAmount) * 100, 2) : 0;
 
         $months = [
-            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
-            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
-            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
+            1 => 'يناير',
+            2 => 'فبراير',
+            3 => 'مارس',
+            4 => 'أبريل',
+            5 => 'مايو',
+            6 => 'يونيو',
+            7 => 'يوليو',
+            8 => 'أغسطس',
+            9 => 'سبتمبر',
+            10 => 'أكتوبر',
+            11 => 'نوفمبر',
+            12 => 'ديسمبر'
         ];
 
         // التعديل هنا: الموظفين الديناميكي البيرمشن
-        $employees = Employee::whereHas('roles.permissions', function($q){
-                $q->where('name', 'receipts_payments');
-            })
+        $employees = Employee::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'receipts_payments');
+        })
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
@@ -259,5 +277,115 @@ class ReceiptsPaymentsController extends Controller
             'selectedEmployee',
             'employees'
         ));
+    }
+
+    public function editReceipt(Receipt $receipt)
+    {
+        $currentYear = request()->get('year', date('Y'));
+        $currentMonth = request()->get('month', date('n'));
+        $employeeId = request()->get('employee_id');
+
+        // التحقق من أن المقبوض يخص نفس الموظف المحدد (إن وجد)
+        if ($employeeId && $receipt->employee_id != $employeeId) {
+            return redirect()->route('admin.receipts-payments.index', [
+                'year' => $currentYear,
+                'month' => $currentMonth,
+                'employee_id' => $employeeId
+            ])->with('error', 'لا يمكن تعديل هذا المقبوض');
+        }
+
+        $employees = Employee::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'receipts_payments');
+        })
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'receipt' => $receipt,
+            'employees' => $employees
+        ]);
+    }
+
+    public function updateReceipt(Request $request, Receipt $receipt)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'description' => 'required|string|max:500',
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+        ], [
+            'employee_id.required' => 'الموظف مطلوب',
+            'description.required' => 'البيان مطلوب',
+            'amount.required' => 'المبلغ مطلوب',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من صفر',
+            'date.required' => 'التاريخ مطلوب',
+        ]);
+
+        $receipt->update([
+            'employee_id' => $request->employee_id,
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'employee_id', 'search']))
+            ->with('success', 'تم تحديث المقبوض بنجاح');
+    }
+
+    public function editPayment(Payment $payment)
+    {
+        $currentYear = request()->get('year', date('Y'));
+        $currentMonth = request()->get('month', date('n'));
+        $employeeId = request()->get('employee_id');
+
+        // التحقق من أن المدفوع يخص نفس الموظف المحدد (إن وجد)
+        if ($employeeId && $payment->employee_id != $employeeId) {
+            return redirect()->route('admin.receipts-payments.index', [
+                'year' => $currentYear,
+                'month' => $currentMonth,
+                'employee_id' => $employeeId
+            ])->with('error', 'لا يمكن تعديل هذا المدفوع');
+        }
+
+        $employees = Employee::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'receipts_payments');
+        })
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'payment' => $payment,
+            'employees' => $employees
+        ]);
+    }
+
+    public function updatePayment(Request $request, Payment $payment)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'description' => 'required|string|max:500',
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+        ], [
+            'employee_id.required' => 'الموظف مطلوب',
+            'description.required' => 'البيان مطلوب',
+            'amount.required' => 'المبلغ مطلوب',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من صفر',
+            'date.required' => 'التاريخ مطلوب',
+        ]);
+
+        $payment->update([
+            'employee_id' => $request->employee_id,
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'employee_id', 'search']))
+            ->with('success', 'تم تحديث المدفوع بنجاح');
     }
 }
