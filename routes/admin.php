@@ -409,4 +409,20 @@ Route::middleware('admin.auth')->group(function () {
         // تحميل ملفات شات محدد - Route جديد
         Route::get('/{workChat}/backup-files', [App\Http\Controllers\Admin\WorkChatController::class, 'backupChatFiles'])->name('backup-chat-files');
     });
+
+    // حجوزات الطباعة - إضافة هذا الكود بعد حجوزات التصوير والمونتاج
+   // حجوزات الطباعة - إضافة هذا الكود بعد حجوزات التصوير والمونتاج
+    Route::prefix('print-booking')->name('admin.print-booking.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PrintBookingController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\PrintBookingController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\PrintBookingController::class, 'store'])->name('store');
+        Route::get('/{printBooking}', [App\Http\Controllers\Admin\PrintBookingController::class, 'show'])->name('show');
+        Route::get('/{printBooking}/edit', [App\Http\Controllers\Admin\PrintBookingController::class, 'edit'])->name('edit');
+        Route::put('/{printBooking}', [App\Http\Controllers\Admin\PrintBookingController::class, 'update'])->name('update');
+        Route::delete('/{printBooking}', [App\Http\Controllers\Admin\PrintBookingController::class, 'destroy'])->name('destroy');
+
+        // Routes الإحصائيات والطباعة
+        Route::get('/stats/dashboard', [App\Http\Controllers\Admin\PrintBookingController::class, 'getDashboardStats'])->name('stats');
+        Route::get('/print/report', [App\Http\Controllers\Admin\PrintBookingController::class, 'printReport'])->name('print');
+    });
 });
