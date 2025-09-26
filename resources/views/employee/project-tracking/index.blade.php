@@ -12,10 +12,13 @@
         }
 
         @keyframes pulse-border {
-            0%, 100% {
+
+            0%,
+            100% {
                 border-color: rgba(234, 179, 8, 0.5);
                 box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
             }
+
             50% {
                 border-color: rgba(234, 179, 8, 1);
                 box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
@@ -43,9 +46,11 @@
             0% {
                 transform: translate(0, 0px);
             }
+
             50% {
                 transform: translate(0, -10px);
             }
+
             100% {
                 transform: translate(0, 0px);
             }
@@ -285,13 +290,16 @@
                     updateMyTimerDisplay() {
                         if (this.myActiveTimer && this.myTimerStartTime) {
                             if (this.myActiveTimer.is_paused) {
-                                // إذا كان متوقف، اعرض الوقت المحفوظ فقط
+                                // إذا متوقف، اعرض الوقت المحفوظ فقط
                                 this.activeTimerDisplay = this.formatSeconds(this.myActiveTimer.total_seconds || 0);
                             } else {
-                                // إذا كان يعمل، احسب من start_time الحالي
+                                // *** الحل المهم: احسب من start_time فقط، لا تجمع مع total_seconds ***
                                 const now = new Date();
                                 const diffInSeconds = Math.floor((now - this.myTimerStartTime) / 1000);
-                                this.activeTimerDisplay = this.formatSeconds(diffInSeconds);
+
+                                // تأكد من أن الرقم موجب
+                                const displaySeconds = Math.max(0, diffInSeconds);
+                                this.activeTimerDisplay = this.formatSeconds(displaySeconds);
                             }
                         }
                     },
@@ -401,8 +409,29 @@
                             const data = await response.json();
 
                             if (data.success) {
+                                // *** الحل: تحديث بيانات الـ timer بالكامل من السيرفر ***
+
+                                // إيقاف العداد القديم
+                                if (this.timerInterval) {
+                                    clearInterval(this.timerInterval);
+                                    this.timerInterval = null;
+                                }
+
+                                // تحديث بيانات Timer من السيرفر
+                                this.myActiveTimer = data.timer;
+
+                                // *** هنا المهم: استخدم start_time الجديد من السيرفر ***
+                                this.myTimerStartTime = new Date(data.timer.start_time);
+
+                                // بدء العداد من جديد
+                                this.updateMyTimerDisplay();
+                                this.timerInterval = setInterval(() => {
+                                    this.updateMyTimerDisplay();
+                                }, 1000);
+
                                 await this.showAlert('تم استئناف العداد بنجاح', 'success');
-                                location.reload();
+                                // لا حاجة لـ location.reload() هنا
+
                             } else {
                                 this.showAlert(data.message, 'error');
                             }
@@ -411,7 +440,6 @@
                             this.showAlert('حدث خطأ أثناء استئناف العداد', 'error');
                         }
                     },
-
                     async stopTimer() {
                         if (this.timerInterval) {
                             clearInterval(this.timerInterval);
@@ -442,7 +470,7 @@
                         }
                     },
 
-                    async restartTimer(timerId) {
+               async restartTimer(timerId) {
                         try {
                             const response = await fetch('{{ route('employee.project-tracking.restart-timer') }}', {
                                 method: 'POST',
@@ -460,9 +488,10 @@
                             const data = await response.json();
 
                             if (data.success) {
+                                // رسالة تظهر أنه كمل نفس الجلسة
                                 const message = `تم استكمال الجلسة #${data.session_number} من ${data.continued_from}`;
                                 await this.showAlert(message, 'success');
-                                location.reload();
+                                location.reload(); // ريفريش مباشر
                             } else {
                                 this.showAlert(data.message, 'error');
                             }

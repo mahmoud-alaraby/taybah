@@ -161,7 +161,6 @@ class ProjectTrackingController extends Controller
             'timer' => $timer->load(['project', 'task']),
         ]);
     }
-
     public function pauseTimer(Request $request)
     {
         $employeeId = auth('employee')->id();
@@ -178,7 +177,7 @@ class ProjectTrackingController extends Controller
             ], 400);
         }
 
-        // حساب الوقت المنقضي حتى الآن وحفظه
+        // *** حساب الوقت المنقضي حتى الآن وحفظه ***
         $pauseTime = now();
         $totalSeconds = $activeTimer->start_time->diffInSeconds($pauseTime);
 
@@ -194,7 +193,7 @@ class ProjectTrackingController extends Controller
             'is_paused' => true,
             'pause_count' => $activeTimer->pause_count + 1,
             'pause_resume_log' => $pauseLog,
-            'total_seconds' => $totalSeconds
+            'total_seconds' => $totalSeconds // حفظ الوقت المنقضي
         ]);
 
         return response()->json([
@@ -202,10 +201,10 @@ class ProjectTrackingController extends Controller
             'message' => 'تم إيقاف العداد مؤقتاً',
             'timer' => $activeTimer->fresh(),
             'pause_count' => $activeTimer->pause_count,
-            'is_paused' => $activeTimer->is_paused
+            'is_paused' => true
         ]);
     }
-
+    
     public function resumeTimer(Request $request)
     {
         $employeeId = auth('employee')->id();
@@ -238,23 +237,25 @@ class ProjectTrackingController extends Controller
             'time' => $resumeTime->toISOString()
         ];
 
-        // الحل: تحديث start_time بحيث يعكس الوقت المحفوظ
+        // *** الحل المهم: حساب start_time بحيث يعكس الوقت المحفوظ ***
         $savedSeconds = $activeTimer->total_seconds;
         $newStartTime = $resumeTime->copy()->subSeconds($savedSeconds);
 
         $activeTimer->update([
-            'start_time' => $newStartTime,
+            'start_time' => $newStartTime, // هذا صحيح
             'is_paused' => false,
             'resume_count' => $activeTimer->resume_count + 1,
-            'pause_resume_log' => $pauseLog
+            'pause_resume_log' => $pauseLog,
+            // *** مهم: لا تغير total_seconds هنا! ***
+            // 'total_seconds' => 0, // ❌ خطأ شائع
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'تم استئناف العداد بنجاح',
-            'timer' => $activeTimer->fresh(),
+            'timer' => $activeTimer->fresh()->load(['project', 'task']), // إرجاع البيانات المحدثة
             'resume_count' => $activeTimer->resume_count,
-            'is_paused' => $activeTimer->is_paused
+            'is_paused' => false
         ]);
     }
 
