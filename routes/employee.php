@@ -125,6 +125,18 @@ Route::middleware('employee.auth')->group(function () {
         });
     });
 
+    Route::middleware(['employee.permission:print_booking'])->group(function () {
+    Route::prefix('print-booking')->name('employee.print-booking.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Employee\PrintBookingController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Employee\PrintBookingController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Employee\PrintBookingController::class, 'store'])->name('store');
+        Route::get('/{printBooking}', [App\Http\Controllers\Employee\PrintBookingController::class, 'show'])->name('show');
+        Route::get('/{printBooking}/edit', [App\Http\Controllers\Employee\PrintBookingController::class, 'edit'])->name('edit');
+        Route::put('/{printBooking}', [App\Http\Controllers\Employee\PrintBookingController::class, 'update'])->name('update');
+        Route::delete('/{printBooking}', [App\Http\Controllers\Employee\PrintBookingController::class, 'destroy'])->name('destroy');
+    });
+});
+
     // سيستم تكاليف التصميم
     Route::middleware('employee.permission:designers_account')
         ->prefix('designer-task-accounts')

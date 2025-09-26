@@ -425,4 +425,24 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/stats/dashboard', [App\Http\Controllers\Admin\PrintBookingController::class, 'getDashboardStats'])->name('stats');
         Route::get('/print/report', [App\Http\Controllers\Admin\PrintBookingController::class, 'printReport'])->name('print');
     });
+
+      // تكاليف الطباعة
+    Route::prefix('print-costs')->name('admin.print-costs.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PrintCostsController::class, 'index'])->name('index');
+        Route::post('/receipt', [App\Http\Controllers\Admin\PrintCostsController::class, 'storeReceipt'])->name('receipt.store');
+        Route::post('/payment', [App\Http\Controllers\Admin\PrintCostsController::class, 'storePayment'])->name('payment.store');
+        Route::post('/target', [App\Http\Controllers\Admin\PrintCostsController::class, 'updateTarget'])->name('target');
+        
+        // Routes للتعديل
+        Route::get('/receipt/{receipt}/edit', [App\Http\Controllers\Admin\PrintCostsController::class, 'editReceipt'])->name('receipt.edit');
+        Route::put('/receipt/{receipt}', [App\Http\Controllers\Admin\PrintCostsController::class, 'updateReceipt'])->name('receipt.update');
+        
+        Route::get('/payment/{payment}/edit', [App\Http\Controllers\Admin\PrintCostsController::class, 'editPayment'])->name('payment.edit');
+        Route::put('/payment/{payment}', [App\Http\Controllers\Admin\PrintCostsController::class, 'updatePayment'])->name('payment.update');
+        
+        Route::delete('/receipt/{receipt}', [App\Http\Controllers\Admin\PrintCostsController::class, 'deleteReceipt'])->name('receipt.delete');
+        Route::delete('/payment/{payment}', [App\Http\Controllers\Admin\PrintCostsController::class, 'deletePayment'])->name('payment.delete');
+        
+        Route::get('/print', [App\Http\Controllers\Admin\PrintCostsController::class, 'printReport'])->name('print');
+    });
 });

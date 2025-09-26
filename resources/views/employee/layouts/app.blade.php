@@ -313,6 +313,13 @@
                         <span class="flex-1">حجوزات التصوير والمونتاج</span>
                     </a>
                     @endif
+                            @if(auth('employee')->user()->hasPermission('print_booking'))
+                    <a href="{{ route('employee.print-booking.index') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.print-booking.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                        <i class="fas fa-print ml-2 text-sm"></i>
+                        <span class="flex-1">حجوزات الطباعة</span>
+                    </a>
+                    @endif
 
                         @if(auth('employee')->user()->hasPermission('photography_costs'))
     <a href="{{ route('employee.photography-costs.index') }}"

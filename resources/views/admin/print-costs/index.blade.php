@@ -1,19 +1,19 @@
 @extends('admin.layouts.app')
 
-@section('title', 'متابعة المقبوضات والمدفوعات')
-@section('page-title', 'متابعة المقبوضات والمدفوعات')
-@section('page-subtitle', 'إدارة المقبوضات والمدفوعات ومتابعة التارجت الشهري لجميع الموظفين')
+@section('title', 'متابعة تكاليف الطباعة')
+@section('page-title', 'متابعة تكاليف الطباعة')
+@section('page-subtitle', 'إدارة تكاليف الطباعة ومتابعة التارجت الشهري لجميع الموظفين')
 
 @section('content')
     <div class="space-y-6">
         <!-- Header with Target & Summary Stats -->
         <div class="bg-white shadow rounded-lg">
             <!-- Target Setting Section -->
-            <div class="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-4 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-bold flex items-center">
-                        <i class="fas fa-bullseye ml-2"></i>
-                        تحديد التارجت الشهري - {{ $months[$currentMonth] }} {{ $currentYear }}
+                        <i class="fas fa-print ml-2"></i>
+                        تحديد التارجت الشهري للطباعة - {{ $months[$currentMonth] }} {{ $currentYear }}
                     </h2>
                     <div class="text-right">
                         <div class="text-2xl font-bold">{{ $achievementPercentage }}%</div>
@@ -21,7 +21,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('admin.receipts-payments.target') }}" method="POST" class="grid grid-cols-5 gap-3">
+                <form action="{{ route('admin.print-costs.target') }}" method="POST" class="grid grid-cols-5 gap-3">
                     @csrf
                     <div>
                         <label class="block text-xs font-medium mb-1 text-white opacity-90">الموظف</label>
@@ -68,7 +68,7 @@
 
                     <div class="flex items-end">
                         <button type="submit"
-                            class="w-full h-10 bg-white text-red-600 font-bold rounded-md hover:bg-gray-50 transition-colors shadow text-sm">
+                            class="w-full h-10 bg-white text-purple-600 font-bold rounded-md hover:bg-gray-50 transition-colors shadow text-sm">
                             <i class="fas fa-save ml-1"></i>
                             حفظ
                         </button>
@@ -76,7 +76,7 @@
                 </form>
             </div>
 
-            <!-- Statistics Cards - إحصائيات المقبوضات والمدفوعات بشكل عصري -->
+            <!-- Statistics Cards -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <!-- إجمالي المقبوضات -->
@@ -155,14 +155,14 @@
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">البحث في البيان</label>
                     <input type="text" name="search" value="{{ $search }}"
-                        placeholder="مثال: بروفايل الأستاذ علي"
-                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                        placeholder="مثال: طباعة بروشورات"
+                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
                     <select name="employee_id"
-                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
                         <option value="">جميع الموظفين</option>
                         @foreach ($employees as $employee)
                             <option value="{{ $employee->id }}" {{ $employee->id == $employeeId ? 'selected' : '' }}>
@@ -175,7 +175,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">السنة</label>
                     <select name="year"
-                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
                         @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
                             <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>
                                 {{ $y }}</option>
@@ -186,7 +186,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
                     <select name="month"
-                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
                         @foreach ($months as $num => $name)
                             <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>
                                 {{ $name }}</option>
@@ -203,7 +203,7 @@
                 </div>
 
                 <div>
-                    <a href="{{ route('admin.receipts-payments.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search, 'employee_id' => $employeeId]) }}"
+                    <a href="{{ route('admin.print-costs.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search, 'employee_id' => $employeeId]) }}"
                         target="_blank"
                         class="w-full h-9 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center">
                         <i class="fas fa-print ml-1"></i>
@@ -231,7 +231,7 @@
 
                 <!-- Receipt Form -->
                 <div id="receiptForm" class="hidden bg-green-50 border-b border-green-200 p-4">
-                    <form action="{{ route('admin.receipts-payments.receipt.store') }}" method="POST">
+                    <form action="{{ route('admin.print-costs.receipt.store') }}" method="POST">
                         @csrf
                         <div class="space-y-3">
                             <div>
@@ -258,7 +258,7 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
-                                    <input type="number" name="amount" placeholder="0.00" step="0.01"
+                                    <input type="number" name="amount" step="0.01"
                                         min="0.01" required
                                         class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
                                 </div>
@@ -269,60 +269,52 @@
                                         class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="flex space-x-2 space-x-reverse">
-                                <button type="submit"
-                                    class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
-                                    حفظ
-                                </button>
-                                <button type="button" onclick="toggleForm('receiptForm')"
-                                    class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
-                                    إلغاء
-                                </button>
-                            </div>
+                        <div class="flex space-x-2 space-x-reverse mt-3">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
+                                حفظ
+                            </button>
+                            <button type="button" onclick="toggleForm('receiptForm')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Receipts Table -->
                 <div class="overflow-hidden">
-                    @if ($receipts->count() > 0)
+                    @if($receipts->count() > 0)
                         <table class="min-w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات
-                                    </th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المنشئ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach ($receipts as $receipt)
+                                @foreach($receipts as $receipt)
                                     <tr class="hover:bg-green-50">
                                         <td class="px-3 py-2 text-sm text-gray-900">
                                             <div class="font-medium">{{ $receipt->employee->name }}</div>
                                             <div class="text-xs text-gray-500">{{ $receipt->employee->employee_id }}</div>
                                         </td>
-                                        <td class="px-3 py-2 text-sm text-gray-900">
-                                            {{ Str::limit($receipt->description, 25) }}</td>
-                                        <td class="px-3 py-2 text-sm font-medium text-green-600">
-                                            {{ number_format($receipt->amount, 2) }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date->format('Y-m-d') }}
-                                        </td>
+                                        <td class="px-3 py-2 text-sm text-gray-900">{{ Str::limit($receipt->description, 25) }}</td>
+                                        <td class="px-3 py-2 text-sm font-medium text-green-600">{{ number_format($receipt->amount, 2) }}</td>
+                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date }}</td>
                                         <td class="px-3 py-2 text-sm">
-                                            <div class="flex space-x-2 space-x-reverse">
-                                                <button onclick="editReceipt({{ $receipt->id }})"
-                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
+                                            <div class="flex space-x-1 space-x-reverse">
+                                                <button onclick="editReceipt({{ $receipt->id }})" 
+                                                        class="text-blue-600 hover:text-blue-800">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button onclick="deleteItem('receipt', {{ $receipt->id }})"
-                                                    class="text-red-600 hover:text-red-800" title="حذف">
+                                                <button onclick="deleteItem('receipt', {{ $receipt->id }})" 
+                                                        class="text-red-600 hover:text-red-800">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -331,9 +323,9 @@
                                 @endforeach
                             </tbody>
                         </table>
-
+                        
                         <!-- Pagination -->
-                        @if ($receipts->hasPages())
+                        @if($receipts->hasPages())
                             <div class="px-4 py-3 border-t">
                                 {{ $receipts->appends(request()->query())->links() }}
                             </div>
@@ -345,180 +337,247 @@
                         </div>
                     @endif
                 </div>
-
             </div>
 
-            <!-- Payments Table -->
-            <div class="overflow-hidden">
-                @if ($payments->count() > 0)
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($payments as $payment)
-                                <tr class="hover:bg-red-50">
-                                    <td class="px-3 py-2 text-sm text-gray-900">
-                                        <div class="font-medium">{{ $payment->employee->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $payment->employee->employee_id }}</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-sm text-gray-900">
-                                        {{ Str::limit($payment->description, 25) }}</td>
-                                    <td class="px-3 py-2 text-sm font-medium text-red-600">
-                                        {{ number_format($payment->amount, 2) }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date->format('Y-m-d') }}</td>
-                                    <td class="px-3 py-2 text-sm">
-                                        <div class="flex space-x-2 space-x-reverse">
-                                            <button onclick="editPayment({{ $payment->id }})"
-                                                class="text-blue-600 hover:text-blue-800" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteItem('payment', {{ $payment->id }})"
-                                                class="text-red-600 hover:text-red-800" title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            <!-- المدفوعات -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="bg-red-600 text-white px-4 py-3 flex items-center justify-between">
+                    <h3 class="font-bold flex items-center">
+                        <i class="fas fa-arrow-up ml-2"></i>
+                        المدفوعات ({{ $payments->total() }})
+                    </h3>
+                    <button onclick="toggleForm('paymentForm')"
+                        class="bg-white text-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-gray-50">
+                        <i class="fas fa-plus ml-1"></i>
+                        إضافة
+                    </button>
+                </div>
 
-                    <!-- Pagination -->
-                    @if ($payments->hasPages())
-                        <div class="px-4 py-3 border-t">
-                            {{ $payments->appends(request()->query())->links() }}
+                <!-- Payment Form -->
+                <div id="paymentForm" class="hidden bg-red-50 border-b border-red-200 p-4">
+                    <form action="{{ route('admin.print-costs.payment.store') }}" method="POST">
+                        @csrf
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
+                                    required>
+                                    <option value="">اختر الموظف</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}"
+                                            {{ $employee->id == $employeeId ? 'selected' : '' }}>
+                                            {{ $employee->name }} ({{ $employee->employee_id }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea name="description" rows="2" placeholder="وصف المدفوع..." required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" name="amount" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" name="date" value="{{ date('Y-m-d') }}" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2 space-x-reverse mt-3">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
+                                حفظ
+                            </button>
+                            <button type="button" onclick="toggleForm('paymentForm')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Payments Table -->
+                <div class="overflow-hidden">
+                    @if($payments->count() > 0)
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المنشئ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($payments as $payment)
+                                    <tr class="hover:bg-red-50">
+                                        <td class="px-3 py-2 text-sm text-gray-900">
+                                            <div class="font-medium">{{ $payment->employee->name }}</div>
+                                            <div class="text-xs text-gray-500">{{ $payment->employee->employee_id }}</div>
+                                        </td>
+                                        <td class="px-3 py-2 text-sm text-gray-900">{{ Str::limit($payment->description, 25) }}</td>
+                                        <td class="px-3 py-2 text-sm font-medium text-red-600">{{ number_format($payment->amount, 2) }}</td>
+                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date }}</td>
+                                        <td class="px-3 py-2 text-sm">
+                                            <div class="flex space-x-1 space-x-reverse">
+                                                <button onclick="editPayment({{ $payment->id }})" 
+                                                        class="text-blue-600 hover:text-blue-800">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteItem('payment', {{ $payment->id }})" 
+                                                        class="text-red-600 hover:text-red-800">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        
+                        <!-- Pagination -->
+                        @if($payments->hasPages())
+                            <div class="px-4 py-3 border-t">
+                                {{ $payments->appends(request()->query())->links() }}
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                            <p class="text-sm">لا توجد مدفوعات</p>
                         </div>
                     @endif
-                @else
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
-                        <p class="text-sm">لا توجد مدفوعات</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Modal للتعديل على المقبوضات -->
-            <div id="editReceiptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-                <div class="flex items-center justify-center min-h-screen px-4">
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                        <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg">
-                            <h3 class="font-bold">تعديل المقبوض</h3>
-                        </div>
-                        <form id="editReceiptForm" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="p-4 space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
-                                    <select id="editReceiptEmployeeId" name="employee_id"
-                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
-                                        required>
-                                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                                    <textarea id="editReceiptDescription" name="description" rows="2" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
-                                        <input type="number" id="editReceiptAmount" name="amount" step="0.01"
-                                            min="0.01" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                                        <input type="date" id="editReceiptDate" name="date" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
-                                <button type="submit"
-                                    class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
-                                    حفظ التعديل
-                                </button>
-                                <button type="button" onclick="closeModal('editReceiptModal')"
-                                    class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
-                                    إلغاء
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
-
-            <!-- Modal للتعديل على المدفوعات -->
-            <div id="editPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-                <div class="flex items-center justify-center min-h-screen px-4">
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                        <div class="bg-red-600 text-white px-4 py-3 rounded-t-lg">
-                            <h3 class="font-bold">تعديل المدفوع</h3>
-                        </div>
-                        <form id="editPaymentForm" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="p-4 space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
-                                    <select id="editPaymentEmployeeId" name="employee_id"
-                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
-                                        required>
-                                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                                    <textarea id="editPaymentDescription" name="description" rows="2" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
-                                        <input type="number" id="editPaymentAmount" name="amount" step="0.01"
-                                            min="0.01" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                                        <input type="date" id="editPaymentDate" name="date" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
-                                <button type="submit"
-                                    class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
-                                    حفظ التعديل
-                                </button>
-                                <button type="button" onclick="closeModal('editPaymentModal')"
-                                    class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
-                                    إلغاء
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
+        <!-- Modal للتعديل على المقبوضات -->
+        <div id="editReceiptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg">
+                        <h3 class="font-bold">تعديل المقبوض</h3>
+                    </div>
+                    <form id="editReceiptForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select id="editReceiptEmployeeId" name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
+                                    required>
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea id="editReceiptDescription" name="description" rows="2" required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" id="editReceiptAmount" name="amount" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" id="editReceiptDate" name="date" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
+                                حفظ التعديل
+                            </button>
+                            <button type="button" onclick="closeModal('editReceiptModal')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal للتعديل على المدفوعات -->
+        <div id="editPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="bg-red-600 text-white px-4 py-3 rounded-t-lg">
+                        <h3 class="font-bold">تعديل المدفوع</h3>
+                    </div>
+                    <form id="editPaymentForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select id="editPaymentEmployeeId" name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
+                                    required>
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea id="editPaymentDescription" name="description" rows="2" required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" id="editPaymentAmount" name="amount" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" id="editPaymentDate" name="date" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
+                                حفظ التعديل
+                            </button>
+                            <button type="button" onclick="closeModal('editPaymentModal')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 @endsection
 
@@ -554,7 +613,7 @@
                 if (result.isConfirmed) {
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = `/admin/receipts-payments/${type}/${id}`;
+                    form.action = `/admin/print-costs/${type}/${id}`;
 
                     const csrfField = document.createElement('input');
                     csrfField.type = 'hidden';
@@ -574,13 +633,6 @@
             });
         }
 
-        // Auto-hide forms after successful submission
-        @if (session('success'))
-            document.addEventListener('DOMContentLoaded', function() {
-                const forms = document.querySelectorAll('#receiptForm, #paymentForm');
-                forms.forEach(form => form.classList.add('hidden'));
-            });
-        @endif
         function editReceipt(receiptId) {
             const currentParams = new URLSearchParams(window.location.search);
             const year = currentParams.get('year') || new Date().getFullYear();
@@ -588,7 +640,7 @@
             const employeeId = currentParams.get('employee_id') || '';
 
             const url =
-                `/admin/receipts-payments/receipt/${receiptId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
+                `/admin/print-costs/receipt/${receiptId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -610,7 +662,7 @@
 
                         // تحديث action للفورم
                         document.getElementById('editReceiptForm').action =
-                            `/admin/receipts-payments/receipt/${receiptId}?${currentParams.toString()}`;
+                            `/admin/print-costs/receipt/${receiptId}?${currentParams.toString()}`;
 
                         // إظهار الـ modal
                         document.getElementById('editReceiptModal').classList.remove('hidden');
@@ -629,7 +681,7 @@
             const employeeId = currentParams.get('employee_id') || '';
 
             const url =
-                `/admin/receipts-payments/payment/${paymentId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
+                `/admin/print-costs/payment/${paymentId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -651,7 +703,7 @@
 
                         // تحديث action للفورم
                         document.getElementById('editPaymentForm').action =
-                            `/admin/receipts-payments/payment/${paymentId}?${currentParams.toString()}`;
+                            `/admin/print-costs/payment/${paymentId}?${currentParams.toString()}`;
 
                         // إظهار الـ modal
                         document.getElementById('editPaymentModal').classList.remove('hidden');
@@ -680,9 +732,13 @@
             }
         });
 
-        // التحقق من نجاح العملية وإخفاء الـ modals
+        // Auto-hide forms after successful submission
         @if (session('success'))
             document.addEventListener('DOMContentLoaded', function() {
+                const forms = document.querySelectorAll('#receiptForm, #paymentForm');
+                forms.forEach(form => form.classList.add('hidden'));
+                
+                // إخفاء الـ modals أيضاً
                 const modals = ['editReceiptModal', 'editPaymentModal'];
                 modals.forEach(modalId => {
                     const modal = document.getElementById(modalId);
@@ -692,5 +748,29 @@
                 });
             });
         @endif
+
+        // دالة confirmDelete (يجب أن تكون موجودة في ملف منفصل أو في layout)
+        function confirmDelete(title, text) {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'نعم، احذف!',
+                cancelButtonText: 'إلغاء'
+            });
+        }
+
+        // دالة showAlert (يجب أن تكون موجودة في ملف منفصل أو في layout)
+        function showAlert(message, type) {
+            Swal.fire({
+                title: type === 'error' ? 'خطأ!' : 'نجح!',
+                text: message,
+                icon: type,
+                confirmButtonText: 'موافق'
+            });
+        }
     </script>
 @endpush
