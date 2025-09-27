@@ -161,7 +161,7 @@ class PrintCostsController extends Controller
     public function updateTarget(Request $request)
     {
         $request->validate([
-          
+
             'target_amount' => 'required|numeric|min:0',
             'year' => 'required|integer|min:2020|max:2050',
             'month' => 'required|integer|min:1|max:12',
@@ -328,7 +328,7 @@ class PrintCostsController extends Controller
             'date' => $request->date,
         ]);
 
-        return redirect()->route('admin.print-costs.index', request()->only(['year', 'month', 'employee_id', 'search']))
+        return redirect()->route('admin.print-costs.index', request()->only(['year', 'month', 'search']))
             ->with('success', 'تم تحديث المقبوض بنجاح');
     }
 
@@ -382,7 +382,7 @@ class PrintCostsController extends Controller
             'date' => $request->date,
         ]);
 
-        return redirect()->route('admin.print-costs.index', request()->only(['year', 'month', 'employee_id', 'search']))
+        return redirect()->route('admin.print-costs.index', request()->only(['year', 'month', 'search']))
             ->with('success', 'تم تحديث المدفوع بنجاح');
     }
 }

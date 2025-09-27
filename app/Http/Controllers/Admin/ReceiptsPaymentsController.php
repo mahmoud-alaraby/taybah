@@ -330,7 +330,7 @@ class ReceiptsPaymentsController extends Controller
             'date' => $request->date,
         ]);
 
-        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'employee_id', 'search']))
+        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'search']))
             ->with('success', 'تم تحديث المقبوض بنجاح');
     }
 
@@ -385,7 +385,7 @@ class ReceiptsPaymentsController extends Controller
             'date' => $request->date,
         ]);
 
-        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'employee_id', 'search']))
+        return redirect()->route('admin.receipts-payments.index', request()->only(['year', 'month', 'search']))
             ->with('success', 'تم تحديث المدفوع بنجاح');
     }
 }
