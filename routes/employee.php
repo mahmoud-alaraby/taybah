@@ -37,6 +37,18 @@ Route::middleware('employee.auth')->group(function () {
 
         Route::post('/receipts-payments/target', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'updateTarget'])
             ->name('employee.receipts-payments.target');
+ // الروتس الجديدة للتعديل
+    Route::get('/receipts-payments/receipt/{receipt}/edit', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'editReceipt'])
+        ->name('employee.receipts-payments.receipt.edit');
+
+    Route::put('/receipts-payments/receipt/{receipt}', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'updateReceipt'])
+        ->name('employee.receipts-payments.receipt.update');
+
+    Route::get('/receipts-payments/payment/{payment}/edit', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'editPayment'])
+        ->name('employee.receipts-payments.payment.edit');
+
+    Route::put('/receipts-payments/payment/{payment}', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'updatePayment'])
+        ->name('employee.receipts-payments.payment.update');
 
         Route::delete('/receipts-payments/receipt/{receipt}', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'deleteReceipt'])
             ->name('employee.receipts-payments.receipt.delete');
@@ -228,7 +240,6 @@ Route::middleware('employee.permission:print_costs')->group(function () {
     });
 
     // ============== النظام الجديد للتواصل مع العملاء ==============
-    // ============== النظام الجديد للتواصل مع العملاء ==============
     Route::middleware(['employee.permission:customer_communication'])
         ->prefix('customer-communication')
         ->name('employee.customer-communication.')
@@ -273,15 +284,19 @@ Route::middleware('employee.permission:print_costs')->group(function () {
         })->name('employee.montage-follow-up');
     });
 
-    // سيستم المهام 
-    Route::prefix('employee')->name('employee.')->group(function () {
-        Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
-        Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('tasks.store');
-        Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('tasks.update');
-        Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('tasks.destroy');
-        Route::get('/tasks/print', [EmployeeTaskController::class, 'print'])->name('tasks.print');
-    });
+    // سيستم المهام - المحدث مع إضافة routes التعديل
 
+Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('employee.tasks.index');
+Route::post('/tasks', [EmployeeTaskController::class, 'store'])->name('employee.tasks.store');
+Route::get('/tasks/{task}', [EmployeeTaskController::class, 'show'])->name('employee.tasks.show');
+Route::post('/tasks/{task}/edit', [EmployeeTaskController::class, 'edit'])->name('employee.tasks.edit');
+Route::patch('/tasks/{task}', [EmployeeTaskController::class, 'update'])->name('employee.tasks.update');
+Route::delete('/tasks/{task}', [EmployeeTaskController::class, 'destroy'])->name('employee.tasks.destroy');
+Route::get('/tasks/print', [EmployeeTaskController::class, 'print'])->name('employee.tasks.print');
+
+    // باقي الـ routes...
+    // [باقي الكود كما هو دون تغيير]
+    
     // نظام متابعة المشاريع والمهام مع الاستوب ووتش
     Route::middleware('employee.permission:project_tracking')->group(function () {
         Route::prefix('project-tracking')->name('employee.project-tracking.')->group(function () {

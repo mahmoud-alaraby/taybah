@@ -130,9 +130,9 @@
         <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b">
             <h2 class="text-lg font-semibold text-gray-900 flex items-center">
                 <i class="fas fa-users text-green-500 ml-2"></i>
-                اختيار الموظف المسؤول
+                اختيار الموظف للتواصل مع العميل
             </h2>
-            <p class="text-sm text-green-700 mt-1">اختر أحد الموظفين المؤهلين للتواصل مع العملاء</p>
+            <p class="text-sm text-green-700 mt-1">يمكنك اختيار الموظف المسؤول الحالي أو أي موظف آخر مؤهل للتواصل مع العملاء</p>
         </div>
         
         <div class="p-6">
@@ -148,29 +148,90 @@
                     </p>
                 </div>
             @else
+                @php
+                    // البحث عن الموظف المسؤول الحالي
+                    $responsibleEmployee = null;
+                    foreach($employeesWithPermission as $emp) {
+                        if ($customer->employee_id == $emp->id) {
+                            $responsibleEmployee = $emp;
+                            break;
+                        }
+                    }
+                    
+                    // ترتيب الموظفين - المسؤول أولاً ثم الباقين
+                    $sortedEmployees = $employeesWithPermission->sortByDesc(function($emp) use ($customer) {
+                        return $emp->id == $customer->employee_id ? 1 : 0;
+                    });
+                @endphp
+                
+                <!-- ملخص الموظفين المتاحين -->
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium text-blue-900">إجمالي الموظفين المؤهلين للتواصل مع العملاء</h3>
+                            <p class="text-sm text-blue-700">
+                                @if($responsibleEmployee)
+                                    الموظف المسؤول الحالي هو: <span class="font-semibold">{{ $responsibleEmployee->name }}</span> (محدد افتراضياً)
+                                @else
+                                    لا يوجد موظف مسؤول محدد، يرجى اختيار موظف للتواصل
+                                @endif
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-4 py-2 rounded-full text-lg font-bold bg-blue-500 text-white">
+                                {{ $employeesWithPermission->count() }}
+                            </span>
+                            <p class="text-xs text-blue-600 mt-1">موظف مؤهل</p>
+                        </div>
+                    </div>
+                </div>
+
                 <form action="{{ route('admin.customer-communication.assign-employee', $customer->id) }}" method="POST">
                     @csrf
                     
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-cog text-gray-600 ml-2"></i>
+                        اختر الموظف للتواصل (الموظف المسؤول محدد افتراضياً)
+                    </h3>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        @foreach($employeesWithPermission as $employee)
+                        @foreach($sortedEmployees as $employee)
+                            @php
+                                $isResponsible = ($responsibleEmployee && $responsibleEmployee->id == $employee->id);
+                                $isDefaultSelected = $isResponsible || (!$responsibleEmployee && $loop->first);
+                            @endphp
                             <div class="relative">
                                 <input type="radio" 
                                        name="employee_id" 
                                        value="{{ $employee->id }}" 
                                        id="employee_{{ $employee->id }}"
-                                       class="sr-only employee-radio">
+                                       class="sr-only employee-radio"
+                                       {{ $isDefaultSelected ? 'checked' : '' }}>
                                 
                                 <label for="employee_{{ $employee->id }}" 
-                                       class="block p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-blue-300 hover:shadow-md employee-card">
+                                       class="block p-4 border-2 {{ $isDefaultSelected ? ($isResponsible ? 'border-green-500 bg-green-50' : 'border-blue-500 bg-blue-50') : 'border-gray-200' }} rounded-xl cursor-pointer transition-all duration-300 hover:border-blue-300 hover:shadow-md employee-card">
                                     
                                     <!-- Employee Info -->
                                     <div class="flex items-center space-x-3 space-x-reverse">
-                                        <div class="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                                        <div class="h-12 w-12 rounded-full bg-gradient-to-r {{ $isResponsible ? 'from-green-500 to-green-600' : 'from-blue-500 to-blue-600' }} flex items-center justify-center text-white font-bold text-lg">
                                             {{ substr($employee->name, 0, 1) }}
                                         </div>
                                         
                                         <div class="flex-1 min-w-0">
-                                            <h3 class="font-semibold text-gray-900 truncate">{{ $employee->name }}</h3>
+                                            <div class="flex items-center flex-wrap gap-2">
+                                                <h3 class="font-semibold text-gray-900 truncate">{{ $employee->name }}</h3>
+                                                @if($isResponsible)
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500 text-white">
+                                                        <i class="fas fa-crown ml-1"></i>
+                                                        الموظف المسؤول
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500 text-white">
+                                                        <i class="fas fa-user-check ml-1"></i>
+                                                        مؤهل
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <p class="text-sm text-gray-600">{{ $employee->position ?? 'موظف' }}</p>
                                             <p class="text-xs text-gray-500">{{ $employee->department ?? 'قسم العملاء' }}</p>
                                         </div>
@@ -195,10 +256,20 @@
                                             </div>
                                         @endif
                                     </div>
+
+                                    @if($isResponsible)
+                                        <!-- إشارة للموظف المسؤول -->
+                                        <div class="mt-3 p-2 bg-green-100 rounded-lg border border-green-200">
+                                            <p class="text-xs text-green-800 font-medium text-center">
+                                                <i class="fas fa-star text-green-600 ml-1"></i>
+                                                هذا هو الموظف المسؤول الحالي عن العميل
+                                            </p>
+                                        </div>
+                                    @endif
                                     
                                     <!-- Selection Indicator -->
-                                    <div class="absolute top-2 left-2 w-5 h-5 border-2 border-gray-300 rounded-full selection-indicator">
-                                        <div class="w-3 h-3 bg-blue-500 rounded-full m-0.5 opacity-0 selection-dot"></div>
+                                    <div class="absolute top-2 left-2 w-5 h-5 border-2 {{ $isDefaultSelected ? ($isResponsible ? 'border-green-500 bg-green-50' : 'border-blue-500 bg-blue-50') : 'border-gray-300' }} rounded-full selection-indicator">
+                                        <div class="w-3 h-3 {{ $isDefaultSelected ? ($isResponsible ? 'bg-green-500' : 'bg-blue-500') : 'bg-blue-500' }} rounded-full m-0.5 selection-dot {{ $isDefaultSelected ? 'opacity-100' : 'opacity-0' }}"></div>
                                     </div>
                                 </label>
                             </div>
@@ -209,10 +280,9 @@
                     <div class="flex items-center justify-center pt-6 border-t">
                         <button type="submit" 
                                 id="submitBtn"
-                                disabled
-                                class="bg-gray-400 text-white px-8 py-3 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg disabled:cursor-not-allowed">
+                                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg">
                             <i class="fas fa-comments ml-2"></i>
-                            إنشاء الشات وتعيين الموظف
+                            إنشاء الشات مع الموظف المختار
                         </button>
                     </div>
                 </form>
@@ -233,14 +303,15 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', function() {
             // Reset all cards
             employeeCards.forEach(card => {
-                card.classList.remove('border-blue-500', 'bg-blue-50', 'shadow-lg');
+                card.classList.remove('border-blue-500', 'bg-blue-50', 'shadow-lg', 'border-green-500', 'bg-green-50');
                 card.classList.add('border-gray-200');
                 
                 const indicator = card.querySelector('.selection-indicator');
                 const dot = card.querySelector('.selection-dot');
-                indicator.classList.remove('border-blue-500', 'bg-blue-50');
+                indicator.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50');
                 indicator.classList.add('border-gray-300');
-                dot.classList.add('opacity-0');
+                dot.classList.remove('bg-green-500');
+                dot.classList.add('bg-blue-500', 'opacity-0');
             });
             
             // Highlight selected card
@@ -253,12 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const dot = selectedCard.querySelector('.selection-dot');
                 indicator.classList.remove('border-gray-300');
                 indicator.classList.add('border-blue-500', 'bg-blue-50');
-                dot.classList.remove('opacity-0');
-                
-                // Enable submit button
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('bg-gray-400');
-                submitBtn.classList.add('bg-gradient-to-r', 'from-green-500', 'to-green-600', 'hover:from-green-600', 'hover:to-green-700');
+                dot.classList.remove('opacity-0', 'bg-green-500');
+                dot.classList.add('bg-blue-500', 'opacity-100');
             }
         });
     });

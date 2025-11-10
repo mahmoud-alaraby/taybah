@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Employee/ReceiptsPaymentsController.php
 
 namespace App\Http\Controllers\Employee;
 
@@ -118,6 +117,100 @@ class ReceiptsPaymentsController extends Controller
 
         return redirect()->route('employee.receipts-payments')
                        ->with('success', 'تم إضافة المدفوع بنجاح');
+    }
+
+    public function editReceipt(Receipt $receipt)
+    {
+        // التأكد من أن المقبوض يخص الموظف الحالي
+        if ($receipt->employee_id !== auth('employee')->id()) {
+            abort(403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'receipt' => [
+                'id' => $receipt->id,
+                'description' => $receipt->description,
+                'amount' => $receipt->amount,
+                'date' => $receipt->date->format('Y-m-d'),
+                'employee_id' => $receipt->employee_id
+            ]
+        ]);
+    }
+
+    public function updateReceipt(Request $request, Receipt $receipt)
+    {
+        // التأكد من أن المقبوض يخص الموظف الحالي
+        if ($receipt->employee_id !== auth('employee')->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'description' => 'required|string|max:500',
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+        ], [
+            'description.required' => 'البيان مطلوب',
+            'amount.required' => 'المبلغ مطلوب',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من صفر',
+            'date.required' => 'التاريخ مطلوب',
+        ]);
+
+        $receipt->update([
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->route('employee.receipts-payments', $request->only(['year', 'month', 'search']))
+                       ->with('success', 'تم تحديث المقبوض بنجاح');
+    }
+
+    public function editPayment(Payment $payment)
+    {
+        // التأكد من أن المدفوع يخص الموظف الحالي
+        if ($payment->employee_id !== auth('employee')->id()) {
+            abort(403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'payment' => [
+                'id' => $payment->id,
+                'description' => $payment->description,
+                'amount' => $payment->amount,
+                'date' => $payment->date->format('Y-m-d'),
+                'employee_id' => $payment->employee_id
+            ]
+        ]);
+    }
+
+    public function updatePayment(Request $request, Payment $payment)
+    {
+        // التأكد من أن المدفوع يخص الموظف الحالي
+        if ($payment->employee_id !== auth('employee')->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'description' => 'required|string|max:500',
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+        ], [
+            'description.required' => 'البيان مطلوب',
+            'amount.required' => 'المبلغ مطلوب',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من صفر',
+            'date.required' => 'التاريخ مطلوب',
+        ]);
+
+        $payment->update([
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->route('employee.receipts-payments', $request->only(['year', 'month', 'search']))
+                       ->with('success', 'تم تحديث المدفوع بنجاح');
     }
 
     public function updateTarget(Request $request)

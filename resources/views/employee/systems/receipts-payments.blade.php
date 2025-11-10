@@ -230,7 +230,7 @@
             <!-- Receipts Table -->
             <div class="overflow-hidden">
                 @if($receipts->count() > 0)
-                    <table class="min-w-full">
+                    <table class="min-w-full<table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
@@ -246,10 +246,16 @@
                                     <td class="px-3 py-2 text-sm font-medium text-green-600">{{ number_format($receipt->amount, 2) }}</td>
                                     <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date->format('Y-m-d') }}</td>
                                     <td class="px-3 py-2 text-sm">
-                                        <button onclick="deleteItem('receipt', {{ $receipt->id }})" 
-                                                class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <div class="flex space-x-2 space-x-reverse">
+                                            <button onclick="editReceipt({{ $receipt->id }})" 
+                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteItem('receipt', {{ $receipt->id }})" 
+                                                    class="text-red-600 hover:text-red-800" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -340,10 +346,16 @@
                                     <td class="px-3 py-2 text-sm font-medium text-red-600">{{ number_format($payment->amount, 2) }}</td>
                                     <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date->format('Y-m-d') }}</td>
                                     <td class="px-3 py-2 text-sm">
-                                        <button onclick="deleteItem('payment', {{ $payment->id }})" 
-                                                class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <div class="flex space-x-2 space-x-reverse">
+                                            <button onclick="editPayment({{ $payment->id }})" 
+                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteItem('payment', {{ $payment->id }})" 
+                                                    class="text-red-600 hover:text-red-800" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -365,11 +377,123 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal للتعديل على المقبوضات -->
+    <div id="editReceiptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg">
+                    <h3 class="font-bold">تعديل المقبوض</h3>
+                </div>
+                <form id="editReceiptForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                            <textarea id="editReceiptDescription" name="description" rows="2" required
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                <input type="number" id="editReceiptAmount" name="amount" step="0.01" min="0.01" required
+                                       class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                <input type="date" id="editReceiptDate" name="date" required
+                                       class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                        <button type="submit"
+                            class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
+                            حفظ التعديل
+                        </button>
+                        <button type="button" onclick="closeModal('editReceiptModal')"
+                            class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal للتعديل على المدفوعات -->
+    <div id="editPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="bg-red-600 text-white px-4 py-3 rounded-t-lg">
+                    <h3 class="font-bold">تعديل المدفوع</h3>
+                </div>
+                <form id="editPaymentForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                            <textarea id="editPaymentDescription" name="description" rows="2" required
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                <input type="number" id="editPaymentAmount" name="amount" step="0.01" min="0.01" required
+                                       class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                <input type="date" id="editPaymentDate" name="date" required
+                                       class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                        <button type="submit"
+                            class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
+                            حفظ التعديل
+                        </button>
+                        <button type="button" onclick="closeModal('editPaymentModal')"
+                            class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+// منع ظهور الـ modal تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // التأكد من أن جميع الـ modals مخفية عند التحميل
+    const modals = ['editReceiptModal', 'editPaymentModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    });
+
+    // إخفاء الفورمز عند النجاح
+    @if(session('success'))
+        const forms = document.querySelectorAll('#receiptForm, #paymentForm');
+        forms.forEach(form => form.classList.add('hidden'));
+    @endif
+});
+
 function toggleForm(formId) {
     const form = document.getElementById(formId);
     const isHidden = form.classList.contains('hidden');
@@ -429,12 +553,100 @@ function deleteItem(type, id) {
     });
 }
 
-// Auto-hide forms after successful submission
-@if(session('success'))
-    document.addEventListener('DOMContentLoaded', function() {
-        const forms = document.querySelectorAll('#receiptForm, #paymentForm');
-        forms.forEach(form => form.classList.add('hidden'));
-    });
-@endif
+function editReceipt(receiptId) {
+    // منع أي events أخرى من التداخل
+    event.preventDefault();
+    event.stopPropagation();
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const year = currentParams.get('year') || new Date().getFullYear();
+    const month = currentParams.get('month') || (new Date().getMonth() + 1);
+
+    const url = `/employee/receipts-payments/receipt/${receiptId}/edit?year=${year}&month=${month}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // ملء بيانات المقبوض
+                document.getElementById('editReceiptDescription').value = data.receipt.description;
+                document.getElementById('editReceiptAmount').value = data.receipt.amount;
+                document.getElementById('editReceiptDate').value = data.receipt.date;
+
+                // تحديث action للفورم
+                document.getElementById('editReceiptForm').action = 
+                    `/employee/receipts-payments/receipt/${receiptId}?${currentParams.toString()}`;
+
+                // إظهار الـ modal
+                document.getElementById('editReceiptModal').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطأ في تحميل بيانات المقبوض');
+        });
+}
+
+function editPayment(paymentId) {
+    // منع أي events أخرى من التداخل
+    event.preventDefault();
+    event.stopPropagation();
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const year = currentParams.get('year') || new Date().getFullYear();
+    const month = currentParams.get('month') || (new Date().getMonth() + 1);
+
+    const url = `/employee/receipts-payments/payment/${paymentId}/edit?year=${year}&month=${month}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // ملء بيانات المدفوع
+                document.getElementById('editPaymentDescription').value = data.payment.description;
+                document.getElementById('editPaymentAmount').value = data.payment.amount;
+                document.getElementById('editPaymentDate').value = data.payment.date;
+
+                // تحديث action للفورم
+                document.getElementById('editPaymentForm').action = 
+                    `/employee/receipts-payments/payment/${paymentId}?${currentParams.toString()}`;
+
+                // إظهار الـ modal
+                document.getElementById('editPaymentModal').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطأ في تحميل بيانات المدفوع');
+        });
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// إغلاق الـ modal عند الضغط على الخلفية فقط
+document.addEventListener('click', function(event) {
+    // التأكد من أن الضغطة على الخلفية وليس على المحتوى
+    if (event.target.classList.contains('bg-gray-600') && event.target.classList.contains('bg-opacity-50')) {
+        const modals = ['editReceiptModal', 'editPaymentModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+});
+
+// منع إرسال الفورم عند الضغط على Enter في الحقول
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && event.target.matches('input, select')) {
+        // السماح بـ Enter فقط في textarea وأزرار الإرسال
+        if (!event.target.matches('textarea, button[type="submit"]')) {
+            event.preventDefault();
+        }
+    }
+});
 </script>
 @endpush

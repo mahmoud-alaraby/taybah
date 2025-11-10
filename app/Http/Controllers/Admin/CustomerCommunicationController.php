@@ -16,61 +16,61 @@ use ZipArchive;
 
 class CustomerCommunicationController extends Controller
 {
-    public function index(Request $request)
-    {
-        $filter = $request->input('filter', 'all');
-        $admin = auth('admin')->user();
+ public function index(Request $request)
+{
+    $filter = $request->input('filter', 'all');
+    $admin = auth('admin')->user();
 
-        // الحصول على الموظفين الذين لديهم صلاحية customer_communication
-        $employeesWithPermission = Employee::whereHas('roles.permissions', function ($query) {
-            $query->where('name', 'customer_communication');
-        })->get();
+    // الحصول على الموظفين الذين لديهم صلاحية customer_communication
+    $employeesWithPermission = Employee::whereHas('roles.permissions', function ($query) {
+        $query->where('name', 'customer_communication');
+    })->get();
 
-        // الحصول على العملاء المطلوب التواصل معهم
-        $query = PotentialCustomer::where(function ($q) {
-            $q->whereJsonContains('customer_classifications', 'requested_call')
-                ->orWhereJsonContains('customer_classifications', 'requested_visit');
-        });
+    // الحصول على العملاء المطلوب التواصل معهم
+    $query = PotentialCustomer::where(function ($q) {
+        $q->whereJsonContains('customer_classifications', 'requested_call')
+            ->orWhereJsonContains('customer_classifications', 'requested_visit');
+    });
 
-        // تطبيق الفلاتر
-        if ($filter === 'calls_pending') {
-            $query = PotentialCustomer::whereJsonContains('customer_classifications', 'requested_call');
-        } elseif ($filter === 'visits_pending') {
-            $query = PotentialCustomer::whereJsonContains('customer_classifications', 'requested_visit');
-        } elseif ($filter === 'high_priority') {
-            $query->whereJsonContains('customer_classifications', 'difficult_customer');
-        } elseif ($filter === 'unread') {
-            $customerIds = CustomerChat::whereHas('messages', function ($msgQuery) {
+    // تطبيق الفلاتر
+    if ($filter === 'calls_pending') {
+        $query = PotentialCustomer::whereJsonContains('customer_classifications', 'requested_call');
+    } elseif ($filter === 'visits_pending') {
+        $query = PotentialCustomer::whereJsonContains('customer_classifications', 'requested_visit');
+    } elseif ($filter === 'high_priority') {
+        $query->whereJsonContains('customer_classifications', 'difficult_customer');
+    } elseif ($filter === 'unread') {
+        $customerIds = CustomerChat::whereHas('messages', function ($msgQuery) {
+            $msgQuery->where('sender_type', 'employee')
+                ->where('is_read', false);
+        })->pluck('potential_customer_id')->toArray();
+        $query->whereIn('id', $customerIds);
+    } elseif ($filter === 'my_chats') {
+        // إظهار الشاتات التي يديرها هذا الأدمن فقط
+        $customerIds = CustomerChat::where('admin_id', $admin->id)
+            ->pluck('potential_customer_id')
+            ->toArray();
+        $query->whereIn('id', $customerIds);
+    }
+
+   $customers = $query->with(['customerChat' => function ($q) use ($employeesWithPermission) {
+        $q->whereIn('employee_id', $employeesWithPermission->pluck('id'))
+            ->with(['employee', 'admin']);
+    }])
+        ->withCount(['customerChat as unread_count' => function ($q) {
+            $q->whereHas('messages', function ($msgQuery) {
                 $msgQuery->where('sender_type', 'employee')
                     ->where('is_read', false);
-            })->pluck('potential_customer_id')->toArray();
-            $query->whereIn('id', $customerIds);
-        } elseif ($filter === 'my_chats') {
-            // إظهار الشاتات التي يديرها هذا الأدمن فقط
-            $customerIds = CustomerChat::where('admin_id', $admin->id)
-                ->pluck('potential_customer_id')
-                ->toArray();
-            $query->whereIn('id', $customerIds);
-        }
-
-        $customers = $query->with(['customerChat' => function ($q) use ($employeesWithPermission) {
-            $q->whereIn('employee_id', $employeesWithPermission->pluck('id'))
-                ->with(['employee', 'admin']);
+            });
         }])
-            ->withCount(['customerChat as unread_count' => function ($q) {
-                $q->whereHas('messages', function ($msgQuery) {
-                    $msgQuery->where('sender_type', 'employee')
-                        ->where('is_read', false);
-                });
-            }])
-            ->orderBy('created_at', 'desc')
-            ->paginate(12);
+        ->orderBy('created_at', 'desc')
+        ->paginate(12);
 
-        // الإحصائيات
-        $stats = $this->getAdminStats();
+    // الإحصائيات
+    $stats = $this->getAdminStats();
 
-        return view('admin.customer_communication.index', compact('customers', 'filter', 'stats', 'employeesWithPermission'));
-    }
+    return view('admin.customer_communication.index', compact('customers', 'filter', 'stats', 'employeesWithPermission'));
+}
 
     public function show($potentialCustomerId)
     {

@@ -76,7 +76,7 @@
                 </form>
             </div>
 
-            <!-- Statistics Cards - إحصائيات المقبوضات والمدفوعات بشكل عصري -->
+            <!-- Statistics Cards -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <!-- إجمالي المقبوضات -->
@@ -106,7 +106,7 @@
                             </svg>
                         </div>
                     </div>
-                    <!-- صافي السيولة أو العجز -->
+                    <!-- صافي السيولة -->
                     <div
                         class="rounded-xl p-4 text-white shadow-lg
             {{ $netAmount >= 0
@@ -146,7 +146,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
         <!-- Filters & Actions -->
@@ -290,16 +289,11 @@
                         <table class="min-w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ
-                                    </th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات
-                                    </th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -313,8 +307,7 @@
                                             {{ Str::limit($receipt->description, 25) }}</td>
                                         <td class="px-3 py-2 text-sm font-medium text-green-600">
                                             {{ number_format($receipt->amount, 2) }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date->format('Y-m-d') }}
-                                        </td>
+                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date->format('Y-m-d') }}</td>
                                         <td class="px-3 py-2 text-sm">
                                             <div class="flex space-x-2 space-x-reverse">
                                                 <button onclick="editReceipt({{ $receipt->id }})"
@@ -345,185 +338,271 @@
                         </div>
                     @endif
                 </div>
-
             </div>
 
-            <!-- Payments Table -->
-            <div class="overflow-hidden">
-                @if ($payments->count() > 0)
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($payments as $payment)
-                                <tr class="hover:bg-red-50">
-                                    <td class="px-3 py-2 text-sm text-gray-900">
-                                        <div class="font-medium">{{ $payment->employee->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $payment->employee->employee_id }}</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-sm text-gray-900">
-                                        {{ Str::limit($payment->description, 25) }}</td>
-                                    <td class="px-3 py-2 text-sm font-medium text-red-600">
-                                        {{ number_format($payment->amount, 2) }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date->format('Y-m-d') }}</td>
-                                    <td class="px-3 py-2 text-sm">
-                                        <div class="flex space-x-2 space-x-reverse">
-                                            <button onclick="editPayment({{ $payment->id }})"
-                                                class="text-blue-600 hover:text-blue-800" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteItem('payment', {{ $payment->id }})"
-                                                class="text-red-600 hover:text-red-800" title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-
-                    <!-- Pagination -->
-                    @if ($payments->hasPages())
-                        <div class="px-4 py-3 border-t">
-                            {{ $payments->appends(request()->query())->links() }}
-                        </div>
-                    @endif
-                @else
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
-                        <p class="text-sm">لا توجد مدفوعات</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Modal للتعديل على المقبوضات -->
-            <div id="editReceiptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-                <div class="flex items-center justify-center min-h-screen px-4">
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                        <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg">
-                            <h3 class="font-bold">تعديل المقبوض</h3>
-                        </div>
-                        <form id="editReceiptForm" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="p-4 space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
-                                    <select id="editReceiptEmployeeId" name="employee_id"
-                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
-                                        required>
-                                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                                    <textarea id="editReceiptDescription" name="description" rows="2" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
-                                        <input type="number" id="editReceiptAmount" name="amount" step="0.01"
-                                            min="0.01" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                                        <input type="date" id="editReceiptDate" name="date" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
-                                <button type="submit"
-                                    class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
-                                    حفظ التعديل
-                                </button>
-                                <button type="button" onclick="closeModal('editReceiptModal')"
-                                    class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
-                                    إلغاء
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+            <!-- المدفوعات -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="bg-red-600 text-white px-4 py-3 flex items-center justify-between">
+                    <h3 class="font-bold flex items-center">
+                        <i class="fas fa-arrow-up ml-2"></i>
+                        المدفوعات ({{ $payments->total() }})
+                    </h3>
+                    <button onclick="toggleForm('paymentForm')"
+                        class="bg-white text-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-gray-50">
+                        <i class="fas fa-plus ml-1"></i>
+                        إضافة
+                    </button>
                 </div>
-            </div>
 
-            <!-- Modal للتعديل على المدفوعات -->
-            <div id="editPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-                <div class="flex items-center justify-center min-h-screen px-4">
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                        <div class="bg-red-600 text-white px-4 py-3 rounded-t-lg">
-                            <h3 class="font-bold">تعديل المدفوع</h3>
-                        </div>
-                        <form id="editPaymentForm" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="p-4 space-y-3">
+                <!-- Payment Form -->
+                <div id="paymentForm" class="hidden bg-red-50 border-b border-red-200 p-4">
+                    <form action="{{ route('admin.receipts-payments.payment.store') }}" method="POST">
+                        @csrf
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
+                                    required>
+                                    <option value="">اختر الموظف</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}"
+                                            {{ $employee->id == $employeeId ? 'selected' : '' }}>
+                                            {{ $employee->name }} ({{ $employee->employee_id }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea name="description" rows="2" placeholder="وصف المدفوع..." required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
-                                    <select id="editPaymentEmployeeId" name="employee_id"
-                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
-                                        required>
-                                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                                    </select>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" name="amount" placeholder="0.00" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                                    <textarea id="editPaymentDescription" name="description" rows="2" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
-                                        <input type="number" id="editPaymentAmount" name="amount" step="0.01"
-                                            min="0.01" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                                        <input type="date" id="editPaymentDate" name="date" required
-                                            class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                                    </div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" name="date" value="{{ date('Y-m-d') }}" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
                                 </div>
                             </div>
 
-                            <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                            <div class="flex space-x-2 space-x-reverse">
                                 <button type="submit"
                                     class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
-                                    حفظ التعديل
+                                    حفظ
                                 </button>
-                                <button type="button" onclick="closeModal('editPaymentModal')"
+                                <button type="button" onclick="toggleForm('paymentForm')"
                                     class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
                                     إلغاء
                                 </button>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Payments Table -->
+                <div class="overflow-hidden">
+                    @if ($payments->count() > 0)
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach ($payments as $payment)
+                                    <tr class="hover:bg-red-50">
+                                        <td class="px-3 py-2 text-sm text-gray-900">
+                                            <div class="font-medium">{{ $payment->employee->name }}</div>
+                                            <div class="text-xs text-gray-500">{{ $payment->employee->employee_id }}</div>
+                                        </td>
+                                        <td class="px-3 py-2 text-sm text-gray-900">
+                                            {{ Str::limit($payment->description, 25) }}</td>
+                                        <td class="px-3 py-2 text-sm font-medium text-red-600">
+                                            {{ number_format($payment->amount, 2) }}</td>
+                                        <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date->format('Y-m-d') }}</td>
+                                        <td class="px-3 py-2 text-sm">
+                                            <div class="flex space-x-2 space-x-reverse">
+                                                <button onclick="editPayment({{ $payment->id }})"
+                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteItem('payment', {{ $payment->id }})"
+                                                    class="text-red-600 hover:text-red-800" title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        <!-- Pagination -->
+                        @if ($payments->hasPages())
+                            <div class="px-4 py-3 border-t">
+                                {{ $payments->appends(request()->query())->links() }}
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                            <p class="text-sm">لا توجد مدفوعات</p>
+                        </div>
+                    @endif
                 </div>
             </div>
+        </div>
 
+        <!-- Modal للتعديل على المقبوضات -->
+        <div id="editReceiptModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg">
+                        <h3 class="font-bold">تعديل المقبوض</h3>
+                    </div>
+                    <form id="editReceiptForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select id="editReceiptEmployeeId" name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
+                                    required>
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea id="editReceiptDescription" name="description" rows="2" required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" id="editReceiptAmount" name="amount" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm text-center">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" id="editReceiptDate" name="date" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm">
+                                حفظ التعديل
+                            </button>
+                            <button type="button" onclick="closeModal('editReceiptModal')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal للتعديل على المدفوعات -->
+        <div id="editPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="bg-red-600 text-white px-4 py-3 rounded-t-lg">
+                        <h3 class="font-bold">تعديل المدفوع</h3>
+                    </div>
+                    <form id="editPaymentForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
+                                <select id="editPaymentEmployeeId" name="employee_id"
+                                    class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm"
+                                    required>
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
+                                <textarea id="editPaymentDescription" name="description" rows="2" required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                                    <input type="number" id="editPaymentAmount" name="amount" step="0.01"
+                                        min="0.01" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm text-center">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                    <input type="date" id="editPaymentDate" name="date" required
+                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 rounded-b-lg flex space-x-2 space-x-reverse">
+                            <button type="submit"
+                                class="flex-1 h-8 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-sm">
+                                حفظ التعديل
+                            </button>
+                            <button type="button" onclick="closeModal('editPaymentModal')"
+                                class="h-8 px-4 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
 
 @push('scripts')
     <script>
+        // منع ظهور الـ modal تلقائياً عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // التأكد من أن جميع الـ modals مخفية عند التحميل
+            const modals = ['editReceiptModal', 'editPaymentModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+
+            // إخفاء الفورمز عند النجاح
+            @if (session('success'))
+                const forms = document.querySelectorAll('#receiptForm, #paymentForm');
+                forms.forEach(form => form.classList.add('hidden'));
+            @endif
+        });
+
         function toggleForm(formId) {
             const form = document.getElementById(formId);
             const isHidden = form.classList.contains('hidden');
@@ -550,45 +629,53 @@
             const title = type === 'receipt' ? 'حذف المقبوض' : 'حذف المدفوع';
             const text = type === 'receipt' ? 'هل أنت متأكد من حذف هذا المقبوض؟' : 'هل أنت متأكد من حذف هذا المدفوع؟';
 
-            confirmDelete(title, text).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/admin/receipts-payments/${type}/${id}`;
-
-                    const csrfField = document.createElement('input');
-                    csrfField.type = 'hidden';
-                    csrfField.name = '_token';
-                    csrfField.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    form.appendChild(csrfField);
-
-                    const methodField = document.createElement('input');
-                    methodField.type = 'hidden';
-                    methodField.name = '_method';
-                    methodField.value = 'DELETE';
-                    form.appendChild(methodField);
-
-                    document.body.appendChild(form);
-                    form.submit();
+            // التأكد من وجود confirmDelete function
+            if (typeof confirmDelete === 'function') {
+                confirmDelete(title, text).then((result) => {
+                    if (result.isConfirmed) {
+                        submitDeleteForm(type, id);
+                    }
+                });
+            } else {
+                // fallback في حالة عدم وجود confirmDelete
+                if (confirm(text)) {
+                    submitDeleteForm(type, id);
                 }
-            });
+            }
         }
 
-        // Auto-hide forms after successful submission
-        @if (session('success'))
-            document.addEventListener('DOMContentLoaded', function() {
-                const forms = document.querySelectorAll('#receiptForm, #paymentForm');
-                forms.forEach(form => form.classList.add('hidden'));
-            });
-        @endif
+        function submitDeleteForm(type, id) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/receipts-payments/${type}/${id}`;
+
+            const csrfField = document.createElement('input');
+            csrfField.type = 'hidden';
+            csrfField.name = '_token';
+            csrfField.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfField);
+
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
         function editReceipt(receiptId) {
+            // منع أي events أخرى من التداخل
+            event.preventDefault();
+            event.stopPropagation();
+
             const currentParams = new URLSearchParams(window.location.search);
             const year = currentParams.get('year') || new Date().getFullYear();
             const month = currentParams.get('month') || (new Date().getMonth() + 1);
             const employeeId = currentParams.get('employee_id') || '';
 
-            const url =
-                `/admin/receipts-payments/receipt/${receiptId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
+            const url = `/admin/receipts-payments/receipt/${receiptId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -599,7 +686,7 @@
                         employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
                         data.employees.forEach(employee => {
                             const selected = employee.id === data.receipt.employee_id ? 'selected' : '';
-                            employeeSelect.innerHTML +=
+                            employeeSelect.innerHTML += 
                                 `<option value="${employee.id}" ${selected}>${employee.name} (${employee.employee_id})</option>`;
                         });
 
@@ -609,7 +696,7 @@
                         document.getElementById('editReceiptDate').value = data.receipt.date;
 
                         // تحديث action للفورم
-                        document.getElementById('editReceiptForm').action =
+                        document.getElementById('editReceiptForm').action = 
                             `/admin/receipts-payments/receipt/${receiptId}?${currentParams.toString()}`;
 
                         // إظهار الـ modal
@@ -618,18 +705,25 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('خطأ في تحميل بيانات المقبوض', 'error');
+                    if (typeof showAlert === 'function') {
+                        showAlert('خطأ في تحميل بيانات المقبوض', 'error');
+                    } else {
+                        alert('خطأ في تحميل بيانات المقبوض');
+                    }
                 });
         }
 
         function editPayment(paymentId) {
+            // منع أي events أخرى من التداخل
+            event.preventDefault();
+            event.stopPropagation();
+
             const currentParams = new URLSearchParams(window.location.search);
             const year = currentParams.get('year') || new Date().getFullYear();
             const month = currentParams.get('month') || (new Date().getMonth() + 1);
             const employeeId = currentParams.get('employee_id') || '';
 
-            const url =
-                `/admin/receipts-payments/payment/${paymentId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
+            const url = `/admin/receipts-payments/payment/${paymentId}/edit?year=${year}&month=${month}&employee_id=${employeeId}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -640,7 +734,7 @@
                         employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
                         data.employees.forEach(employee => {
                             const selected = employee.id === data.payment.employee_id ? 'selected' : '';
-                            employeeSelect.innerHTML +=
+                            employeeSelect.innerHTML += 
                                 `<option value="${employee.id}" ${selected}>${employee.name} (${employee.employee_id})</option>`;
                         });
 
@@ -650,7 +744,7 @@
                         document.getElementById('editPaymentDate').value = data.payment.date;
 
                         // تحديث action للفورم
-                        document.getElementById('editPaymentForm').action =
+                        document.getElementById('editPaymentForm').action = 
                             `/admin/receipts-payments/payment/${paymentId}?${currentParams.toString()}`;
 
                         // إظهار الـ modal
@@ -659,7 +753,11 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('خطأ في تحميل بيانات المدفوع', 'error');
+                    if (typeof showAlert === 'function') {
+                        showAlert('خطأ في تحميل بيانات المدفوع', 'error');
+                    } else {
+                        alert('خطأ في تحميل بيانات المدفوع');
+                    }
                 });
         }
 
@@ -667,9 +765,10 @@
             document.getElementById(modalId).classList.add('hidden');
         }
 
-        // إغلاق الـ modal عند الضغط خارجها
+        // إغلاق الـ modal عند الضغط على الخلفية فقط
         document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('bg-gray-600')) {
+            // التأكد من أن الضغطة على الخلفية وليس على المحتوى
+            if (event.target.classList.contains('bg-gray-600') && event.target.classList.contains('bg-opacity-50')) {
                 const modals = ['editReceiptModal', 'editPaymentModal'];
                 modals.forEach(modalId => {
                     const modal = document.getElementById(modalId);
@@ -680,17 +779,14 @@
             }
         });
 
-        // التحقق من نجاح العملية وإخفاء الـ modals
-        @if (session('success'))
-            document.addEventListener('DOMContentLoaded', function() {
-                const modals = ['editReceiptModal', 'editPaymentModal'];
-                modals.forEach(modalId => {
-                    const modal = document.getElementById(modalId);
-                    if (modal && !modal.classList.contains('hidden')) {
-                        modal.classList.add('hidden');
-                    }
-                });
-            });
-        @endif
+        // منع إرسال الفورم عند الضغط على Enter في الحقول
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && event.target.matches('input, select')) {
+                // السماح بـ Enter فقط في textarea وأزرار الإرسال
+                if (!event.target.matches('textarea, button[type="submit"]')) {
+                    event.preventDefault();
+                }
+            }
+        });
     </script>
 @endpush
