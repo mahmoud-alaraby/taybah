@@ -265,6 +265,14 @@
                                                 هذا هو الموظف المسؤول الحالي عن العميل
                                             </p>
                                         </div>
+                                    @else
+                                        <!-- إشارة للموظف المؤهل -->
+                                        <div class="mt-3 p-2 bg-blue-100 rounded-lg border border-blue-200">
+                                            <p class="text-xs text-blue-800 font-medium text-center">
+                                                <i class="fas fa-user-shield text-blue-600 ml-1"></i>
+                                                موظف مؤهل ولديه صلاحية التواصل مع العملاء
+                                            </p>
+                                        </div>
                                     @endif
                                     
                                     <!-- Selection Indicator -->
@@ -353,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 .employee-card {
     transition: all 0.3s ease;
+    min-height: 180px; /* تثبيت ارتفاع موحد لجميع الكروت */
 }
 
 .employee-card:hover {
@@ -379,6 +388,15 @@ document.addEventListener('DOMContentLoaded', function() {
     50% {
         opacity: 0.5;
     }
+}
+
+/* تحسينات إضافية للتصميم */
+.employee-card .border-blue-200 {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+.employee-card .border-green-200 {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.1) 100%);
 }
 </style>
 @endpush

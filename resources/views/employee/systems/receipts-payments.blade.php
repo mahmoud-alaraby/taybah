@@ -58,127 +58,125 @@
             </form>
         </div>
 
-       <!-- Summary Stats styled like the modern statistics cards you provided -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gray-50">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <!-- إجمالي المقبوضات -->
-        <div class="bg-gradient-to-r from-green-400 to-green-600 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">إجمالي المقبوضات</p>
-                    <p class="text-2xl font-bold">{{ number_format($totalReceipts, 2) }}</p>
+        <!-- Summary Stats -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gray-50">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- إجمالي المقبوضات -->
+                <div class="bg-gradient-to-r from-green-400 to-green-600 rounded-xl p-4 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">إجمالي المقبوضات</p>
+                            <p class="text-2xl font-bold">{{ number_format($totalReceipts, 2) }}</p>
+                        </div>
+                        <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path>
+                            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                        </svg>
+                    </div>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path>
-                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-                </svg>
-            </div>
-        </div>
 
-        <!-- إجمالي المدفوعات -->
-        <div class="bg-gradient-to-r from-red-400 to-red-600 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">إجمالي المدفوعات</p>
-                    <p class="text-2xl font-bold">{{ number_format($totalPayments, 2) }}</p>
+                <!-- إجمالي المدفوعات -->
+                <div class="bg-gradient-to-r from-red-400 to-red-600 rounded-xl p-4 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">إجمالي المدفوعات</p>
+                            <p class="text-2xl font-bold">{{ number_format($totalPayments, 2) }}</p>
+                        </div>
+                        <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414 1.414A9 9 0 1 0 12 21v0"></path>
+                        </svg>
+                    </div>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414 1.414A9 9 0 1 0 12 21v0"></path>
-                </svg>
-            </div>
-        </div>
 
-        <!-- صافي السيولة أو العجز -->
-        <div class="rounded-xl p-4 text-white shadow-lg
-            {{ $netAmount >= 0 
-                ? 'bg-gradient-to-r from-blue-500 to-blue-700' 
-                : 'bg-gradient-to-r from-orange-400 to-orange-600' }}">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">{{ $netAmount >= 0 ? 'سيولة متاحة' : 'عجز' }}</p>
-                    <p class="text-2xl font-bold">{{ number_format($netAmount, 2) }}</p>
+                <!-- صافي السيولة أو العجز -->
+                <div class="rounded-xl p-4 text-white shadow-lg
+                    {{ $netAmount >= 0 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-700' 
+                        : 'bg-gradient-to-r from-orange-400 to-orange-600' }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">{{ $netAmount >= 0 ? 'سيولة متاحة' : 'عجز' }}</p>
+                            <p class="text-2xl font-bold">{{ number_format($netAmount, 2) }}</p>
+                        </div>
+                        <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            @if($netAmount >= 0)
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0 0l-4-4m4 4l4-4"></path>
+                                <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                            @else
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17v-8m0 0l-4 4m4-4l4 4"></path>
+                                <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                            @endif
+                        </svg>
+                    </div>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    @if($netAmount >= 0)
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0 0l-4-4m4 4l4-4"></path>
-                        <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-                    @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17v-8m0 0l-4 4m4-4l4 4"></path>
-                        <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-                    @endif
-                </svg>
-            </div>
-        </div>
 
-        <!-- التارجت المحدد -->
-        <div class="bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl p-4 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm opacity-90">التارجت المحدد</p>
-                    <p class="text-2xl font-bold">{{ number_format($targetAmount, 2) }}</p>
+                <!-- التارجت المحدد -->
+                <div class="bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl p-4 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">التارجت المحدد</p>
+                            <p class="text-2xl font-bold">{{ number_format($targetAmount, 2) }}</p>
+                        </div>
+                        <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 12 13"></path>
+                            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                        </svg>
+                    </div>
                 </div>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 12 13"></path>
-                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-                </svg>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Filters & Actions -->
+    <div class="bg-white shadow rounded-lg p-4 border border-gray-300">
+        <form method="GET" class="grid grid-cols-6 gap-3 items-end">
+            <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">البحث في البيان</label>
+                <input type="text" name="search" value="{{ $search }}" 
+                       placeholder="مثال: بروفايل الأستاذ علي"
+                       class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+                <select name="year" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                    @for($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
+                <select name="month" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+                    @foreach($months as $num => $name)
+                        <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>{{ $name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div>
+                <button type="submit" class="w-full h-9 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm border border-blue-600 focus:ring-2 focus:ring-blue-400">
+                    <i class="fas fa-search ml-1"></i>
+                    بحث
+                </button>
+            </div>
+            
+            <div>
+                <a href="{{ route('employee.receipts-payments.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search]) }}" 
+                   target="_blank"
+                   class="w-full h-9 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center border border-green-600 focus:ring-2 focus:ring-green-400">
+                    <i class="fas fa-print ml-1"></i>
+                    طباعة
+                </a>
+            </div>
+        </form>
     </div>
-
-<!-- Filters & Actions with borders and border-radius adjustments -->
-<div class="bg-white shadow rounded-lg p-4 border border-gray-300">
-    <form method="GET" class="grid grid-cols-6 gap-3 items-end">
-        <div class="col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">البحث في البيان</label>
-            <input type="text" name="search" value="{{ $search }}" 
-                   placeholder="مثال: بروفايل الأستاذ علي"
-                   class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-        </div>
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-            <select name="year" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                @for($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
-                    <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
-            </select>
-        </div>
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
-            <select name="month" class="w-full h-9 rounded-md border border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-                @foreach($months as $num => $name)
-                    <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
-        </div>
-        
-        <div>
-            <button type="submit" class="w-full h-9 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium text-sm border border-blue-600 focus:ring-2 focus:ring-blue-400">
-                <i class="fas fa-search ml-1"></i>
-                بحث
-            </button>
-        </div>
-        
-        <div>
-            <a href="{{ route('employee.receipts-payments.print', ['year' => $currentYear, 'month' => $currentMonth, 'search' => $search]) }}" 
-               target="_blank"
-               class="w-full h-9 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center border border-green-600 focus:ring-2 focus:ring-green-400">
-                <i class="fas fa-print ml-1"></i>
-                طباعة
-            </a>
-        </div>
-    </form>
-</div>
-
 
     <!-- Main Content: Tables -->
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- المقبوضات -->
-        <div class="bg-white shadow rounded-lg">
+        <div class="bg-white shadow rounded-lg overflow-hidden">
             <div class="bg-green-600 text-white px-4 py-3 flex items-center justify-between">
                 <h3 class="font-bold flex items-center">
                     <i class="fas fa-arrow-down ml-2"></i>
@@ -197,7 +195,7 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                            <textarea name="description" rows="2" placeholder="وصف المقبوض..." required
+                            <textarea name="description" rows="3" placeholder="وصف المقبوض..." required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
                         </div>
                         
@@ -230,47 +228,57 @@
             <!-- Receipts Table -->
             <div class="overflow-hidden">
                 @if($receipts->count() > 0)
-                    <table class="min-w-full<table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($receipts as $receipt)
-                                <tr class="hover:bg-green-50">
-                                    <td class="px-3 py-2 text-sm text-gray-900">{{ Str::limit($receipt->description, 30) }}</td>
-                                    <td class="px-3 py-2 text-sm font-medium text-green-600">{{ number_format($receipt->amount, 2) }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-500">{{ $receipt->date->format('Y-m-d') }}</td>
-                                    <td class="px-3 py-2 text-sm">
-                                        <div class="flex space-x-2 space-x-reverse">
-                                            <button onclick="editReceipt({{ $receipt->id }})" 
-                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteItem('receipt', {{ $receipt->id }})" 
-                                                    class="text-red-600 hover:text-red-800" title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">البيان</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">المبلغ</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">التاريخ</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">إجراءات</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($receipts as $receipt)
+                                    <tr class="hover:bg-green-50 transition-colors">
+                                        <td class="px-4 py-3 text-sm text-gray-900">
+                                            <div class="break-words leading-relaxed">
+                                                {{ $receipt->description }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-bold text-green-600 whitespace-nowrap">
+                                            {{ number_format($receipt->amount, 2) }} ر.س
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                                            {{ $receipt->date->format('Y-m-d') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                            <div class="flex space-x-2 space-x-reverse">
+                                                <button onclick="editReceipt({{ $receipt->id }})" 
+                                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="تعديل">
+                                                    <i class="fas fa-edit text-lg"></i>
+                                                </button>
+                                                <button onclick="deleteItem('receipt', {{ $receipt->id }})" 
+                                                        class="text-red-600 hover:text-red-800 transition-colors" title="حذف">
+                                                    <i class="fas fa-trash text-lg"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     
                     <!-- Pagination -->
                     @if($receipts->hasPages())
-                        <div class="px-4 py-3 border-t">
+                        <div class="px-4 py-3 border-t bg-gray-50">
                             {{ $receipts->appends(request()->query())->links() }}
                         </div>
                     @endif
                 @else
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
                         <p class="text-sm">لا توجد مقبوضات</p>
                     </div>
                 @endif
@@ -278,7 +286,7 @@
         </div>
 
         <!-- المدفوعات -->
-        <div class="bg-white shadow rounded-lg">
+        <div class="bg-white shadow rounded-lg overflow-hidden">
             <div class="bg-red-600 text-white px-4 py-3 flex items-center justify-between">
                 <h3 class="font-bold flex items-center">
                     <i class="fas fa-arrow-up ml-2"></i>
@@ -297,7 +305,7 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                            <textarea name="description" rows="2" placeholder="وصف المدفوع..." required
+                            <textarea name="description" rows="3" placeholder="وصف المدفوع..." required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
                         </div>
                         
@@ -330,47 +338,57 @@
             <!-- Payments Table -->
             <div class="overflow-hidden">
                 @if($payments->count() > 0)
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">البيان</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($payments as $payment)
-                                <tr class="hover:bg-red-50">
-                                    <td class="px-3 py-2 text-sm text-gray-900">{{ Str::limit($payment->description, 30) }}</td>
-                                    <td class="px-3 py-2 text-sm font-medium text-red-600">{{ number_format($payment->amount, 2) }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-500">{{ $payment->date->format('Y-m-d') }}</td>
-                                    <td class="px-3 py-2 text-sm">
-                                        <div class="flex space-x-2 space-x-reverse">
-                                            <button onclick="editPayment({{ $payment->id }})" 
-                                                    class="text-blue-600 hover:text-blue-800" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteItem('payment', {{ $payment->id }})" 
-                                                    class="text-red-600 hover:text-red-800" title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">البيان</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">المبلغ</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">التاريخ</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">إجراءات</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($payments as $payment)
+                                    <tr class="hover:bg-red-50 transition-colors">
+                                        <td class="px-4 py-3 text-sm text-gray-900">
+                                            <div class="break-words leading-relaxed">
+                                                {{ $payment->description }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-bold text-red-600 whitespace-nowrap">
+                                            {{ number_format($payment->amount, 2) }} ر.س
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                                            {{ $payment->date->format('Y-m-d') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                            <div class="flex space-x-2 space-x-reverse">
+                                                <button onclick="editPayment({{ $payment->id }})" 
+                                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="تعديل">
+                                                    <i class="fas fa-edit text-lg"></i>
+                                                </button>
+                                                <button onclick="deleteItem('payment', {{ $payment->id }})" 
+                                                        class="text-red-600 hover:text-red-800 transition-colors" title="حذف">
+                                                    <i class="fas fa-trash text-lg"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     
                     <!-- Pagination -->
                     @if($payments->hasPages())
-                        <div class="px-4 py-3 border-t">
+                        <div class="px-4 py-3 border-t bg-gray-50">
                             {{ $payments->appends(request()->query())->links() }}
                         </div>
                     @endif
                 @else
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
                         <p class="text-sm">لا توجد مدفوعات</p>
                     </div>
                 @endif
@@ -391,7 +409,7 @@
                     <div class="p-4 space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                            <textarea id="editReceiptDescription" name="description" rows="2" required
+                            <textarea id="editReceiptDescription" name="description" rows="3" required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 text-sm resize-none"></textarea>
                         </div>
 
@@ -438,7 +456,7 @@
                     <div class="p-4 space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">البيان</label>
-                            <textarea id="editPaymentDescription" name="description" rows="2" required
+                            <textarea id="editPaymentDescription" name="description" rows="3" required
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm resize-none"></textarea>
                         </div>
 
@@ -450,7 +468,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1<label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
                                 <input type="date" id="editPaymentDate" name="date" required
                                        class="w-full h-9 rounded-md border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
                             </div>
@@ -648,5 +666,124 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
+
+// إضافة تأثيرات بصرية للجداول
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة hover effects للصفوف
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.01)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+
+// تحسين تجربة المستخدم مع النماذج
+function enhanceFormExperience() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        const inputs = form.querySelectorAll('input, textarea, select');
+        
+        inputs.forEach(input => {
+            // إضافة تأثيرات التركيز
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('ring-2');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('ring-2');
+            });
+        });
+    });
+}
+
+// استدعاء تحسينات التجربة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', enhanceFormExperience);
 </script>
+
+<style>
+/* تحسينات CSS إضافية */
+.break-words {
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.leading-relaxed {
+    line-height: 1.625;
+}
+
+/* تأثيرات انتقالية سلسة */
+.transition-colors {
+    transition: color 0.2s ease-in-out;
+}
+
+/* تحسين عرض الجداول على الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .grid-cols-1.lg\\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    th, td {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* تحسين عرض النص العربي */
+.text-right {
+    text-align: right;
+    direction: rtl;
+}
+
+/* تأثيرات للأزرار */
+button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* تحسين عرض البطاقات الإحصائية */
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* تأثيرات التمرير */
+.hover\\:bg-green-50:hover {
+    background-color: #f0fdf4;
+}
+
+.hover\\:bg-red-50:hover {
+    background-color: #fef2f2;
+}
+
+/* تحسين عرض النماذج */
+.space-y-3 > * + * {
+    margin-top: 0.75rem;
+}
+
+.space-x-reverse > * + * {
+    margin-right: 0.5rem;
+    margin-left: 0;
+}
+
+/* تأثيرات للمودال */
+.z-50 {
+    z-index: 50;
+}
+
+.bg-opacity-50 {
+    background-color: rgba(75, 85, 99, 0.5);
+}
+</style>
 @endpush
