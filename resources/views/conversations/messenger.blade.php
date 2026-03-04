@@ -232,12 +232,21 @@
                 <div class="relative max-w-4xl max-h-[90vh] w-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col" onclick="event.stopPropagation()">
                     <div class="flex items-center justify-between px-4 py-2 border-b bg-gray-100 flex-shrink-0">
                         <span id="chat-preview-title" class="font-medium text-gray-900 truncate"></span>
-                        <button type="button" id="chat-preview-close" class="p-2 rounded-lg hover:bg-gray-200 text-gray-600" aria-label="إغلاق">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="flex items-center gap-1">
+                            <span id="chat-preview-counter" class="text-sm text-gray-500 ml-2"></span>
+                            <button type="button" id="chat-preview-close" class="p-2 rounded-lg hover:bg-gray-200 text-gray-600" aria-label="إغلاق">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex-1 min-h-0 overflow-auto p-4 flex items-center justify-center bg-gray-900/10">
-                        <div id="chat-preview-content"></div>
+                    <div class="flex-1 min-h-0 overflow-auto p-2 flex items-center justify-center bg-gray-900/10 relative w-full">
+                        <button type="button" id="chat-preview-prev" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-red-600 disabled:opacity-40 disabled:pointer-events-none" aria-label="السابق">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div id="chat-preview-content" class="w-full flex-1 min-h-0 flex items-center justify-center"></div>
+                        <button type="button" id="chat-preview-next" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-red-600 disabled:opacity-40 disabled:pointer-events-none" aria-label="التالي">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -247,26 +256,45 @@
                     var modal = document.getElementById('chat-preview-modal');
                     var content = document.getElementById('chat-preview-content');
                     var titleEl = document.getElementById('chat-preview-title');
+                    var counterEl = document.getElementById('chat-preview-counter');
                     var closeBtn = document.getElementById('chat-preview-close');
+                    var prevBtn = document.getElementById('chat-preview-prev');
+                    var nextBtn = document.getElementById('chat-preview-next');
                     if (!modal || !content) return;
-                    function openPreview(url, type, name) {
-                        titleEl.textContent = name || '';
+
+                    var previewItems = [];
+                    var currentIndex = 0;
+
+                    function buildPreviewItems() {
+                        previewItems = [];
+                        document.querySelectorAll('.chat-preview-link').forEach(function(a) {
+                            var url = a.getAttribute('data-preview-url');
+                            if (!url) return;
+                            previewItems.push({
+                                url: url,
+                                type: a.getAttribute('data-preview-type') || 'file',
+                                name: a.getAttribute('data-preview-name') || ''
+                            });
+                        });
+                    }
+
+                    function renderContent(url, type, name) {
                         content.innerHTML = '';
                         if (type === 'image') {
                             var img = document.createElement('img');
                             img.src = url;
                             img.alt = name || '';
-                            img.className = 'max-w-full max-h-[80vh] object-contain rounded-lg';
+                            img.className = 'w-full max-h-[80vh] object-contain rounded-lg';
                             content.appendChild(img);
                         } else if (type === 'pdf') {
                             var iframe = document.createElement('iframe');
                             iframe.src = url + '#view=FitH';
-                            iframe.className = 'w-full h-[80vh] border-0 rounded-lg bg-white';
+                            iframe.className = 'w-full h-[80vh] min-h-[60vh] border-0 rounded-lg bg-white flex-1';
                             iframe.title = name || 'PDF';
                             content.appendChild(iframe);
                         } else {
                             var wrap = document.createElement('div');
-                            wrap.className = 'text-center p-6';
+                            wrap.className = 'w-full text-center p-6';
                             var icon = document.createElement('div');
                             icon.className = 'text-4xl text-gray-400 mb-3';
                             icon.innerHTML = '<i class="fas fa-file-alt"></i>';
@@ -279,28 +307,83 @@
                             wrap.appendChild(link);
                             content.appendChild(wrap);
                         }
+                    }
+
+                    function openPreviewAt(index) {
+                        if (index < 0 || index >= previewItems.length) return;
+                        currentIndex = index;
+                        var item = previewItems[currentIndex];
+                        titleEl.textContent = item.name || '';
+                        counterEl.textContent = previewItems.length > 1 ? (currentIndex + 1) + ' / ' + previewItems.length : '';
+                        renderContent(item.url, item.type, item.name);
+                        if (prevBtn) prevBtn.disabled = currentIndex === 0;
+                        if (nextBtn) nextBtn.disabled = currentIndex === previewItems.length - 1;
+                        if (prevBtn && nextBtn) {
+                            prevBtn.style.visibility = previewItems.length > 1 ? 'visible' : 'hidden';
+                            nextBtn.style.visibility = previewItems.length > 1 ? 'visible' : 'hidden';
+                        }
+                    }
+
+                    function openPreview(url, type, name) {
+                        titleEl.textContent = name || '';
+                        counterEl.textContent = '';
+                        renderContent(url, type, name);
                         modal.classList.remove('hidden');
                         modal.classList.add('flex');
                         document.body.style.overflow = 'hidden';
+                        if (prevBtn && nextBtn) { prevBtn.style.visibility = 'hidden'; nextBtn.style.visibility = 'hidden'; }
                     }
+
                     function closePreview() {
                         modal.classList.add('hidden');
                         modal.classList.remove('flex');
                         document.body.style.overflow = '';
                         content.innerHTML = '';
+                        previewItems = [];
                     }
-                    document.querySelectorAll('.chat-preview-link').forEach(function(a) {
+
+                    function onKeydown(e) {
+                        if (!modal.classList.contains('flex')) return;
+                        if (e.key === 'Escape') { closePreview(); return; }
+                        if (previewItems.length <= 1) return;
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            if (currentIndex > 0) openPreviewAt(currentIndex - 1);
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            if (currentIndex < previewItems.length - 1) openPreviewAt(currentIndex + 1);
+                        }
+                    }
+
+                    buildPreviewItems();
+                    document.querySelectorAll('.chat-preview-link').forEach(function(a, index) {
                         a.addEventListener('click', function(e) {
                             e.preventDefault();
+                            buildPreviewItems();
                             var url = a.getAttribute('data-preview-url');
                             var type = a.getAttribute('data-preview-type') || 'file';
                             var name = a.getAttribute('data-preview-name') || '';
-                            openPreview(url, type, name);
+                            var idx = Array.prototype.indexOf.call(document.querySelectorAll('.chat-preview-link'), a);
+                            if (previewItems.length > 1 && idx >= 0) {
+                                currentIndex = idx;
+                                openPreviewAt(currentIndex);
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                                document.body.style.overflow = 'hidden';
+                            } else {
+                                openPreview(url, type, name);
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                                document.body.style.overflow = 'hidden';
+                            }
                         });
                     });
+
+                    if (prevBtn) prevBtn.addEventListener('click', function() { if (currentIndex > 0) openPreviewAt(currentIndex - 1); });
+                    if (nextBtn) nextBtn.addEventListener('click', function() { if (currentIndex < previewItems.length - 1) openPreviewAt(currentIndex + 1); });
                     closeBtn.addEventListener('click', closePreview);
                     modal.addEventListener('click', function(e) { if (e.target === modal) closePreview(); });
-                    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePreview(); });
+                    document.addEventListener('keydown', onKeydown);
                 })();
             </script>
         @else
