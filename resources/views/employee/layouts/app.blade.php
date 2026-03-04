@@ -391,7 +391,16 @@
                         <p class="text-sm text-gray-600">@yield('page-subtitle', 'مرحباً بك في نظام الموظفين')</p>
                     </div>
                     
-                    <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="flex items-center gap-3 space-x-reverse">
+                        {{-- Chat icon with unread badge --}}
+                        @if($chatConversationsUrl ?? null)
+                            <a href="{{ $chatConversationsUrl }}" class="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2" title="المحادثات">
+                                <i class="fas fa-comments text-lg"></i>
+                                @if(($unreadChatCount ?? 0) > 0)
+                                    <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-xs font-bold text-white bg-red-600 rounded-full">{{ $unreadChatCount > 99 ? '99+' : $unreadChatCount }}</span>
+                                @endif
+                            </a>
+                        @endif
                         <!-- Profile dropdown -->
                         <div class="dropdown-container relative">
                             <button onclick="toggleDropdown()" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 p-1 prevent-flash">

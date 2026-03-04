@@ -255,9 +255,9 @@ class ConversationController extends Controller
     }
 
     /**
-     * Build sidebar list: id, otherNames, lastMessage for each conversation.
+     * Build sidebar list: id, otherNames, lastMessage, unreadCount for each conversation.
      *
-     * @return array<int, array{id: int, otherNames: string, lastMessage: string|null}>
+     * @return array<int, array{id: int, otherNames: string, lastMessage: string|null, unreadCount: int}>
      */
     private function buildConversationList($conversations, $currentUser): array
     {
@@ -268,10 +268,12 @@ class ConversationController extends Controller
             );
             $otherNames = $others->map(fn ($p) => $p->name ?? 'مستخدم')->implode(', ');
             $lastMsg = $conv->last_message;
+            $unreadCount = $conv->unReadNotifications($currentUser)->count();
             $list[] = [
                 'id'           => $conv->id,
                 'otherNames'   => $otherNames ?: 'محادثة #' . $conv->id,
                 'lastMessage'  => $lastMsg ? Str::limit($lastMsg->body, 40) : null,
+                'unreadCount'  => $unreadCount,
             ];
         }
         return $list;

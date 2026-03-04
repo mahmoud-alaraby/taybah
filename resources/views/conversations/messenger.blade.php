@@ -12,33 +12,90 @@
 <div class="h-[calc(100vh-8rem)] flex rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden" dir="rtl">
     {{-- Left: Conversation list (sidebar) --}}
     <aside class="w-80 flex-shrink-0 flex flex-col border-l border-gray-200 bg-gray-50/80">
-        {{-- New chat --}}
-        <div class="p-3 border-b border-gray-200 bg-white">
-            <form action="{{ route($storeRoute) }}" method="POST" class="flex gap-2">
+        {{-- New chat: searchable users --}}
+        <div class="p-3 border-b border-gray-200 bg-white relative">
+            <form id="new-chat-form" action="{{ route($storeRoute) }}" method="POST" class="space-y-2">
                 @csrf
-                <select name="participant" required class="flex-1 rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring-red-500 py-2">
-                    <option value="">محادثة جديدة...</option>
-                    @foreach($usersForNewChat as $u)
-                        <option value="{{ $u['value'] }}">{{ $u['label'] }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700" title="بدء محادثة">
-                    <i class="fas fa-plus"></i>
-                </button>
+                <input type="hidden" name="participant" id="new-chat-participant" value="" required />
+                <div class="relative">
+                    <input type="text" id="new-chat-search" placeholder="بحث عن مستخدم..." autocomplete="off"
+                        class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring-red-500 py-2 pr-8 pl-2" />
+                    <i class="fas fa-search absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                    <div id="new-chat-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg z-20">
+                        @foreach($usersForNewChat as $u)
+                            <button type="button" class="new-chat-option w-full text-right px-3 py-2 text-sm hover:bg-gray-100 border-b border-gray-50 last:border-0" data-value="{{ $u['value'] }}" data-label="{{ $u['label'] }}">
+                                {{ $u['label'] }}
+                            </button>
+                        @endforeach
+                        <div id="new-chat-no-results" class="hidden px-3 py-2 text-sm text-gray-500">لا توجد نتائج</div>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span id="new-chat-selected-label" class="flex-1 text-sm text-gray-500 truncate min-w-0">اختر مستخدماً...</span>
+                    <button type="submit" id="new-chat-submit" disabled class="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed" title="بدء محادثة">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </form>
+            <script>
+                (function() {
+                    var form = document.getElementById('new-chat-form');
+                    var searchInput = document.getElementById('new-chat-search');
+                    var hiddenInput = document.getElementById('new-chat-participant');
+                    var dropdown = document.getElementById('new-chat-dropdown');
+                    var selectedLabel = document.getElementById('new-chat-selected-label');
+                    var submitBtn = document.getElementById('new-chat-submit');
+                    var noResults = document.getElementById('new-chat-no-results');
+                    var options = document.querySelectorAll('.new-chat-option');
+                    var allOptions = Array.prototype.map.call(options, function(o) { return { el: o, value: o.getAttribute('data-value'), label: o.getAttribute('data-label') }; });
+                    function filter(q) {
+                        q = (q || '').trim().toLowerCase();
+                        var shown = 0;
+                        allOptions.forEach(function(o) {
+                            var match = !q || o.label.toLowerCase().indexOf(q) !== -1;
+                            o.el.style.display = match ? '' : 'none';
+                            if (match) shown++;
+                        });
+                        noResults.classList.toggle('hidden', shown > 0);
+                    }
+                    function select(value, label) {
+                        hiddenInput.value = value || '';
+                        selectedLabel.textContent = label || 'اختر مستخدماً...';
+                        submitBtn.disabled = !value;
+                        dropdown.classList.add('hidden');
+                        searchInput.value = '';
+                        filter('');
+                    }
+                    searchInput.addEventListener('focus', function() { dropdown.classList.remove('hidden'); filter(searchInput.value); });
+                    searchInput.addEventListener('input', function() { filter(searchInput.value); });
+                    searchInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') { dropdown.classList.add('hidden'); searchInput.blur(); }
+                    });
+                    allOptions.forEach(function(o) {
+                        o.el.addEventListener('click', function() { select(o.value, o.label); });
+                    });
+                    document.addEventListener('click', function(e) {
+                        if (!form.contains(e.target)) dropdown.classList.add('hidden');
+                    });
+                })();
+            </script>
         </div>
         {{-- List --}}
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto relative">
             @forelse($conversationList as $item)
+                @php $hasUnread = !empty($item['unreadCount']) && (int)$item['unreadCount'] > 0; @endphp
                 <a href="{{ route($showRoute, $item['id']) }}"
-                   class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 border-b border-gray-100 {{ ($selectedConversation && $selectedConversation->id == $item['id']) ? 'bg-red-50 border-r-4 border-r-red-600' : '' }}">
-                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 flex-shrink-0">
+                   class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 border-b border-gray-100 {{ ($selectedConversation && $selectedConversation->id == $item['id']) ? 'bg-red-50 border-r-4 border-r-red-600' : '' }} {{ $hasUnread ? 'bg-red-50/50' : '' }}">
+                    <div class="relative h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 flex-shrink-0">
                         <i class="fas fa-user"></i>
+                        @if($hasUnread)
+                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-xs font-bold text-white bg-red-600 rounded-full">{{ $item['unreadCount'] > 99 ? '99+' : $item['unreadCount'] }}</span>
+                        @endif
                     </div>
                     <div class="min-w-0 flex-1 text-right">
-                        <div class="font-medium text-gray-900 truncate">{{ $item['otherNames'] ?: 'محادثة #' . $item['id'] }}</div>
+                        <div class="font-medium truncate {{ $hasUnread ? 'text-gray-900 font-semibold' : 'text-gray-900' }}">{{ $item['otherNames'] ?: 'محادثة #' . $item['id'] }}</div>
                         @if(!empty($item['lastMessage']))
-                            <div class="text-xs text-gray-500 truncate">{{ $item['lastMessage'] }}</div>
+                            <div class="text-xs {{ $hasUnread ? 'text-gray-700' : 'text-gray-500' }} truncate">{{ $item['lastMessage'] }}</div>
                         @endif
                     </div>
                 </a>
