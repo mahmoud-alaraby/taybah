@@ -144,7 +144,7 @@
                                     {{ mb_substr($sender->name ?? '؟', 0, 1) }}
                                 </div>
                             @endif
-                            <div class="rounded-2xl px-4 py-2.5 {{ $isMe ? 'bg-red-600 text-white rounded-tr-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-tl-sm shadow-sm' }}">
+                            <div class="rounded-2xl px-1 py-2.5 {{ $isMe ? 'bg-red-600 text-white rounded-tr-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-tl-sm shadow-sm' }}">
                                 @if(!$isMe && $sender)
                                     <div class="text-xs font-medium text-gray-500 mb-0.5">{{ $sender->name ?? 'مستخدم' }}</div>
                                 @endif
@@ -175,8 +175,18 @@
                                         @endforeach
                                     </div>
                                 @endif
-                                <div class="text-xs mt-1 {{ $isMe ? 'text-red-200' : 'text-gray-400' }}">
-                                    {{ $message->created_at->format('H:i') }} · {{ $message->created_at->format('d/m/Y') }}
+                                <div class="text-xs mt-1 mx-2 flex items-center gap-3 {{ $isMe ? 'text-red-200' : 'text-gray-400' }}">
+                                    <span class="font-[10px]">{{ $message->created_at->format('H:i') }} · {{ $message->created_at->format('d/m/Y') }}</span>
+                                    @if($isMe)
+                                        @php $status = $messageStatusMap[$message->id ?? $message->getKey()] ?? 'delivered'; @endphp
+                                        <span class="inline-flex items-center" title="{{ $status === 'seen' ? 'مقروءة' : ($status === 'delivered' ? 'تم التسليم' : 'تم الإرسال') }}">
+                                            @if($status === 'seen')
+                                                <i class="fas fa-check-double text-blue-300" aria-hidden="true"></i>
+                                            @else
+                                                <i class="fas fa-check-double text-current opacity-80" aria-hidden="true"></i>
+                                            @endif
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -292,6 +302,22 @@
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
+            @if(config('musonza_chat.broadcasts'))
+            {{-- Real-time chat config (Pusher + Echo) --}}
+            <script>
+                window.chatRealtime = {
+                    enabled: true,
+                    conversationId: {{ $selectedConversation->id }},
+                    currentUser: { id: {{ $currentUser->getKey() }}, type: @json($currentUser->getMorphClass()) },
+                    pusherKey: @json(config('broadcasting.connections.pusher.key')),
+                    pusherCluster: @json(config('broadcasting.connections.pusher.options.cluster', 'mt1')),
+                    authEndpoint: @json(url('/broadcasting/auth')),
+                    csrfToken: @json(csrf_token()),
+                    eventName: @json(\Musonza\Chat\Eventing\MessageWasSent::class),
+                    sendUrl: @json(route($sendRoute, $selectedConversation->id)),
+                };
+            </script>
+            @endif
             {{-- Preview modal for images and files --}}
             <div id="chat-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70" role="dialog" aria-modal="true" aria-label="معاينة الملف">
                 <div class="relative max-w-4xl max-h-[90vh] w-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col" onclick="event.stopPropagation()">
@@ -451,6 +477,147 @@
                     document.addEventListener('keydown', onKeydown);
                 })();
             </script>
+            {{-- Real-time: Echo + AJAX send (when CHAT_REALTIME_ENABLED and Pusher configured) --}}
+            @if(config('musonza_chat.broadcasts'))
+            <script>
+                (function() {
+                    var cfg = window.chatRealtime;
+                    if (!cfg || !cfg.enabled || !cfg.pusherKey) return;
+
+                    function escapeHtml(s) {
+                        if (!s) return '';
+                        var d = document.createElement('div');
+                        d.textContent = s;
+                        return d.innerHTML;
+                    }
+                    function removeEmptyState() {
+                        var container = document.getElementById('chat-messages');
+                        if (!container) return;
+                        var empty = container.querySelector('.flex.flex-col.items-center.justify-center');
+                        if (empty && empty.textContent.indexOf('لا توجد رسائل') !== -1) empty.remove();
+                    }
+                    function buildMessageHtml(msg, isMe) {
+                        var sender = msg.sender || {};
+                        var name = sender.name || 'مستخدم';
+                        var initial = (name || '؟').charAt(0);
+                        var body = msg.body && msg.body !== '📎 مرفقات' ? '<div class="break-words text-sm">' + escapeHtml(msg.body) + '</div>' : '';
+                        var attachments = (msg.data && msg.data.attachments) || [];
+                        var attHtml = '';
+                        if (attachments.length) {
+                            attHtml = '<div class="mt-2 space-y-1.5">';
+                            attachments.forEach(function(att) {
+                                var url = (window.location.origin || '') + '/storage/' + (att.path || '');
+                                var isImage = att.mime && att.mime.indexOf('image/') === 0;
+                                var isPdf = att.mime === 'application/pdf';
+                                var previewType = isImage ? 'image' : (isPdf ? 'pdf' : 'file');
+                                var attName = att.name || (isImage ? 'صورة' : 'ملف');
+                                if (isImage) {
+                                    attHtml += '<a href="' + url + '" class="chat-preview-link block cursor-pointer" data-preview-url="' + escapeHtml(url) + '" data-preview-type="image" data-preview-name="' + escapeHtml(attName) + '"><img src="' + url + '" alt="' + escapeHtml(attName) + '" class="rounded-lg max-h-40 max-w-full object-cover border border-gray-200 hover:opacity-90" loading="lazy" /></a>';
+                                    attHtml += '<a href="' + url + '" class="chat-preview-link text-xs ' + (isMe ? 'text-red-200' : 'text-gray-500') + ' hover:underline" data-preview-url="' + escapeHtml(url) + '" data-preview-type="image" data-preview-name="' + escapeHtml(attName) + '">' + escapeHtml(attName) + '</a>';
+                                } else {
+                                    attHtml += '<a href="' + url + '" class="chat-preview-link inline-flex items-center gap-1.5 text-sm ' + (isMe ? 'text-red-100 hover:text-white' : 'text-red-600 hover:text-red-700') + ' cursor-pointer" data-preview-url="' + escapeHtml(url) + '" data-preview-type="' + previewType + '" data-preview-name="' + escapeHtml(attName) + '"><i class="fas fa-paperclip"></i><span>' + escapeHtml(attName) + '</span></a>';
+                                }
+                            });
+                            attHtml += '</div>';
+                        }
+                        var time = msg.created_at ? (typeof msg.created_at === 'string' ? msg.created_at : (msg.created_at.date || '')) : '';
+                        if (time) {
+                            var d = new Date(time);
+                            time = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ' · ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+                        }
+                        var bubbleClass = isMe ? 'bg-red-600 text-white rounded-tr-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-tl-sm shadow-sm';
+                        var timeClass = isMe ? 'text-red-200' : 'text-gray-400';
+                        var status = (msg.status || 'delivered');
+                        var checkIcon = isMe ? '<span class="inline-flex items-center" title="' + (status === 'seen' ? 'مقروءة' : 'تم التسليم') + '"><i class="fas fa-check-double ' + (status === 'seen' ? 'text-blue-300' : 'text-current opacity-80') + '" aria-hidden="true"></i></span>' : '';
+                        var row = '<div class="flex ' + (isMe ? 'justify-start' : 'justify-end') + '">';
+                        row += '<div class="max-w-[75%] flex ' + (isMe ? 'flex-row' : 'flex-row-reverse') + '">';
+                        if (!isMe) row += '<div class="flex-shrink-0 ml-2 mt-1 h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs">' + escapeHtml(initial) + '</div>';
+                        row += '<div class="rounded-2xl px-4 py-2.5 ' + bubbleClass + '">';
+                        if (!isMe) row += '<div class="text-xs font-medium text-gray-500 mb-0.5">' + escapeHtml(name) + '</div>';
+                        row += body + attHtml;
+                        row += '<div class="text-xs mt-1 flex items-center gap-1 ' + timeClass + '">' + (time || '') + checkIcon + '</div></div></div></div>';
+                        return row;
+                    }
+                    function appendMessage(msg) {
+                        var container = document.getElementById('chat-messages');
+                        if (!container) return;
+                        removeEmptyState();
+                        var sender = msg.sender || {};
+                        var senderId = sender.id != null ? sender.id : sender;
+                        var senderType = sender.type || (msg.sender && msg.sender.morph_class) || '';
+                        if (typeof senderId === 'object') { senderId = sender.id; senderType = sender.morph_class || sender.type || ''; }
+                        var isMe = (String(senderId) === String(cfg.currentUser.id)) && (String(senderType || '') === String(cfg.currentUser.type || ''));
+                        var html = buildMessageHtml(msg, isMe);
+                        container.insertAdjacentHTML('beforeend', html);
+                        container.scrollTop = container.scrollHeight;
+                    }
+
+                    var form = document.getElementById('chat-send-form');
+                    if (form) {
+                        form.addEventListener('submit', function(e) {
+                            if (!cfg.enabled) return;
+                            e.preventDefault();
+                            var bodyInput = form.querySelector('input[name="body"]');
+                            var fileInput = form.querySelector('input[name="attachments[]"]');
+                            var fd = new FormData(form);
+                            var submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.disabled = true;
+                            fetch(cfg.sendUrl, {
+                                method: 'POST',
+                                body: fd,
+                                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                                credentials: 'same-origin'
+                            }).then(function(r) {
+                                if (!r.ok) return r.json().then(function(j) { throw new Error(j.message || 'فشل الإرسال'); }).catch(function() { throw new Error('فشل الإرسال'); });
+                                return r.json();
+                            }).then(function(data) {
+                                if (data.message) appendMessage(data.message);
+                                if (bodyInput) bodyInput.value = '';
+                                if (fileInput) fileInput.value = '';
+                                var preview = document.getElementById('chat-file-preview');
+                                if (preview) { preview.classList.add('hidden'); preview.innerHTML = ''; }
+                            }).catch(function(err) {
+                                alert(err.message || 'حدث خطأ أثناء الإرسال');
+                            }).finally(function() {
+                                if (submitBtn) submitBtn.disabled = false;
+                            });
+                            return false;
+                        });
+                    }
+
+                    function initEcho() {
+                        if (window._chatEchoInstance) {
+                            return;
+                        }
+                        var s1 = document.createElement('script');
+                        s1.src = 'https://js.pusher.com/8.3.0/pusher.min.js';
+                        s1.onload = function() {
+                            var s2 = document.createElement('script');
+                            s2.src = 'https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.min.js';
+                            s2.onload = function() {
+                                var EchoClass = window.Echo;
+                                if (!EchoClass) return;
+                                window._chatEchoInstance = new EchoClass({
+                                    broadcaster: 'pusher',
+                                    key: cfg.pusherKey,
+                                    cluster: cfg.pusherCluster,
+                                    forceTLS: true,
+                                    authEndpoint: cfg.authEndpoint,
+                                    auth: { headers: { 'X-CSRF-TOKEN': cfg.csrfToken, 'Accept': 'application/json' } }
+                                });
+                                window._chatEchoInstance.private('mc-chat-conversation.' + cfg.conversationId).listen(cfg.eventName, function(e) {
+                                    if (e && e.message) appendMessage(e.message);
+                                });
+                            };
+                            document.head.appendChild(s2);
+                        };
+                        document.head.appendChild(s1);
+                    }
+                    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initEcho);
+                    else initEcho();
+                })();
+            </script>
+            @endif
         @else
             {{-- Empty state: no conversation selected --}}
             <div class="flex-1 flex flex-col items-center justify-center text-gray-500 p-8 bg-gray-50/50">

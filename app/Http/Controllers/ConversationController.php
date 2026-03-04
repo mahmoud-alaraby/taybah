@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Musonza\Chat\Facades\ChatFacade as Chat;
+use Musonza\Chat\Models\MessageNotification;
 
 /**
  * Shared conversation controller for both admins and employees.
@@ -44,6 +45,7 @@ class ConversationController extends Controller
             'selectedConversation' => null,
             'conversation'       => null,
             'messages'           => null,
+            'messageStatusMap'   => [],
             'currentUser'        => $user,
             'otherNames'         => '',
             'sendRoute'          => auth('admin')->check() ? 'admin.conversations.send' : 'employee.conversations.send',
@@ -109,10 +111,13 @@ class ConversationController extends Controller
             $messages->getCollection()->load('participation.messageable');
         }
 
-        Chat::conversation($conversation)->setParticipant($currentUser)->readAll();
-
         $otherParticipants = $participants->filter(fn ($p) => $p->getKey() !== $currentUser->getKey() || $p->getMorphClass() !== $currentUser->getMorphClass());
         $otherNames = $otherParticipants->map(fn ($p) => $p->name ?? 'مستخدم')->implode(', ') ?: 'محادثة';
+
+        // WhatsApp-style status for my messages: delivered (2 gray checks) vs seen (2 blue checks)
+        $messageStatusMap = $this->buildMessageStatusMap($messages, $currentUser, $otherParticipants);
+
+        Chat::conversation($conversation)->setParticipant($currentUser)->readAll();
 
         $conversations = $currentUser->conversations();
         foreach ($conversations as $conv) {
@@ -138,6 +143,7 @@ class ConversationController extends Controller
             'selectedConversation' => $conversation,
             'conversation'        => $conversation,
             'messages'            => $messages,
+            'messageStatusMap'    => $messageStatusMap,
             'currentUser'         => $currentUser,
             'otherNames'          => $otherNames,
         ]);
@@ -198,10 +204,22 @@ class ConversationController extends Controller
         if (!empty($attachmentsData)) {
             $payload->data(['attachments' => $attachmentsData]);
         }
-        $payload->send();
+        $message = $payload->send();
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true]);
+            $message->load('participation.messageable');
+            return response()->json([
+                'success' => true,
+                'message' => [
+                    'id'              => $message->getKey(),
+                    'body'            => $message->body,
+                    'conversation_id' => $message->conversation_id,
+                    'type'            => $message->type,
+                    'data'            => $message->data,
+                    'created_at'      => $message->created_at,
+                    'sender'          => $message->sender,
+                ],
+            ]);
         }
         return back()->with('success', 'تم إرسال الرسالة.');
     }
@@ -282,6 +300,46 @@ class ConversationController extends Controller
     private function getExistingConversationBetween($userOne, $userTwo)
     {
         return Chat::conversations()->between($userOne, $userTwo);
+    }
+
+    /**
+     * Build map of message_id => 'seen'|'delivered' for messages sent by current user (WhatsApp-style read receipts).
+     *
+     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection  $messages
+     * @param  \Illuminate\Database\Eloquent\Model  $currentUser
+     * @param  \Illuminate\Support\Collection  $otherParticipants
+     * @return array<int, string>
+     */
+    private function buildMessageStatusMap($messages, $currentUser, $otherParticipants): array
+    {
+        $messageStatusMap = [];
+        $collection = method_exists($messages, 'getCollection') ? $messages->getCollection() : $messages;
+        $myMessageIds = [];
+        foreach ($collection as $msg) {
+            $id = $msg->id ?? $msg->getKey();
+            $isSender = $msg->is_sender ?? false;
+            if ($id && $isSender) {
+                $myMessageIds[] = $id;
+            }
+        }
+        if (empty($myMessageIds) || $otherParticipants->isEmpty()) {
+            return $messageStatusMap;
+        }
+        foreach ($myMessageIds as $mid) {
+            $messageStatusMap[$mid] = 'seen';
+        }
+        foreach ($otherParticipants as $other) {
+            $notifications = MessageNotification::whereIn('message_id', $myMessageIds)
+                ->where('messageable_id', $other->getKey())
+                ->where('messageable_type', $other->getMorphClass())
+                ->get(['message_id', 'is_seen']);
+            foreach ($notifications as $n) {
+                if (! $n->is_seen) {
+                    $messageStatusMap[$n->message_id] = 'delivered';
+                }
+            }
+        }
+        return $messageStatusMap;
     }
 
     /**
