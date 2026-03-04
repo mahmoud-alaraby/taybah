@@ -92,16 +92,19 @@
                                             @php
                                                 $url = asset('storage/' . $att['path']);
                                                 $isImage = isset($att['mime']) && str_starts_with($att['mime'], 'image/');
+                                                $isPdf = isset($att['mime']) && $att['mime'] === 'application/pdf';
+                                                $previewType = $isImage ? 'image' : ($isPdf ? 'pdf' : 'file');
+                                                $attName = $att['name'] ?? ($isImage ? 'صورة' : 'ملف');
                                             @endphp
                                             @if($isImage)
-                                                <a href="{{ $url }}" target="_blank" rel="noopener" class="block">
-                                                    <img src="{{ $url }}" alt="{{ $att['name'] ?? 'صورة' }}" class="rounded-lg max-h-40 max-w-full object-cover border border-gray-200" loading="lazy" />
+                                                <a href="{{ $url }}" class="chat-preview-link block cursor-pointer" data-preview-url="{{ $url }}" data-preview-type="image" data-preview-name="{{ $attName }}">
+                                                    <img src="{{ $url }}" alt="{{ $attName }}" class="rounded-lg max-h-40 max-w-full object-cover border border-gray-200 hover:opacity-90" loading="lazy" />
                                                 </a>
-                                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-xs {{ $isMe ? 'text-red-200' : 'text-gray-500' }} hover:underline">{{ $att['name'] ?? 'صورة' }}</a>
+                                                <a href="{{ $url }}" class="chat-preview-link text-xs {{ $isMe ? 'text-red-200' : 'text-gray-500' }} hover:underline" data-preview-url="{{ $url }}" data-preview-type="image" data-preview-name="{{ $attName }}">{{ $attName }}</a>
                                             @else
-                                                <a href="{{ $url }}" target="_blank" rel="noopener" download="{{ $att['name'] ?? 'file' }}" class="inline-flex items-center gap-1.5 text-sm {{ $isMe ? 'text-red-100 hover:text-white' : 'text-red-600 hover:text-red-700' }}">
+                                                <a href="{{ $url }}" class="chat-preview-link inline-flex items-center gap-1.5 text-sm {{ $isMe ? 'text-red-100 hover:text-white' : 'text-red-600 hover:text-red-700' }} cursor-pointer" data-preview-url="{{ $url }}" data-preview-type="{{ $previewType }}" data-preview-name="{{ $attName }}">
                                                     <i class="fas fa-paperclip"></i>
-                                                    <span>{{ $att['name'] ?? 'ملف' }}</span>
+                                                    <span>{{ $attName }}</span>
                                                 </a>
                                             @endif
                                         @endforeach
@@ -135,14 +138,16 @@
                 @if(session('error'))
                     <p class="text-red-600 text-sm mb-2">{{ session('error') }}</p>
                 @endif
-                <form action="{{ route($sendRoute, $selectedConversation->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+                <form id="chat-send-form" action="{{ route($sendRoute, $selectedConversation->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
                     @csrf
+                    <div id="chat-file-preview" class="hidden flex flex-wrap gap-2 items-center p-2 rounded-lg bg-gray-100 border border-gray-200 text-sm"></div>
                     <div class="flex gap-2 items-end">
                         <label class="p-3 rounded-xl border border-gray-300 hover:bg-gray-50 cursor-pointer text-gray-600" title="إرفاق ملف (صور، PDF، Word، حتى 10 ميجا)">
                             <i class="fas fa-paperclip"></i>
-                            <input type="file" name="attachments[]" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" class="hidden" />
+                            <input id="chat-file-input" type="file" name="attachments[]" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" class="hidden" />
                         </label>
                         <input type="text" name="body" value="{{ old('body') }}" placeholder="اكتب رسالة أو أرفق ملفاً..."
+                            autocomplete="off"
                             class="flex-1 rounded-xl border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm py-3 px-4"
                             maxlength="5000" />
                         <button type="submit" class="p-3 rounded-xl bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
@@ -151,6 +156,70 @@
                     </div>
                     <p class="text-xs text-gray-500">صور، PDF، Word، Excel، نص، ZIP — حد أقصى 5 ملفات و 10 ميجابايت لكل ملف.</p>
                 </form>
+                <script>
+                    (function() {
+                        var form = document.getElementById('chat-send-form');
+                        var fileInput = document.getElementById('chat-file-input');
+                        var preview = document.getElementById('chat-file-preview');
+                        if (!form || !fileInput || !preview) return;
+                        function formatSize(bytes) {
+                            if (bytes < 1024) return bytes + ' B';
+                            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                        }
+                        function removeFileAtIndex(indexToRemove) {
+                            var files = fileInput.files;
+                            if (!files || files.length <= 1) {
+                                fileInput.value = '';
+                                updatePreview();
+                                return;
+                            }
+                            var dt = new DataTransfer();
+                            for (var j = 0; j < files.length; j++) {
+                                if (j !== indexToRemove) dt.items.add(files[j]);
+                            }
+                            fileInput.files = dt.files;
+                            updatePreview();
+                        }
+                        function updatePreview() {
+                            var files = fileInput.files;
+                            if (!files || files.length === 0) {
+                                preview.classList.add('hidden');
+                                preview.innerHTML = '';
+                                return;
+                            }
+                            preview.classList.remove('hidden');
+                            var html = '<span class="text-gray-600 ml-1">المحدد للرفع:</span>';
+                            for (var i = 0; i < files.length; i++) {
+                                var f = files[i];
+                                var isImg = f.type.indexOf("image/") === 0 && f.type.indexOf("svg") === -1;
+                                html += '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-gray-200">';
+                                if (isImg) {
+                                    var url = URL.createObjectURL(f);
+                                    html += '<img src="' + url + '" alt="" class="h-8 w-8 object-cover rounded" />';
+                                }
+                                html += '<span class="max-w-[120px] truncate" title="' + (f.name || 'ملف') + '">' + (f.name || 'ملف') + '</span>';
+                                html += '<span class="text-gray-400 text-xs">(' + formatSize(f.size) + ')</span>';
+                                html += '<button type="button" class="p-0.5 rounded text-red-600 hover:bg-red-50 hover:text-red-700" title="إزالة" data-chat-remove-index="' + i + '"><i class="fas fa-times text-xs"></i></button>';
+                                html += '</span>';
+                            }
+                            html += '<button type="button" class="text-red-600 hover:text-red-700 text-xs px-2 py-1" id="chat-clear-files">مسح الكل</button>';
+                            preview.innerHTML = html;
+                            document.getElementById('chat-clear-files').onclick = function() {
+                                fileInput.value = '';
+                                preview.classList.add('hidden');
+                                preview.innerHTML = '';
+                            };
+                            preview.querySelectorAll('[data-chat-remove-index]').forEach(function(btn) {
+                                btn.onclick = function() { removeFileAtIndex(parseInt(btn.getAttribute('data-chat-remove-index'), 10)); };
+                            });
+                        }
+                        fileInput.addEventListener('change', updatePreview);
+                        form.addEventListener('submit', function() {
+                            setTimeout(function() { fileInput.value = ''; preview.classList.add('hidden'); preview.innerHTML = ''; }, 0);
+                        });
+                    })();
+                </script>
                 @error('body')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
@@ -158,8 +227,81 @@
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
+            {{-- Preview modal for images and files --}}
+            <div id="chat-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70" role="dialog" aria-modal="true" aria-label="معاينة الملف">
+                <div class="relative max-w-4xl max-h-[90vh] w-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between px-4 py-2 border-b bg-gray-100 flex-shrink-0">
+                        <span id="chat-preview-title" class="font-medium text-gray-900 truncate"></span>
+                        <button type="button" id="chat-preview-close" class="p-2 rounded-lg hover:bg-gray-200 text-gray-600" aria-label="إغلاق">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 min-h-0 overflow-auto p-4 flex items-center justify-center bg-gray-900/10">
+                        <div id="chat-preview-content"></div>
+                    </div>
+                </div>
+            </div>
             <script>
                 document.getElementById('chat-messages')?.scrollTo({ top: 1e9, behavior: 'smooth' });
+                (function() {
+                    var modal = document.getElementById('chat-preview-modal');
+                    var content = document.getElementById('chat-preview-content');
+                    var titleEl = document.getElementById('chat-preview-title');
+                    var closeBtn = document.getElementById('chat-preview-close');
+                    if (!modal || !content) return;
+                    function openPreview(url, type, name) {
+                        titleEl.textContent = name || '';
+                        content.innerHTML = '';
+                        if (type === 'image') {
+                            var img = document.createElement('img');
+                            img.src = url;
+                            img.alt = name || '';
+                            img.className = 'max-w-full max-h-[80vh] object-contain rounded-lg';
+                            content.appendChild(img);
+                        } else if (type === 'pdf') {
+                            var iframe = document.createElement('iframe');
+                            iframe.src = url + '#view=FitH';
+                            iframe.className = 'w-full h-[80vh] border-0 rounded-lg bg-white';
+                            iframe.title = name || 'PDF';
+                            content.appendChild(iframe);
+                        } else {
+                            var wrap = document.createElement('div');
+                            wrap.className = 'text-center p-6';
+                            var icon = document.createElement('div');
+                            icon.className = 'text-4xl text-gray-400 mb-3';
+                            icon.innerHTML = '<i class="fas fa-file-alt"></i>';
+                            var link = document.createElement('a');
+                            link.href = url;
+                            link.download = name || 'file';
+                            link.className = 'inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+                            link.textContent = 'تحميل الملف';
+                            wrap.appendChild(icon);
+                            wrap.appendChild(link);
+                            content.appendChild(wrap);
+                        }
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                        document.body.style.overflow = 'hidden';
+                    }
+                    function closePreview() {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                        document.body.style.overflow = '';
+                        content.innerHTML = '';
+                    }
+                    document.querySelectorAll('.chat-preview-link').forEach(function(a) {
+                        a.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            var url = a.getAttribute('data-preview-url');
+                            var type = a.getAttribute('data-preview-type') || 'file';
+                            var name = a.getAttribute('data-preview-name') || '';
+                            openPreview(url, type, name);
+                        });
+                    });
+                    closeBtn.addEventListener('click', closePreview);
+                    modal.addEventListener('click', function(e) { if (e.target === modal) closePreview(); });
+                    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePreview(); });
+                })();
             </script>
         @else
             {{-- Empty state: no conversation selected --}}
