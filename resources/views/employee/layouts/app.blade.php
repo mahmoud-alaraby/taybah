@@ -231,6 +231,13 @@
     </div>
     @endif
 
+    <!-- المحادثات (Musonza Chat) -->
+    <a href="{{ route('employee.conversations.index') }}"
+       class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors prevent-flash {{ request()->routeIs('employee.conversations.*') ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+        <i class="fas fa-comments ml-2 text-sm"></i>
+        المحادثات
+    </a>
+
     {{-- الأعمال/العمليات --}}
     <!-- @php
         $showOpsMenu = auth('employee')->user()->hasPermission('general_operations')

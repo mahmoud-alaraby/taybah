@@ -39,7 +39,7 @@ return [
     /*
      * Whether to load the package routes file in your application.
      */
-    'should_load_routes' => false,
+    'should_load_routes' => true,
 
     /*
      * Routes configuration

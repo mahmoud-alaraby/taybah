@@ -35,6 +35,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
+    // المحادثات (Musonza Chat - مشترك بين المديرين والموظفين)
+    Route::get('conversations', [App\Http\Controllers\ConversationController::class, 'index'])->name('admin.conversations.index');
+    Route::post('conversations', [App\Http\Controllers\ConversationController::class, 'store'])->name('admin.conversations.store');
+    Route::get('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'show'])->name('admin.conversations.show');
+    Route::post('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'sendMessage'])->name('admin.conversations.send');
+
     // إدارة المديرين
     Route::resource('admins', AdminController::class)->names([
         'index' => 'admin.admins.index',

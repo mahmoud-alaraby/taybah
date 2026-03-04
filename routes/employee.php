@@ -25,6 +25,12 @@ Route::middleware('employee.auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('employee.dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('employee.logout');
 
+    // المحادثات (Musonza Chat - مشترك بين المديرين والموظفين)
+    Route::get('conversations', [App\Http\Controllers\ConversationController::class, 'index'])->name('employee.conversations.index');
+    Route::post('conversations', [App\Http\Controllers\ConversationController::class, 'store'])->name('employee.conversations.store');
+    Route::get('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'show'])->name('employee.conversations.show');
+    Route::post('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'sendMessage'])->name('employee.conversations.send');
+
     Route::middleware('employee.permission:receipts_payments')->group(function () {
         Route::get('/receipts-payments', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'index'])
             ->name('employee.receipts-payments');
