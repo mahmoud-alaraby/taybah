@@ -83,7 +83,30 @@
                                 @if(!$isMe && $sender)
                                     <div class="text-xs font-medium text-gray-500 mb-0.5">{{ $sender->name ?? 'مستخدم' }}</div>
                                 @endif
-                                <div class="break-words text-sm">{{ e($message->body) }}</div>
+                                @if($message->body && $message->body !== '📎 مرفقات')
+                                    <div class="break-words text-sm">{{ e($message->body) }}</div>
+                                @endif
+                                @if(!empty($message->data['attachments']))
+                                    <div class="mt-2 space-y-1.5">
+                                        @foreach($message->data['attachments'] as $att)
+                                            @php
+                                                $url = asset('storage/' . $att['path']);
+                                                $isImage = isset($att['mime']) && str_starts_with($att['mime'], 'image/');
+                                            @endphp
+                                            @if($isImage)
+                                                <a href="{{ $url }}" target="_blank" rel="noopener" class="block">
+                                                    <img src="{{ $url }}" alt="{{ $att['name'] ?? 'صورة' }}" class="rounded-lg max-h-40 max-w-full object-cover border border-gray-200" loading="lazy" />
+                                                </a>
+                                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-xs {{ $isMe ? 'text-red-200' : 'text-gray-500' }} hover:underline">{{ $att['name'] ?? 'صورة' }}</a>
+                                            @else
+                                                <a href="{{ $url }}" target="_blank" rel="noopener" download="{{ $att['name'] ?? 'file' }}" class="inline-flex items-center gap-1.5 text-sm {{ $isMe ? 'text-red-100 hover:text-white' : 'text-red-600 hover:text-red-700' }}">
+                                                    <i class="fas fa-paperclip"></i>
+                                                    <span>{{ $att['name'] ?? 'ملف' }}</span>
+                                                </a>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <div class="text-xs mt-1 {{ $isMe ? 'text-red-200' : 'text-gray-400' }}">
                                     {{ $message->created_at->format('H:i') }} · {{ $message->created_at->format('d/m/Y') }}
                                 </div>
@@ -109,16 +132,29 @@
                 @if(session('success'))
                     <p class="text-green-600 text-sm mb-2">{{ session('success') }}</p>
                 @endif
-                <form action="{{ route($sendRoute, $selectedConversation->id) }}" method="POST" class="flex gap-2 items-end">
+                @if(session('error'))
+                    <p class="text-red-600 text-sm mb-2">{{ session('error') }}</p>
+                @endif
+                <form action="{{ route($sendRoute, $selectedConversation->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
                     @csrf
-                    <input type="text" name="body" value="{{ old('body') }}" placeholder="اكتب رسالة..." required
-                        class="flex-1 rounded-xl border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm py-3 px-4"
-                        maxlength="5000" />
-                    <button type="submit" class="p-3 rounded-xl bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div class="flex gap-2 items-end">
+                        <label class="p-3 rounded-xl border border-gray-300 hover:bg-gray-50 cursor-pointer text-gray-600" title="إرفاق ملف (صور، PDF، Word، حتى 10 ميجا)">
+                            <i class="fas fa-paperclip"></i>
+                            <input type="file" name="attachments[]" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" class="hidden" />
+                        </label>
+                        <input type="text" name="body" value="{{ old('body') }}" placeholder="اكتب رسالة أو أرفق ملفاً..."
+                            class="flex-1 rounded-xl border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm py-3 px-4"
+                            maxlength="5000" />
+                        <button type="submit" class="p-3 rounded-xl bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500">صور، PDF، Word، Excel، نص، ZIP — حد أقصى 5 ملفات و 10 ميجابايت لكل ملف.</p>
                 </form>
                 @error('body')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                @error('attachments.*')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>

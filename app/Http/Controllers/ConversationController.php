@@ -7,6 +7,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Musonza\Chat\Facades\ChatFacade as Chat;
 
 /**
@@ -139,11 +140,41 @@ class ConversationController extends Controller
     }
 
     /**
-     * Send a message in a conversation.
+     * Send a message in a conversation (text and/or file attachments).
      */
     public function sendMessage(Request $request, int $id)
     {
-        $request->validate(['body' => 'required|string|max:5000']);
+        $request->validate([
+            'body'        => 'nullable|string|max:5000',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimes:jpeg,jpg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt,zip',
+        ], [
+            'attachments.max'    => 'الحد الأقصى 5 ملفات في الرسالة الواحدة.',
+            'attachments.*.max'  => 'حجم كل ملف يجب ألا يتجاوز 10 ميجابايت.',
+            'attachments.*.mimes'=> 'نوع الملف غير مسموح. المسموح: صور، PDF، Word، Excel، نص، ZIP.',
+        ]);
+
+        $body = trim($request->input('body', ''));
+        $attachmentsData = [];
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                if (!$file->isValid()) {
+                    continue;
+                }
+                $path = $file->store('chat-attachments', 'public');
+                $attachmentsData[] = [
+                    'path' => $path,
+                    'name' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                ];
+            }
+        }
+
+        if ($body === '' && empty($attachmentsData)) {
+            return back()->with('error', 'أضف نصاً أو مرفقاً واحداً على الأقل.');
+        }
 
         $currentUser = auth('admin')->user() ?? auth('employee')->user();
         $conversation = Chat::conversations()->getById($id);
@@ -158,10 +189,12 @@ class ConversationController extends Controller
             abort(403, 'غير مصرح لك بالإرسال في هذه المحادثة.');
         }
 
-        Chat::message($request->body)
-            ->from($currentUser)
-            ->to($conversation)
-            ->send();
+        $messageBody = $body !== '' ? $body : '📎 مرفقات';
+        $payload = Chat::message($messageBody)->from($currentUser)->to($conversation);
+        if (!empty($attachmentsData)) {
+            $payload->data(['attachments' => $attachmentsData]);
+        }
+        $payload->send();
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
