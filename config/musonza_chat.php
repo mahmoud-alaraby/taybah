@@ -12,8 +12,9 @@ return [
      * Example:
      * Channel: mc-chat-conversation.2,
      * Event: Musonza\Chat\Eventing\MessageWasSent
+     * Set CHAT_REALTIME_ENABLED=true and configure Pusher (BROADCAST_CONNECTION=pusher) to enable real-time chat.
      */
-    'broadcasts' => false,
+    'broadcasts' => env('CHAT_REALTIME_ENABLED', false),
 
     /*
      * Enable encryption for message bodies.
@@ -39,7 +40,7 @@ return [
     /*
      * Whether to load the package routes file in your application.
      */
-    'should_load_routes' => false,
+    'should_load_routes' => true,
 
     /*
      * Routes configuration
