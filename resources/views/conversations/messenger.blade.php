@@ -84,21 +84,29 @@
         <div class="flex-1 overflow-y-auto relative">
             @forelse($conversationList as $item)
                 @php $hasUnread = !empty($item['unreadCount']) && (int)$item['unreadCount'] > 0; @endphp
-                <a href="{{ route($showRoute, $item['id']) }}"
-                   class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 border-b border-gray-100 {{ ($selectedConversation && $selectedConversation->id == $item['id']) ? 'bg-red-50 border-r-4 border-r-red-600' : '' }} {{ $hasUnread ? 'bg-red-50/50' : '' }}">
-                    <div class="relative h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 flex-shrink-0">
-                        <i class="fas fa-user"></i>
-                        @if($hasUnread)
-                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-xs font-bold text-white bg-red-600 rounded-full">{{ $item['unreadCount'] > 99 ? '99+' : $item['unreadCount'] }}</span>
-                        @endif
-                    </div>
-                    <div class="min-w-0 flex-1 text-right">
-                        <div class="font-medium truncate {{ $hasUnread ? 'text-gray-900 font-semibold' : 'text-gray-900' }}">{{ $item['otherNames'] ?: 'محادثة #' . $item['id'] }}</div>
-                        @if(!empty($item['lastMessage']))
-                            <div class="text-xs {{ $hasUnread ? 'text-gray-700' : 'text-gray-500' }} truncate">{{ $item['lastMessage'] }}</div>
-                        @endif
-                    </div>
-                </a>
+                <div class="group group-item flex items-center gap-2 px-4 py-3 hover:bg-gray-100 border-b border-gray-100 {{ ($selectedConversation && $selectedConversation->id == $item['id']) ? 'bg-red-50 border-r-4 border-r-red-600' : '' }} {{ $hasUnread ? 'bg-red-50/50' : '' }}">
+                    <a href="{{ route($showRoute, $item['id']) }}" class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="relative h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 flex-shrink-0">
+                            <i class="fas fa-user"></i>
+                            @if($hasUnread)
+                                <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-xs font-bold text-white bg-red-600 rounded-full">{{ $item['unreadCount'] > 99 ? '99+' : $item['unreadCount'] }}</span>
+                            @endif
+                        </div>
+                        <div class="min-w-0 flex-1 text-right">
+                            <div class="font-medium truncate {{ $hasUnread ? 'text-gray-900 font-semibold' : 'text-gray-900' }}">{{ $item['otherNames'] ?: 'محادثة #' . $item['id'] }}</div>
+                            @if(!empty($item['lastMessage']))
+                                <div class="text-xs {{ $hasUnread ? 'text-gray-700' : 'text-gray-500' }} truncate">{{ $item['lastMessage'] }}</div>
+                            @endif
+                        </div>
+                    </a>
+                    <form method="POST" action="{{ route($destroyRoute, $item['id']) }}" class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onsubmit="return confirm('حذف هذه المحادثة من قائمتك؟');" onclick="event.stopPropagation()">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500" title="حذف المحادثة">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                        </button>
+                    </form>
+                </div>
             @empty
                 <div class="p-4 text-center text-gray-500 text-sm">لا توجد محادثات. ابدأ محادثة جديدة من الأعلى.</div>
             @endforelse

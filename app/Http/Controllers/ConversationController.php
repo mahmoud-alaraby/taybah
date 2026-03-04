@@ -32,6 +32,7 @@ class ConversationController extends Controller
         $layout = auth('admin')->check() ? 'admin.layouts.app' : 'employee.layouts.app';
         $storeRoute = auth('admin')->check() ? 'admin.conversations.store' : 'employee.conversations.store';
         $showRoute = auth('admin')->check() ? 'admin.conversations.show' : 'employee.conversations.show';
+        $destroyRoute = auth('admin')->check() ? 'admin.conversations.destroy' : 'employee.conversations.destroy';
 
         return view('conversations.messenger', [
             'layout'             => $layout,
@@ -39,6 +40,7 @@ class ConversationController extends Controller
             'usersForNewChat'    => $usersForNewChat,
             'storeRoute'         => $storeRoute,
             'showRoute'          => $showRoute,
+            'destroyRoute'       => $destroyRoute,
             'selectedConversation' => null,
             'conversation'       => null,
             'messages'           => null,
@@ -123,6 +125,7 @@ class ConversationController extends Controller
         $storeRoute = auth('admin')->check() ? 'admin.conversations.store' : 'employee.conversations.store';
         $showRoute = auth('admin')->check() ? 'admin.conversations.show' : 'employee.conversations.show';
         $sendRoute = auth('admin')->check() ? 'admin.conversations.send' : 'employee.conversations.send';
+        $destroyRoute = auth('admin')->check() ? 'admin.conversations.destroy' : 'employee.conversations.destroy';
 
         return view('conversations.messenger', [
             'layout'              => $layout,
@@ -131,6 +134,7 @@ class ConversationController extends Controller
             'storeRoute'          => $storeRoute,
             'showRoute'           => $showRoute,
             'sendRoute'           => $sendRoute,
+            'destroyRoute'        => $destroyRoute,
             'selectedConversation' => $conversation,
             'conversation'        => $conversation,
             'messages'            => $messages,
@@ -200,6 +204,32 @@ class ConversationController extends Controller
             return response()->json(['success' => true]);
         }
         return back()->with('success', 'تم إرسال الرسالة.');
+    }
+
+    /**
+     * Leave/delete conversation for the current user (removes from their list).
+     */
+    public function destroy(int $id)
+    {
+        $currentUser = auth('admin')->user() ?? auth('employee')->user();
+        $conversation = Chat::conversations()->getById($id);
+
+        if (!$conversation) {
+            return $this->conversationNotFound();
+        }
+
+        $participants = $conversation->getParticipants();
+        $isParticipant = $participants->contains(fn ($p) => $p->getKey() === $currentUser->getKey() && $p->getMorphClass() === $currentUser->getMorphClass());
+        if (!$isParticipant) {
+            abort(403, 'غير مصرح لك بحذف هذه المحادثة.');
+        }
+
+        $currentUser->leaveConversation($id);
+
+        if (auth('admin')->check()) {
+            return redirect()->route('admin.conversations.index')->with('success', 'تم حذف المحادثة من قائمتك.');
+        }
+        return redirect()->route('employee.conversations.index')->with('success', 'تم حذف المحادثة من قائمتك.');
     }
 
     private function conversationNotFound()

@@ -30,6 +30,7 @@ Route::middleware('employee.auth')->group(function () {
     Route::post('conversations', [App\Http\Controllers\ConversationController::class, 'store'])->name('employee.conversations.store');
     Route::get('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'show'])->name('employee.conversations.show');
     Route::post('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'sendMessage'])->name('employee.conversations.send');
+    Route::delete('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'destroy'])->name('employee.conversations.destroy');
 
     Route::middleware('employee.permission:receipts_payments')->group(function () {
         Route::get('/receipts-payments', [App\Http\Controllers\Employee\ReceiptsPaymentsController::class, 'index'])

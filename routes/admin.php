@@ -40,6 +40,7 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('conversations', [App\Http\Controllers\ConversationController::class, 'store'])->name('admin.conversations.store');
     Route::get('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'show'])->name('admin.conversations.show');
     Route::post('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'sendMessage'])->name('admin.conversations.send');
+    Route::delete('conversations/{id}', [App\Http\Controllers\ConversationController::class, 'destroy'])->name('admin.conversations.destroy');
 
     // إدارة المديرين
     Route::resource('admins', AdminController::class)->names([
